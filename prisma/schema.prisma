@@ -1,0 +1,559 @@
+// ============================================
+// TALENTERO - Schéma Base de Données
+// Plateforme de recrutement freelance IT
+// Opérée par TRINEXTA
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTIFICATION & UTILISATEURS
+// ============================================
+
+model User {
+  id            Int       @id @default(autoincrement())
+  uid           String    @unique @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  role          UserRole  @default(TALENT)
+  emailVerified Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  
+  // Relations selon le rôle
+  talent        Talent?
+  client        Client?
+  
+  // Sessions & Tokens
+  sessions      Session[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+}
+
+enum UserRole {
+  TALENT    // Freelance
+  CLIENT    // Entreprise
+  ADMIN     // TRINEXTA
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// TALENTS (FREELANCES)
+// ============================================
+
+model Talent {
+  id                    Int       @id @default(autoincrement())
+  uid                   String    @unique @default(uuid())
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                Int       @unique
+  
+  // Identité
+  prenom                String
+  nom                   String
+  telephone             String?
+  photoUrl              String?
+  
+  // SIRET - Vérification Freelance
+  siret                 String    @unique
+  siren                 String
+  raisonSociale         String
+  dateCreationEntreprise DateTime?
+  codeAPE               String?
+  libelleAPE            String?
+  formeJuridique        String?
+  siretVerifie          Boolean   @default(false)
+  siretVerifieLe        DateTime?
+  
+  // Adresse
+  adresse               String?
+  codePostal            String?
+  ville                 String?
+  pays                  String    @default("France")
+  
+  // Profil Professionnel
+  titrePoste            String?   // "Développeur Full Stack Java/Angular"
+  bio                   String?   // Présentation courte
+  competences           String[]  // ["Java", "Spring", "Angular", "PostgreSQL"]
+  anneesExperience      Int       @default(0)
+  
+  // Conditions de travail
+  tjm                   Int?      // TJM souhaité
+  tjmMin                Int?      // TJM minimum acceptable
+  tjmMax                Int?      // TJM maximum
+  mobilite              Mobilite  @default(FLEXIBLE)
+  zonesGeographiques    String[]  // ["Paris", "Île-de-France", "Remote"]
+  disponibilite         Disponibilite @default(IMMEDIATE)
+  disponibleLe          DateTime?
+  
+  // Documents
+  cvUrl                 String?
+  cvOriginalName        String?
+  
+  // Extras
+  softSkills            String[]
+  langues               String[]  // ["Français:Natif", "Anglais:Courant"]
+  certifications        String[]
+  linkedinUrl           String?
+  githubUrl             String?
+  portfolioUrl          String?
+  
+  // Statut
+  statut                TalentStatus @default(ACTIF)
+  visiblePublic         Boolean   @default(true)
+  
+  // Relations
+  experiences           Experience[]
+  formations            Formation[]
+  candidatures          Candidature[]
+  matchs                Match[]
+  alertes               Alerte[]
+  messagesEnvoyes       Message[] @relation("MessagesSent")
+  messagesRecus         Message[] @relation("MessagesReceived")
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@index([competences])
+  @@index([ville])
+  @@index([disponibilite])
+}
+
+enum Mobilite {
+  FULL_REMOTE
+  HYBRIDE
+  SUR_SITE
+  FLEXIBLE
+}
+
+enum Disponibilite {
+  IMMEDIATE
+  SOUS_15_JOURS
+  SOUS_1_MOIS
+  SOUS_2_MOIS
+  SOUS_3_MOIS
+  DATE_PRECISE
+  NON_DISPONIBLE
+}
+
+enum TalentStatus {
+  ACTIF
+  INACTIF
+  EN_MISSION
+  SUSPENDU
+}
+
+model Experience {
+  id           Int        @id @default(autoincrement())
+  talent       Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId     Int
+  
+  poste        String
+  entreprise   String?
+  lieu         String?
+  dateDebut    DateTime
+  dateFin      DateTime?
+  enCours      Boolean    @default(false)
+  description  String?
+  competences  String[]
+  
+  createdAt    DateTime   @default(now())
+}
+
+model Formation {
+  id           Int        @id @default(autoincrement())
+  talent       Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId     Int
+  
+  diplome      String
+  etablissement String?
+  annee        Int?
+  description  String?
+  
+  createdAt    DateTime   @default(now())
+}
+
+// ============================================
+// CLIENTS (ENTREPRISES)
+// ============================================
+
+model Client {
+  id                    Int       @id @default(autoincrement())
+  uid                   String    @unique @default(uuid())
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                Int       @unique
+  
+  // Entreprise
+  raisonSociale         String
+  siret                 String    @unique
+  siren                 String
+  codeAPE               String?
+  formeJuridique        String?
+  
+  // Contact principal
+  contactNom            String
+  contactPrenom         String
+  contactEmail          String
+  contactTelephone      String?
+  contactPoste          String?   // "DRH", "CTO", "Responsable Recrutement"
+  
+  // Adresse
+  adresse               String?
+  codePostal            String?
+  ville                 String?
+  pays                  String    @default("France")
+  
+  // Infos entreprise
+  description           String?
+  secteurActivite       String?
+  tailleEntreprise      TailleEntreprise?
+  siteWeb               String?
+  logoUrl               String?
+  
+  // Statut
+  statut                ClientStatus @default(EN_ATTENTE)
+  valideParAdmin        Boolean   @default(false)
+  valideLe              DateTime?
+  
+  // Relations
+  offres                Offre[]
+  messagesEnvoyes       Message[] @relation("ClientMessagesSent")
+  messagesRecus         Message[] @relation("ClientMessagesReceived")
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+enum TailleEntreprise {
+  TPE         // 1-10
+  PME         // 11-250
+  ETI         // 251-5000
+  GRANDE      // 5000+
+}
+
+enum ClientStatus {
+  EN_ATTENTE  // En attente validation TRINEXTA
+  ACTIF
+  SUSPENDU
+  ARCHIVE
+}
+
+// ============================================
+// OFFRES D'EMPLOI
+// ============================================
+
+model Offre {
+  id                    Int       @id @default(autoincrement())
+  uid                   String    @unique @default(uuid())
+  slug                  String    @unique  // URL friendly: "dev-java-senior-paris-abc123"
+  
+  // Créateur
+  client                Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId              Int?
+  createdByAdmin        Boolean   @default(false)  // Si créée par TRINEXTA
+  
+  // Contenu
+  titre                 String
+  description           String
+  responsabilites       String?
+  profilRecherche       String?
+  
+  // Compétences
+  competencesRequises   String[]  // Obligatoires
+  competencesSouhaitees String[]  // Nice to have
+  
+  // Conditions
+  tjmMin                Int?
+  tjmMax                Int?
+  dureeJours            Int?      // Durée mission en jours
+  dateDebut             DateTime?
+  dateFin               DateTime?
+  renouvelable          Boolean   @default(false)
+  
+  // Localisation
+  lieu                  String?
+  codePostal            String?
+  mobilite              Mobilite  @default(FLEXIBLE)
+  
+  // Expérience requise
+  experienceMin         Int?      // Années minimum
+  
+  // Publication
+  statut                OffreStatus @default(BROUILLON)
+  publieLe              DateTime?
+  expireLe              DateTime?
+  visiblePublic         Boolean   @default(true)
+  
+  // Métriques
+  nbVues                Int       @default(0)
+  nbCandidatures        Int       @default(0)
+  
+  // Relations
+  candidatures          Candidature[]
+  matchs                Match[]
+  vues                  OffreVue[]
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([competencesRequises])
+  @@index([statut])
+  @@index([lieu])
+}
+
+enum OffreStatus {
+  BROUILLON
+  EN_ATTENTE    // En attente validation si créée par client
+  PUBLIEE
+  POURVUE
+  FERMEE
+  EXPIREE
+}
+
+// ============================================
+// MATCHING & CANDIDATURES
+// ============================================
+
+model Match {
+  id            Int       @id @default(autoincrement())
+  
+  offre         Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  offreId       Int
+  talent        Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId      Int
+  
+  // Score de matching (0-100)
+  score         Int
+  scoreDetails  Json?     // Détail du score par critère
+  
+  // Compétences matchées
+  competencesMatchees   String[]
+  competencesManquantes String[]
+  
+  // Statut
+  vuParTalent   Boolean   @default(false)
+  vuParClient   Boolean   @default(false)
+  
+  notes         String?   // Notes internes TRINEXTA
+  
+  createdAt     DateTime  @default(now())
+  
+  @@unique([offreId, talentId])
+  @@index([score])
+}
+
+model Candidature {
+  id            Int       @id @default(autoincrement())
+  uid           String    @unique @default(uuid())
+  
+  offre         Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  offreId       Int
+  talent        Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId      Int
+  
+  // Candidature
+  tjmPropose    Int?
+  motivation    String?
+  disponibilite Disponibilite?
+  
+  // Matching au moment de la candidature
+  scoreMatch    Int?
+  
+  // Pipeline
+  statut        CandidatureStatus @default(NOUVELLE)
+  
+  // Dates importantes
+  vueLe         DateTime?
+  reponduLe     DateTime?
+  entretienLe   DateTime?
+  
+  // Notes
+  notesTrinexta String?   // Notes internes
+  notesClient   String?   // Notes du client
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@unique([offreId, talentId])
+}
+
+enum CandidatureStatus {
+  NOUVELLE          // Vient de postuler
+  VUE               // Vue par TRINEXTA/Client
+  EN_REVUE          // En cours d'analyse
+  SHORTLIST         // Présélectionné
+  PROPOSEE_CLIENT   // Proposée au client (CV anonymisé)
+  ENTRETIEN         // Entretien programmé
+  ACCEPTEE          // Mission confirmée
+  REFUSEE           // Refusée
+  RETIREE           // Talent a retiré sa candidature
+}
+
+// ============================================
+// ALERTES & NOTIFICATIONS
+// ============================================
+
+model Alerte {
+  id              Int       @id @default(autoincrement())
+  talent          Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId        Int
+  
+  // Critères de l'alerte
+  nom             String?
+  competences     String[]
+  tjmMin          Int?
+  mobilite        Mobilite?
+  lieux           String[]
+  
+  // Paramètres
+  frequence       AlerteFrequence @default(INSTANTANEE)
+  active          Boolean   @default(true)
+  
+  // Stats
+  derniereNotif   DateTime?
+  nbOffresEnvoyees Int      @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum AlerteFrequence {
+  INSTANTANEE
+  QUOTIDIENNE
+  HEBDOMADAIRE
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  
+  // Destinataire (un des trois)
+  userId      Int?
+  type        NotificationType
+  
+  titre       String
+  message     String
+  lien        String?
+  
+  lu          Boolean   @default(false)
+  luLe        DateTime?
+  
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId, lu])
+}
+
+enum NotificationType {
+  NOUVELLE_OFFRE
+  NOUVELLE_CANDIDATURE
+  STATUT_CANDIDATURE
+  MESSAGE
+  ALERTE_OFFRE
+  VALIDATION_COMPTE
+  SYSTEME
+}
+
+// ============================================
+// MESSAGERIE
+// ============================================
+
+model Message {
+  id          Int       @id @default(autoincrement())
+  uid         String    @unique @default(uuid())
+  
+  // Expéditeur/Destinataire (Talent)
+  expediteurTalent    Talent? @relation("MessagesSent", fields: [expediteurTalentId], references: [id])
+  expediteurTalentId  Int?
+  destinataireTalent  Talent? @relation("MessagesReceived", fields: [destinataireTalentId], references: [id])
+  destinataireTalentId Int?
+  
+  // Expéditeur/Destinataire (Client)
+  expediteurClient    Client? @relation("ClientMessagesSent", fields: [expediteurClientId], references: [id])
+  expediteurClientId  Int?
+  destinataireClient  Client? @relation("ClientMessagesReceived", fields: [destinataireClientId], references: [id])
+  destinataireClientId Int?
+  
+  // Expéditeur Admin (TRINEXTA)
+  expediteurAdmin     Boolean @default(false)
+  
+  // Contexte
+  offreId     Int?      // Si lié à une offre
+  sujet       String?
+  contenu     String
+  
+  // Statut
+  lu          Boolean   @default(false)
+  luLe        DateTime?
+  
+  createdAt   DateTime  @default(now())
+}
+
+// ============================================
+// LOGS & ANALYTICS
+// ============================================
+
+model AuditLog {
+  id          Int       @id @default(autoincrement())
+  
+  userId      Int?
+  action      String    // "CREATE_OFFRE", "UPDATE_CANDIDATURE", etc.
+  entite      String    // "Offre", "Candidature", etc.
+  entiteId    Int?
+  
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model OffreVue {
+  id          Int       @id @default(autoincrement())
+  offre       Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  offreId     Int
+  
+  talentId    Int?      // Si connecté
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime  @default(now())
+  
+  @@index([offreId])
+}
+
+// Ajouter la relation inverse dans Offre
+// (déjà incluse via candidatures et matchs, mais on peut ajouter les vues)
+
+// ============================================
+// CONFIGURATION PLATEFORME
+// ============================================
+
+model ConfigPlateforme {
+  id          Int       @id @default(autoincrement())
+  cle         String    @unique
+  valeur      String
+  description String?
+  
+  updatedAt   DateTime  @updatedAt
+}
