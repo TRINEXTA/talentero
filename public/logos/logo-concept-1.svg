@@ -1,0 +1,6 @@
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Concept 1: Lettre T stylisée avec cercle (connexion) -->
+  <circle cx="20" cy="25" r="18" stroke="#2563eb" stroke-width="3" fill="none"/>
+  <path d="M12 18 H28 M20 18 V32" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+  <text x="48" y="33" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="600" fill="#1e293b">Talentero</text>
+</svg>

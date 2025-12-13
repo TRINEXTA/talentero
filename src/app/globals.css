@@ -181,3 +181,22 @@
 .table-cell {
   @apply px-6 py-4 whitespace-nowrap text-sm;
 }
+
+/* Logo animations */
+@keyframes connect1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(2px, 2px); }
+}
+
+@keyframes connect2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-2px, -2px); }
+}
+
+.animate-connect-1 {
+  animation: connect1 2.5s ease-in-out infinite;
+}
+
+.animate-connect-2 {
+  animation: connect2 2.5s ease-in-out infinite;
+}

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talentero - Logo Final</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=Poppins:wght@600;700;800&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: #0f172a;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 50px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 25px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 35px;
+      text-align: center;
+    }
+    .card.dark {
+      background: #1e293b;
+    }
+    .card h3 {
+      color: #2563eb;
+      font-size: 13px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .card.dark h3 {
+      color: #60a5fa;
+    }
+    .logo-container {
+      padding: 20px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Animation connexion */
+    @keyframes slide-connect {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(3px, 3px); }
+    }
+    @keyframes slide-connect2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-3px, -3px); }
+    }
+    .animated .rect1 {
+      animation: slide-connect 2.5s ease-in-out infinite;
+    }
+    .animated .rect2 {
+      animation: slide-connect2 2.5s ease-in-out infinite;
+    }
+
+    .section-title {
+      color: white;
+      text-align: center;
+      margin: 50px 0 30px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Logo TALENTERO - Version Finale</h1>
+  <p class="subtitle">Concept 2A avec texte stylisé et dégradés</p>
+
+  <h2 class="section-title">Variations de dégradés</h2>
+  <div class="grid">
+
+    <!-- V1 - Bleu vers Violet -->
+    <div class="card">
+      <h3>V1 - Bleu → Violet</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2563eb"/>
+              <stop offset="100%" style="stop-color:#7c3aed"/>
+            </linearGradient>
+            <linearGradient id="grad1b" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#3b82f6"/>
+              <stop offset="100%" style="stop-color:#8b5cf6"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#grad1)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="url(#grad1b)" opacity="0.8"/>
+          <text x="50" y="38" font-family="Montserrat, sans-serif" font-size="28" font-weight="800" fill="url(#grad1)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- V2 - Bleu vers Cyan -->
+    <div class="card">
+      <h3>V2 - Bleu → Cyan</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#1d4ed8"/>
+              <stop offset="100%" style="stop-color:#06b6d4"/>
+            </linearGradient>
+            <linearGradient id="grad2b" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#3b82f6"/>
+              <stop offset="100%" style="stop-color:#22d3ee"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#grad2)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="url(#grad2b)" opacity="0.8"/>
+          <text x="50" y="38" font-family="Montserrat, sans-serif" font-size="28" font-weight="800" fill="url(#grad2)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- V3 - Bleu vers Indigo -->
+    <div class="card">
+      <h3>V3 - Bleu → Indigo</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2563eb"/>
+              <stop offset="100%" style="stop-color:#4f46e5"/>
+            </linearGradient>
+            <linearGradient id="grad3b" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#60a5fa"/>
+              <stop offset="100%" style="stop-color:#818cf8"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#grad3)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="url(#grad3b)" opacity="0.8"/>
+          <text x="50" y="38" font-family="Montserrat, sans-serif" font-size="28" font-weight="800" fill="url(#grad3)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- V4 - Dégradé Sunset -->
+    <div class="card">
+      <h3>V4 - Bleu → Rose</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#3b82f6"/>
+              <stop offset="100%" style="stop-color:#ec4899"/>
+            </linearGradient>
+            <linearGradient id="grad4b" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#60a5fa"/>
+              <stop offset="100%" style="stop-color:#f472b6"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#grad4)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="url(#grad4b)" opacity="0.8"/>
+          <text x="50" y="38" font-family="Montserrat, sans-serif" font-size="28" font-weight="800" fill="url(#grad4)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section-title">Versions sur fond sombre</h2>
+  <div class="grid">
+
+    <!-- Dark V1 -->
+    <div class="card dark">
+      <h3>V1 sur fond sombre</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad1d" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#3b82f6"/>
+              <stop offset="100%" style="stop-color:#a78bfa"/>
+            </linearGradient>
+            <linearGradient id="grad1bd" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#60a5fa"/>
+              <stop offset="100%" style="stop-color:#c4b5fd"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#grad1d)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="url(#grad1bd)" opacity="0.8"/>
+          <text x="50" y="38" font-family="Montserrat, sans-serif" font-size="28" font-weight="800" fill="url(#grad1d)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Dark V2 -->
+    <div class="card dark">
+      <h3>V2 sur fond sombre</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad2d" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#3b82f6"/>
+              <stop offset="100%" style="stop-color:#22d3ee"/>
+            </linearGradient>
+            <linearGradient id="grad2bd" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#60a5fa"/>
+              <stop offset="100%" style="stop-color:#67e8f9"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#grad2d)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="url(#grad2bd)" opacity="0.8"/>
+          <text x="50" y="38" font-family="Montserrat, sans-serif" font-size="28" font-weight="800" fill="url(#grad2d)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section-title">Variations de typographie</h2>
+  <div class="grid">
+
+    <!-- Typo Poppins -->
+    <div class="card">
+      <h3>Police Poppins</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gradP" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2563eb"/>
+              <stop offset="100%" style="stop-color:#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#gradP)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="#8b5cf6" opacity="0.7"/>
+          <text x="50" y="38" font-family="Poppins, sans-serif" font-size="26" font-weight="700" fill="url(#gradP)" letter-spacing="2">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Typo Inter -->
+    <div class="card">
+      <h3>Police Inter</h3>
+      <div class="logo-container animated">
+        <svg width="260" height="55" viewBox="0 0 260 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gradI" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2563eb"/>
+              <stop offset="100%" style="stop-color:#7c3aed"/>
+            </linearGradient>
+          </defs>
+          <rect class="rect1" x="4" y="12" width="20" height="20" rx="5" fill="url(#gradI)"/>
+          <rect class="rect2" x="18" y="23" width="20" height="20" rx="5" fill="#8b5cf6" opacity="0.7"/>
+          <text x="50" y="38" font-family="Inter, sans-serif" font-size="26" font-weight="800" fill="url(#gradI)" letter-spacing="1">TALENTERO</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

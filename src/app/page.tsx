@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, Upload, Zap, Users, CheckCircle, Shield, Clock } from 'lucide-react'
+import { Logo } from '@/components/ui/logo'
 
 export default function HomePage() {
   return (
@@ -9,9 +10,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-primary">
-                Talentero
-              </Link>
+              <Logo size="sm" animated={true} />
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/offres" className="text-gray-600 hover:text-primary transition">
@@ -273,8 +272,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="text-2xl font-bold text-white mb-4">Talentero</div>
-              <p className="text-sm">
+              <Logo size="md" animated={false} darkMode={true} />
+              <p className="text-sm mt-4">
                 Plateforme de recrutement freelance IT nouvelle génération.
                 <br />Opérée par TRINEXTA.
               </p>
