@@ -4,6 +4,7 @@ import { hashPassword } from '@/lib/auth'
 import { registerClientSchema } from '@/lib/validations'
 import { verifySiret } from '@/lib/siret'
 import { sendWelcomeClientEmail } from '@/lib/email'
+import { generateClientCode } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,13 +100,17 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // Génère le code unique client
+      const codeUnique = await generateClientCode()
+
       // Crée le profil client (en attente de validation)
       const client = await tx.client.create({
         data: {
           userId: user.id,
+          codeUnique,
           raisonSociale: siretInfo?.raisonSociale || raisonSociale,
           siret,
-          siren: siret.substring(0, 9),
+          siren: siret ? siret.substring(0, 9) : null,
           codeAPE: siretInfo?.codeAPE,
           formeJuridique: siretInfo?.formeJuridique,
           adresse: siretInfo?.adresse ? `${siretInfo.adresse.numero} ${siretInfo.adresse.rue}`.trim() : null,
