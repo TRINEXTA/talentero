@@ -146,16 +146,6 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Crée une notification pour les admins
-      await tx.notification.create({
-        data: {
-          type: 'VALIDATION_COMPTE',
-          titre: 'Nouveau client à valider',
-          message: `L'entreprise ${raisonSociale} a créé un compte et attend validation.`,
-          lien: `/admin/clients/${client.uid}`,
-        },
-      })
-
       return { user, client }
     })
 
