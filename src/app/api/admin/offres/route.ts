@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
 import { matchTalentsForOffer } from '@/lib/matching'
+import { generateMissionCode } from '@/lib/utils'
 
 // GET - Liste des offres avec filtres
 export async function GET(request: NextRequest) {
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { titre: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
+        { codeUnique: { contains: search, mode: 'insensitive' } },
         { client: { raisonSociale: { contains: search, mode: 'insensitive' } } },
       ]
     }
@@ -44,6 +46,7 @@ export async function GET(request: NextRequest) {
           client: {
             select: {
               uid: true,
+              codeUnique: true,
               raisonSociale: true,
               typeClient: true,
             },
@@ -95,19 +98,21 @@ export async function POST(request: NextRequest) {
 
     const {
       clientId,
-      typeOffre = 'INTERNE',
+      typeOffre = 'TRINEXTA',
       titre,
       description,
       responsabilites,
       profilRecherche,
       competencesRequises,
       competencesSouhaitees,
-      tjmClient, // TJM réel du client (jamais affiché)
+      secteur,
+      tjmClientReel, // TJM réel du client (jamais affiché)
       tjmAffiche, // TJM affiché (notre marge)
       tjmMin,
       tjmMax,
       tjmADefinir,
-      dureeJours,
+      dureeNombre,
+      dureeUnite,
       dateDebut,
       dateFin,
       renouvelable,
@@ -115,6 +120,7 @@ export async function POST(request: NextRequest) {
       lieu,
       codePostal,
       mobilite,
+      deplacementMultiSite,
       deplacementEtranger,
       experienceMin,
       habilitationRequise,
@@ -129,6 +135,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Génère le code unique mission (MI + 4 chiffres)
+    const codeUnique = await generateMissionCode()
 
     // Génère un slug unique
     const baseSlug = titre
@@ -147,9 +156,11 @@ export async function POST(request: NextRequest) {
 
     const offre = await prisma.offre.create({
       data: {
+        codeUnique,
         slug,
         clientId: clientId || null,
         createdByAdmin: true,
+        offreTrinexta: !clientId, // Offre TRINEXTA si pas de client
         typeOffre,
         titre,
         description,
@@ -157,12 +168,14 @@ export async function POST(request: NextRequest) {
         profilRecherche,
         competencesRequises,
         competencesSouhaitees: competencesSouhaitees || [],
-        tjmClient,
+        secteur,
+        tjmClientReel,
         tjmAffiche,
         tjmMin,
         tjmMax,
         tjmADefinir: tjmADefinir || false,
-        dureeJours,
+        dureeNombre,
+        dureeUnite: dureeUnite || 'MOIS',
         dateDebut: dateDebut ? new Date(dateDebut) : null,
         dateFin: dateFin ? new Date(dateFin) : null,
         renouvelable: renouvelable || false,
@@ -170,6 +183,7 @@ export async function POST(request: NextRequest) {
         lieu,
         codePostal,
         mobilite: mobilite || 'FLEXIBLE',
+        deplacementMultiSite: deplacementMultiSite || false,
         deplacementEtranger: deplacementEtranger || false,
         experienceMin,
         habilitationRequise: habilitationRequise || false,
@@ -192,7 +206,7 @@ export async function POST(request: NextRequest) {
         action: 'CREATE_OFFRE_ADMIN',
         entite: 'Offre',
         entiteId: offre.id,
-        details: { titre, typeOffre, publierMaintenant },
+        details: { titre, codeUnique, typeOffre, publierMaintenant },
       },
     })
 
@@ -200,6 +214,7 @@ export async function POST(request: NextRequest) {
       success: true,
       offre: {
         uid: offre.uid,
+        codeUnique: offre.codeUnique,
         slug: offre.slug,
         titre: offre.titre,
         statut: offre.statut,

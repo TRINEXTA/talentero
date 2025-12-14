@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { generateSlug } from '@/lib/utils'
+import { generateSlug, generateMissionCode } from '@/lib/utils'
 
 // GET - Liste des offres du client
 export async function GET(request: NextRequest) {
@@ -86,6 +86,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
+    // Récupère le type de client pour définir le typeOffre
+    const client = await prisma.client.findUnique({
+      where: { id: user.clientId },
+      select: { typeClient: true },
+    })
+
+    // Génère le code unique mission (MI + 4 chiffres)
+    const codeUnique = await generateMissionCode()
+
     // Génère le slug
     const baseSlug = generateSlug(body.titre)
     let slug = baseSlug
@@ -97,27 +106,41 @@ export async function POST(request: NextRequest) {
       counter++
     }
 
+    // Détermine le type d'offre selon le type de client
+    const typeOffre = client?.typeClient === 'SOUSTRAITANCE' ? 'SOUSTRAITANCE' : 'CLIENT_DIRECT'
+
     const offre = await prisma.offre.create({
       data: {
         clientId: user.clientId,
-        titre: body.titre,
+        codeUnique,
         slug,
+        typeOffre,
+        titre: body.titre,
         description: body.description || '',
         responsabilites: body.responsabilites || null,
         profilRecherche: body.profilRecherche || null,
         competencesRequises: body.competencesRequises || [],
         competencesSouhaitees: body.competencesSouhaitees || [],
         experienceMin: body.experienceMin || null,
+        secteur: body.secteur || null,
+        // TJM - Le client renseigne son TJM, jamais visible
+        tjmClientReel: body.tjmClient || null,
         tjmMin: body.tjmMin || null,
         tjmMax: body.tjmMax || null,
-        tjmClient: body.tjmClient || null,
         tjmAffiche: body.tjmAffiche || null,
+        tjmADefinir: body.tjmADefinir || false,
+        // Lieu et mobilité
         lieu: body.lieu || null,
+        codePostal: body.codePostal || null,
         mobilite: body.mobilite || 'FLEXIBLE',
-        dureeJours: body.dureeJours || null,
+        deplacementMultiSite: body.deplacementMultiSite || false,
+        // Durée
+        dureeNombre: body.dureeNombre || null,
+        dureeUnite: body.dureeUnite || 'MOIS',
         dateDebut: body.dateDebut ? new Date(body.dateDebut) : null,
         dateFin: body.dateFin ? new Date(body.dateFin) : null,
         renouvelable: body.renouvelable || false,
+        // Statut initial: brouillon en attente de validation
         statut: 'BROUILLON',
       },
     })
@@ -129,7 +152,7 @@ export async function POST(request: NextRequest) {
         action: 'CREATE_OFFRE',
         entite: 'Offre',
         entiteId: offre.id,
-        details: JSON.parse(JSON.stringify({ titre: offre.titre, slug: offre.slug })),
+        details: JSON.parse(JSON.stringify({ titre: offre.titre, slug: offre.slug, codeUnique })),
       },
     })
 
@@ -137,6 +160,7 @@ export async function POST(request: NextRequest) {
       success: true,
       offre: {
         uid: offre.uid,
+        codeUnique: offre.codeUnique,
         slug: offre.slug,
         titre: offre.titre,
         statut: offre.statut,

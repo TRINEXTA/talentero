@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole, hashPassword } from '@/lib/auth'
+import { generateClientCode } from '@/lib/utils'
 
 // GET - Liste des clients avec filtres
 export async function GET(request: NextRequest) {
@@ -154,9 +155,13 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // Génère le code unique client (CL + 4 chiffres)
+      const codeUnique = await generateClientCode()
+
       const client = await tx.client.create({
         data: {
           userId: user.id,
+          codeUnique,
           typeClient,
           raisonSociale,
           siret,
@@ -230,6 +235,7 @@ export async function POST(request: NextRequest) {
       success: true,
       client: {
         uid: result.client.uid,
+        codeUnique: result.client.codeUnique,
         raisonSociale: result.client.raisonSociale,
         typeClient: result.client.typeClient,
         statut: result.client.statut,
