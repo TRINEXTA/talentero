@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
 import { matchTalentsForOffer, getBestMatchesForOffer } from '@/lib/matching'
-import { sendAOResultNotification } from '@/lib/microsoft-graph'
+import { sendMissionLostNotification, sendProfileNotSelectedNotification } from '@/lib/microsoft-graph'
+import { generateMissionCode } from '@/lib/utils'
 
 // GET - Détails d'une offre
 export async function GET(
@@ -23,6 +24,7 @@ export async function GET(
         client: {
           select: {
             uid: true,
+            codeUnique: true,
             raisonSociale: true,
             typeClient: true,
             contacts: true,
@@ -33,11 +35,13 @@ export async function GET(
             talent: {
               select: {
                 uid: true,
+                codeUnique: true,
                 prenom: true,
                 nom: true,
                 titrePoste: true,
                 competences: true,
-                tjm: true,
+                tjmMin: true,
+                tjmMax: true,
                 photoUrl: true,
                 user: { select: { email: true } },
               },
@@ -50,11 +54,13 @@ export async function GET(
             talent: {
               select: {
                 uid: true,
+                codeUnique: true,
                 prenom: true,
                 nom: true,
                 titrePoste: true,
                 competences: true,
-                tjm: true,
+                tjmMin: true,
+                tjmMax: true,
               },
             },
           },
@@ -70,6 +76,7 @@ export async function GET(
                     talent: {
                       select: {
                         uid: true,
+                        codeUnique: true,
                         prenom: true,
                         nom: true,
                         titrePoste: true,
@@ -81,6 +88,19 @@ export async function GET(
               orderBy: { ordre: 'asc' },
             },
           },
+        },
+        entretiens: {
+          include: {
+            talent: {
+              select: {
+                uid: true,
+                codeUnique: true,
+                prenom: true,
+                nom: true,
+              },
+            },
+          },
+          orderBy: { dateProposee: 'desc' },
         },
       },
     })
@@ -125,12 +145,14 @@ export async function PATCH(
       'profilRecherche',
       'competencesRequises',
       'competencesSouhaitees',
-      'tjmClient',
+      'secteur',
+      'tjmClientReel',
       'tjmAffiche',
       'tjmMin',
       'tjmMax',
       'tjmADefinir',
-      'dureeJours',
+      'dureeNombre',
+      'dureeUnite',
       'dateDebut',
       'dateFin',
       'renouvelable',
@@ -138,13 +160,13 @@ export async function PATCH(
       'lieu',
       'codePostal',
       'mobilite',
+      'deplacementMultiSite',
       'deplacementEtranger',
       'experienceMin',
       'habilitationRequise',
       'typeHabilitation',
       'visiblePublic',
       'statut',
-      'resultatAO',
     ]
 
     const updateData: Record<string, unknown> = {}
@@ -163,20 +185,14 @@ export async function PATCH(
       updateData.publieLe = new Date()
     }
 
-    const updatedOffre = await prisma.offre.update({
-      where: { uid },
-      data: updateData,
-    })
-
-    // Si le résultat d'AO a changé, notifie les candidats
-    if (body.resultatAO && body.resultatAO !== offre.resultatAO) {
-      updateData.dateResultat = new Date()
-
-      // Notifie les candidats de la shortlist
+    // Si on passe à POURVUE, on notifie les candidats non retenus
+    if (body.statut === 'POURVUE' && offre.statut !== 'POURVUE') {
+      // Notifie les candidats non sélectionnés de la shortlist
       const shortlist = await prisma.shortlist.findUnique({
         where: { offreId: offre.id },
         include: {
           candidats: {
+            where: { selectionne: false },
             include: {
               candidature: {
                 include: {
@@ -193,15 +209,51 @@ export async function PATCH(
       if (shortlist) {
         for (const candidat of shortlist.candidats) {
           const talent = candidat.candidature.talent
-          sendAOResultNotification(
+          sendProfileNotSelectedNotification(
             talent.user.email,
             talent.prenom,
-            offre.titre,
-            body.resultatAO
+            offre.titre
           ).catch(console.error)
+
+          // Met à jour le statut de la candidature
+          await prisma.candidature.update({
+            where: { id: candidat.candidature.id },
+            data: { statut: 'REFUSEE' },
+          })
         }
       }
     }
+
+    // Si on passe à FERMEE (mission perdue), notifie tous les candidats
+    if (body.statut === 'FERMEE' && body.missionPerdue) {
+      const candidatures = await prisma.candidature.findMany({
+        where: { offreId: offre.id },
+        include: {
+          talent: {
+            include: { user: { select: { email: true } } },
+          },
+        },
+      })
+
+      for (const candidature of candidatures) {
+        sendMissionLostNotification(
+          candidature.talent.user.email,
+          candidature.talent.prenom,
+          offre.titre
+        ).catch(console.error)
+
+        // Met à jour le statut
+        await prisma.candidature.update({
+          where: { id: candidature.id },
+          data: { statut: 'MISSION_PERDUE' },
+        })
+      }
+    }
+
+    const updatedOffre = await prisma.offre.update({
+      where: { uid },
+      data: updateData,
+    })
 
     // Log l'action
     await prisma.auditLog.create({
@@ -328,7 +380,8 @@ export async function POST(
       }
 
       case 'duplicate': {
-        // Génère un nouveau slug
+        // Génère un nouveau code et slug
+        const codeUnique = await generateMissionCode()
         const baseSlug = `${offre.slug}-copie`
         let slug = baseSlug
         let counter = 1
@@ -339,9 +392,11 @@ export async function POST(
 
         const newOffre = await prisma.offre.create({
           data: {
+            codeUnique,
             slug,
             clientId: offre.clientId,
             createdByAdmin: true,
+            offreTrinexta: offre.offreTrinexta,
             typeOffre: offre.typeOffre,
             titre: `${offre.titre} (copie)`,
             description: offre.description,
@@ -349,17 +404,20 @@ export async function POST(
             profilRecherche: offre.profilRecherche,
             competencesRequises: offre.competencesRequises,
             competencesSouhaitees: offre.competencesSouhaitees,
-            tjmClient: offre.tjmClient,
+            secteur: offre.secteur,
+            tjmClientReel: offre.tjmClientReel,
             tjmAffiche: offre.tjmAffiche,
             tjmMin: offre.tjmMin,
             tjmMax: offre.tjmMax,
             tjmADefinir: offre.tjmADefinir,
-            dureeJours: offre.dureeJours,
+            dureeNombre: offre.dureeNombre,
+            dureeUnite: offre.dureeUnite,
             renouvelable: offre.renouvelable,
             nombrePostes: offre.nombrePostes,
             lieu: offre.lieu,
             codePostal: offre.codePostal,
             mobilite: offre.mobilite,
+            deplacementMultiSite: offre.deplacementMultiSite,
             deplacementEtranger: offre.deplacementEtranger,
             experienceMin: offre.experienceMin,
             habilitationRequise: offre.habilitationRequise,
@@ -373,9 +431,48 @@ export async function POST(
           success: true,
           offre: {
             uid: newOffre.uid,
+            codeUnique: newOffre.codeUnique,
             slug: newOffre.slug,
             titre: newOffre.titre,
           },
+        })
+      }
+
+      case 'notify_mission_lost': {
+        // Notifie tous les candidats que la mission est perdue
+        const candidatures = await prisma.candidature.findMany({
+          where: { offreId: offre.id },
+          include: {
+            talent: {
+              include: { user: { select: { email: true } } },
+            },
+          },
+        })
+
+        let notified = 0
+        for (const candidature of candidatures) {
+          await sendMissionLostNotification(
+            candidature.talent.user.email,
+            candidature.talent.prenom,
+            offre.titre
+          )
+
+          await prisma.candidature.update({
+            where: { id: candidature.id },
+            data: { statut: 'MISSION_PERDUE' },
+          })
+          notified++
+        }
+
+        // Met à jour le statut de l'offre
+        await prisma.offre.update({
+          where: { uid },
+          data: { statut: 'FERMEE' },
+        })
+
+        return NextResponse.json({
+          success: true,
+          message: `${notified} candidats notifiés`,
         })
       }
 
