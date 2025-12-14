@@ -43,40 +43,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifie que le SIRET n'existe pas déjà
-    const existingClient = await prisma.client.findUnique({
-      where: { siret },
-    })
+    if (siret) {
+      const existingClient = await prisma.client.findUnique({
+        where: { siret },
+      })
 
-    if (existingClient) {
-      return NextResponse.json(
-        { error: 'Ce SIRET est déjà enregistré' },
-        { status: 400 }
-      )
+      if (existingClient) {
+        return NextResponse.json(
+          { error: 'Ce SIRET est déjà enregistré' },
+          { status: 400 }
+        )
+      }
     }
 
     // Vérifie le SIRET via l'API INSEE
     let siretInfo = null
-    try {
-      siretInfo = await verifySiret(siret)
-      if (!siretInfo) {
-        return NextResponse.json(
-          { error: 'SIRET non trouvé dans la base INSEE' },
-          { status: 400 }
-        )
-      }
-      if (!siretInfo.actif) {
-        return NextResponse.json(
-          { error: 'Cet établissement n\'est plus actif' },
-          { status: 400 }
-        )
-      }
-    } catch (error) {
-      if (process.env.NODE_ENV === 'production') {
-        console.error('Erreur vérification SIRET:', error)
-        return NextResponse.json(
-          { error: 'Impossible de vérifier le SIRET. Réessayez plus tard.' },
-          { status: 500 }
-        )
+    if (siret) {
+      try {
+        siretInfo = await verifySiret(siret)
+        if (!siretInfo) {
+          return NextResponse.json(
+            { error: 'SIRET non trouvé dans la base INSEE' },
+            { status: 400 }
+          )
+        }
+        if (!siretInfo.actif) {
+          return NextResponse.json(
+            { error: 'Cet établissement n\'est plus actif' },
+            { status: 400 }
+          )
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Erreur vérification SIRET:', error)
+          return NextResponse.json(
+            { error: 'Impossible de vérifier le SIRET. Réessayez plus tard.' },
+            { status: 500 }
+          )
+        }
       }
     }
 
