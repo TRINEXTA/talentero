@@ -28,7 +28,7 @@ export async function GET() {
       prisma.offre.count(),
       prisma.candidature.count(),
       prisma.client.count({ where: { statut: 'EN_ATTENTE' } }),
-      prisma.offre.count({ where: { statut: 'EN_ATTENTE' } }),
+      prisma.offre.count({ where: { statut: 'EN_ATTENTE_VALIDATION' } }),
       prisma.candidature.count({ where: { statut: 'NOUVELLE' } }),
     ])
 

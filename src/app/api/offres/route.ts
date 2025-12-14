@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
         experienceMin: data.experienceMin,
         clientId: user.role === 'CLIENT' ? user.clientId : null,
         createdByAdmin: user.role === 'ADMIN',
-        statut: user.role === 'ADMIN' ? 'PUBLIEE' : 'EN_ATTENTE', // Admin publie directement
+        statut: user.role === 'ADMIN' ? 'PUBLIEE' : 'EN_ATTENTE_VALIDATION', // Admin publie directement
         publieLe: user.role === 'ADMIN' ? new Date() : null,
       },
     })
