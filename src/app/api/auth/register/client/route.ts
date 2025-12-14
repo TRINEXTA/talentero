@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 import { registerClientSchema } from '@/lib/validations'
-import { verifySiret } from '@/lib/siret'
 import { sendWelcomeClientEmail } from '@/lib/email'
 import { generateClientCode } from '@/lib/utils'
 
@@ -57,33 +56,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Vérifie le SIRET via l'API INSEE
-    let siretInfo = null
-    if (siret) {
-      try {
-        siretInfo = await verifySiret(siret)
-        if (!siretInfo) {
-          return NextResponse.json(
-            { error: 'SIRET non trouvé dans la base INSEE' },
-            { status: 400 }
-          )
-        }
-        if (!siretInfo.actif) {
-          return NextResponse.json(
-            { error: 'Cet établissement n\'est plus actif' },
-            { status: 400 }
-          )
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === 'production') {
-          console.error('Erreur vérification SIRET:', error)
-          return NextResponse.json(
-            { error: 'Impossible de vérifier le SIRET. Réessayez plus tard.' },
-            { status: 500 }
-          )
-        }
-      }
-    }
+    // Note: La vérification du SIRET se fait manuellement par l'admin via le KBIS
 
     // Hash du mot de passe
     const passwordHash = await hashPassword(password)
@@ -108,15 +81,10 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           codeUnique,
-          raisonSociale: siretInfo?.raisonSociale || raisonSociale,
-          siret,
+          raisonSociale,
+          siret: siret || null,
           siren: siret ? siret.substring(0, 9) : null,
-          codeAPE: siretInfo?.codeAPE,
-          formeJuridique: siretInfo?.formeJuridique,
-          adresse: siretInfo?.adresse ? `${siretInfo.adresse.numero} ${siretInfo.adresse.rue}`.trim() : null,
-          codePostal: siretInfo?.adresse?.codePostal,
-          ville: siretInfo?.adresse?.ville,
-          statut: 'EN_ATTENTE', // En attente de validation TRINEXTA
+          statut: 'EN_ATTENTE', // En attente de validation TRINEXTA via KBIS
           valideParAdmin: false,
         },
       })
@@ -142,7 +110,7 @@ export async function POST(request: NextRequest) {
           action: 'REGISTER_CLIENT',
           entite: 'Client',
           entiteId: client.id,
-          details: { siretVerifie: !!siretInfo, raisonSociale },
+          details: { codeUnique, raisonSociale },
         },
       })
 

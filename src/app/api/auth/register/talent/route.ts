@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword, createSession } from '@/lib/auth'
 import { registerTalentSchema } from '@/lib/validations'
-import { verifySiret } from '@/lib/siret'
 import { sendWelcomeTalentEmail } from '@/lib/email'
+import { generateTalentCode } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,44 +32,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Vérifie que le SIRET n'existe pas déjà
-    const existingTalent = await prisma.talent.findUnique({
-      where: { siret },
-    })
+    // Vérifie que le SIRET n'existe pas déjà (si fourni)
+    if (siret) {
+      const existingTalent = await prisma.talent.findUnique({
+        where: { siret },
+      })
 
-    if (existingTalent) {
-      return NextResponse.json(
-        { error: 'Ce SIRET est déjà enregistré' },
-        { status: 400 }
-      )
-    }
-
-    // Vérifie le SIRET via l'API INSEE
-    let siretInfo = null
-    try {
-      siretInfo = await verifySiret(siret)
-      if (!siretInfo) {
+      if (existingTalent) {
         return NextResponse.json(
-          { error: 'SIRET non trouvé dans la base INSEE' },
+          { error: 'Ce SIRET est déjà enregistré' },
           { status: 400 }
         )
       }
-      if (!siretInfo.actif) {
-        return NextResponse.json(
-          { error: 'Cet établissement n\'est plus actif' },
-          { status: 400 }
-        )
-      }
-    } catch (error) {
-      // En mode dev, on peut ignorer l'erreur INSEE
-      if (process.env.NODE_ENV === 'production') {
-        console.error('Erreur vérification SIRET:', error)
-        return NextResponse.json(
-          { error: 'Impossible de vérifier le SIRET. Réessayez plus tard.' },
-          { status: 500 }
-        )
-      }
     }
+
+    // Note: La vérification du SIRET se fait manuellement par l'admin via le KBIS
 
     // Hash du mot de passe
     const passwordHash = await hashPassword(password)
@@ -86,25 +63,21 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // Génère le code unique talent
+      const codeUnique = await generateTalentCode()
+
       // Crée le profil talent
       const talent = await tx.talent.create({
         data: {
           userId: user.id,
+          codeUnique,
           prenom,
           nom,
           telephone,
-          siret,
-          siren: siret.substring(0, 9),
-          raisonSociale: siretInfo?.raisonSociale || `${prenom} ${nom}`,
-          dateCreationEntreprise: siretInfo?.dateCreation ? new Date(siretInfo.dateCreation) : null,
-          codeAPE: siretInfo?.codeAPE,
-          libelleAPE: siretInfo?.libelleAPE,
-          formeJuridique: siretInfo?.formeJuridique,
-          siretVerifie: !!siretInfo,
-          siretVerifieLe: siretInfo ? new Date() : null,
-          adresse: siretInfo?.adresse ? `${siretInfo.adresse.numero} ${siretInfo.adresse.rue}`.trim() : null,
-          codePostal: siretInfo?.adresse?.codePostal,
-          ville: siretInfo?.adresse?.ville,
+          siret: siret || null,
+          siren: siret ? siret.substring(0, 9) : null,
+          raisonSociale: `${prenom} ${nom}`,
+          siretVerifie: false, // Sera vérifié par l'admin via KBIS
         },
       })
 
@@ -115,7 +88,7 @@ export async function POST(request: NextRequest) {
           action: 'REGISTER_TALENT',
           entite: 'Talent',
           entiteId: talent.id,
-          details: { siretVerifie: !!siretInfo },
+          details: { codeUnique },
         },
       })
 
