@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
         await prisma.notification.create({
           data: {
             userId: admin.id,
-            type: 'NOUVELLE_OFFRE',
+            type: 'SYSTEME',
             titre: 'Nouvelle offre à valider',
             message: `L'offre "${data.titre}" est en attente de validation.`,
             lien: `/admin/offres/${offre.uid}`,
