@@ -226,15 +226,23 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Crée une notification pour le client/admin
-    await prisma.notification.create({
-      data: {
-        type: 'NOUVELLE_CANDIDATURE',
-        titre: 'Nouvelle candidature',
-        message: `Nouvelle candidature pour "${offre.titre}" (Score: ${matchResult.score}%)`,
-        lien: `/c/candidatures/${candidature.uid}`,
-      },
+    // Crée une notification pour les admins
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN', isActive: true },
+      select: { id: true },
     })
+
+    for (const admin of admins) {
+      await prisma.notification.create({
+        data: {
+          userId: admin.id,
+          type: 'NOUVELLE_CANDIDATURE',
+          titre: 'Nouvelle candidature',
+          message: `Nouvelle candidature pour "${offre.titre}" (Score: ${matchResult.score}%)`,
+          lien: `/admin/candidatures/${candidature.uid}`,
+        },
+      })
+    }
 
     return NextResponse.json({
       success: true,

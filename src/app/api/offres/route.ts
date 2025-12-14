@@ -178,14 +178,22 @@ export async function POST(request: NextRequest) {
 
     // Si créée par un client, notifier les admins
     if (user.role === 'CLIENT') {
-      await prisma.notification.create({
-        data: {
-          type: 'NOUVELLE_OFFRE',
-          titre: 'Nouvelle offre à valider',
-          message: `L'offre "${data.titre}" est en attente de validation.`,
-          lien: `/admin/offres/${offre.uid}`,
-        },
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN', isActive: true },
+        select: { id: true },
       })
+
+      for (const admin of admins) {
+        await prisma.notification.create({
+          data: {
+            userId: admin.id,
+            type: 'NOUVELLE_OFFRE',
+            titre: 'Nouvelle offre à valider',
+            message: `L'offre "${data.titre}" est en attente de validation.`,
+            lien: `/admin/offres/${offre.uid}`,
+          },
+        })
+      }
     }
 
     return NextResponse.json({
