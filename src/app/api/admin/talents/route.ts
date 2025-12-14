@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
 import { parseCV } from '@/lib/cv-parser'
 import { sendAccountActivationEmail } from '@/lib/microsoft-graph'
+import { generateTalentCode } from '@/lib/utils'
 import crypto from 'crypto'
 
 // GET - Liste des talents avec filtres
@@ -148,10 +149,14 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // Génère le code unique talent
+      const codeUnique = await generateTalentCode()
+
       // Crée le profil talent avec les données parsées
       const talent = await tx.talent.create({
         data: {
           userId: user.id,
+          codeUnique,
           prenom: parsedData.prenom || 'Prénom',
           nom: parsedData.nom || 'Nom',
           telephone: parsedData.telephone,
