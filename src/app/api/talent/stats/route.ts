@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       prisma.candidature.count({
         where: {
           talentId: user.talentId,
-          statut: { in: ['NOUVELLE', 'VUE', 'EN_REVUE', 'SHORTLIST', 'PROPOSEE_CLIENT', 'ENTRETIEN'] },
+          statut: { in: ['NOUVELLE', 'VUE', 'EN_REVUE', 'PRE_SELECTIONNE', 'SHORTLIST', 'PROPOSEE_CLIENT', 'ENTRETIEN_DEMANDE', 'ENTRETIEN_PLANIFIE', 'ENTRETIEN_REALISE'] },
         },
       }),
 

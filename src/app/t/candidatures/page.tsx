@@ -95,7 +95,7 @@ export default function TalentCandidaturesPage() {
   // Compteurs par statut
   const stats = {
     total: candidatures.length,
-    enCours: candidatures.filter(c => ['NOUVELLE', 'VUE', 'EN_REVUE', 'SHORTLIST', 'PROPOSEE_CLIENT', 'ENTRETIEN'].includes(c.statut)).length,
+    enCours: candidatures.filter(c => ['NOUVELLE', 'VUE', 'EN_REVUE', 'PRE_SELECTIONNE', 'SHORTLIST', 'PROPOSEE_CLIENT', 'ENTRETIEN_DEMANDE', 'ENTRETIEN_PLANIFIE', 'ENTRETIEN_REALISE'].includes(c.statut)).length,
     acceptees: candidatures.filter(c => c.statut === 'ACCEPTEE').length,
     refusees: candidatures.filter(c => c.statut === 'REFUSEE').length,
   }
