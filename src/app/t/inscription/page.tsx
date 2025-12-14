@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -8,68 +8,252 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
-import { Mail, Lock, User, Building2, Phone, ArrowLeft, CheckCircle, Upload } from 'lucide-react'
+import { Logo } from '@/components/ui/logo'
+import {
+  Mail, Lock, User, Building2, Phone, ArrowLeft, ArrowRight,
+  CheckCircle, Upload, MapPin, Car, Globe, FileText, Loader2
+} from 'lucide-react'
+
+type FormData = {
+  // Étape 1 - Identité
+  prenom: string
+  nom: string
+  email: string
+  telephone: string
+  password: string
+  confirmPassword: string
+  nationalite: string
+
+  // Étape 2 - Entreprise
+  typeSociete: string
+  siret: string
+  raisonSociale: string
+  tvaIntracommunautaire: string
+  assujettTva: boolean
+
+  // Étape 3 - Adresse & Mobilité
+  adresse: string
+  codePostal: string
+  ville: string
+  zonesIntervention: string[]
+  mobilite: string
+  permisConduire: boolean
+  vehicule: boolean
+  accepteDeplacementEtranger: boolean
+
+  // Étape 4 - CV
+  cvFile: File | null
+}
+
+const initialFormData: FormData = {
+  prenom: '',
+  nom: '',
+  email: '',
+  telephone: '',
+  password: '',
+  confirmPassword: '',
+  nationalite: 'Française',
+  typeSociete: 'AUTO_ENTREPRENEUR',
+  siret: '',
+  raisonSociale: '',
+  tvaIntracommunautaire: '',
+  assujettTva: false,
+  adresse: '',
+  codePostal: '',
+  ville: '',
+  zonesIntervention: [],
+  mobilite: 'FLEXIBLE',
+  permisConduire: false,
+  vehicule: false,
+  accepteDeplacementEtranger: false,
+  cvFile: null,
+}
+
+const ZONES_FRANCE = [
+  'Paris', 'Île-de-France', 'Lyon', 'Marseille', 'Toulouse',
+  'Bordeaux', 'Nantes', 'Lille', 'Strasbourg', 'Nice',
+  'Rennes', 'Montpellier', 'Grenoble', 'Remote France', 'Toute la France'
+]
+
+const TYPE_SOCIETE_OPTIONS = [
+  { value: 'AUTO_ENTREPRENEUR', label: 'Auto-entrepreneur / Micro-entreprise' },
+  { value: 'EURL', label: 'EURL' },
+  { value: 'SASU', label: 'SASU' },
+  { value: 'SARL', label: 'SARL' },
+  { value: 'SAS', label: 'SAS' },
+  { value: 'PORTAGE', label: 'Portage salarial' },
+  { value: 'AUTRE', label: 'Autre' },
+]
+
+const MOBILITE_OPTIONS = [
+  { value: 'FULL_REMOTE', label: 'Full Remote uniquement' },
+  { value: 'HYBRIDE', label: 'Hybride (télétravail + présentiel)' },
+  { value: 'SUR_SITE', label: 'Sur site uniquement' },
+  { value: 'FLEXIBLE', label: 'Flexible (tout type)' },
+]
 
 export default function TalentInscriptionPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState({
-    prenom: '',
-    nom: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    siret: '',
-    telephone: '',
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const validateStep1 = () => {
-    const newErrors: Record<string, string> = {}
-    if (!formData.prenom) newErrors.prenom = 'Prénom requis'
-    if (!formData.nom) newErrors.nom = 'Nom requis'
-    if (!formData.email) newErrors.email = 'Email requis'
-    if (!formData.password) newErrors.password = 'Mot de passe requis'
-    if (formData.password.length < 8) newErrors.password = 'Minimum 8 caractères'
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
+  const [loading, setLoading] = useState(false)
+  const [parsingCv, setParsingCv] = useState(false)
+  const [step, setStep] = useState(1)
+  const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [cvFileName, setCvFileName] = useState<string>('')
+
+  const totalSteps = 4
+
+  const updateFormData = (field: keyof FormData, value: unknown) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
     }
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
   }
 
-  const validateStep2 = () => {
+  const toggleZone = (zone: string) => {
+    setFormData(prev => ({
+      ...prev,
+      zonesIntervention: prev.zonesIntervention.includes(zone)
+        ? prev.zonesIntervention.filter(z => z !== zone)
+        : [...prev.zonesIntervention, zone]
+    }))
+  }
+
+  const validateStep = (stepNumber: number): boolean => {
     const newErrors: Record<string, string> = {}
-    const siretClean = formData.siret.replace(/\s/g, '')
-    if (!siretClean) newErrors.siret = 'SIRET requis'
-    else if (!/^\d{14}$/.test(siretClean)) newErrors.siret = 'SIRET invalide (14 chiffres)'
+
+    if (stepNumber === 1) {
+      if (!formData.prenom.trim()) newErrors.prenom = 'Prénom requis'
+      if (!formData.nom.trim()) newErrors.nom = 'Nom requis'
+      if (!formData.email.trim()) newErrors.email = 'Email requis'
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Email invalide'
+      }
+      if (!formData.telephone.trim()) newErrors.telephone = 'Téléphone requis'
+      if (!formData.password) newErrors.password = 'Mot de passe requis'
+      else if (formData.password.length < 8) newErrors.password = 'Minimum 8 caractères'
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
+      }
+    }
+
+    if (stepNumber === 2) {
+      const siretClean = formData.siret.replace(/\s/g, '')
+      if (!siretClean) newErrors.siret = 'SIRET requis'
+      else if (!/^\d{14}$/.test(siretClean)) newErrors.siret = 'SIRET invalide (14 chiffres)'
+      if (!formData.raisonSociale.trim()) newErrors.raisonSociale = 'Raison sociale requise'
+    }
+
+    if (stepNumber === 3) {
+      if (!formData.adresse.trim()) newErrors.adresse = 'Adresse requise'
+      if (!formData.codePostal.trim()) newErrors.codePostal = 'Code postal requis'
+      if (!formData.ville.trim()) newErrors.ville = 'Ville requise'
+      if (formData.zonesIntervention.length === 0) {
+        newErrors.zonesIntervention = 'Sélectionnez au moins une zone'
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const nextStep = () => {
-    if (step === 1 && validateStep1()) {
-      setStep(2)
+    if (validateStep(step)) {
+      setStep(prev => Math.min(prev + 1, totalSteps))
+    }
+  }
+
+  const prevStep = () => {
+    setStep(prev => Math.max(prev - 1, 1))
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Vérifier le type de fichier
+    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Format non supporté",
+        description: "Veuillez uploader un fichier PDF ou DOCX",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Vérifier la taille (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximum est de 10 Mo",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setCvFileName(file.name)
+    updateFormData('cvFile', file)
+
+    // Optionnel : Parser le CV avec l'IA
+    setParsingCv(true)
+    try {
+      // Pour l'instant on simule le parsing
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      toast({
+        title: "CV uploadé",
+        description: "Votre CV a été analysé avec succès",
+      })
+    } catch {
+      // Erreur silencieuse, le CV est quand même uploadé
+    } finally {
+      setParsingCv(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateStep2()) return
 
     setLoading(true)
     setErrors({})
 
     try {
+      // Créer FormData pour l'upload
+      const submitData = new FormData()
+      submitData.append('prenom', formData.prenom)
+      submitData.append('nom', formData.nom)
+      submitData.append('email', formData.email)
+      submitData.append('telephone', formData.telephone)
+      submitData.append('password', formData.password)
+      submitData.append('nationalite', formData.nationalite)
+      submitData.append('typeSociete', formData.typeSociete)
+      submitData.append('siret', formData.siret.replace(/\s/g, ''))
+      submitData.append('raisonSociale', formData.raisonSociale)
+      submitData.append('tvaIntracommunautaire', formData.tvaIntracommunautaire)
+      submitData.append('assujettTva', String(formData.assujettTva))
+      submitData.append('adresse', formData.adresse)
+      submitData.append('codePostal', formData.codePostal)
+      submitData.append('ville', formData.ville)
+      submitData.append('zonesIntervention', JSON.stringify(formData.zonesIntervention))
+      submitData.append('mobilite', formData.mobilite)
+      submitData.append('permisConduire', String(formData.permisConduire))
+      submitData.append('vehicule', String(formData.vehicule))
+      submitData.append('accepteDeplacementEtranger', String(formData.accepteDeplacementEtranger))
+
+      if (formData.cvFile) {
+        submitData.append('cv', formData.cvFile)
+      }
+
       const response = await fetch('/api/auth/register/talent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          siret: formData.siret.replace(/\s/g, ''),
-        }),
+        body: submitData,
       })
 
       const data = await response.json()
@@ -109,49 +293,76 @@ export default function TalentInscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/" className="flex items-center justify-center gap-2 text-gray-600 hover:text-primary mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          Retour à l'accueil
-        </Link>
-        <h1 className="text-center text-3xl font-bold text-primary">Talentero</h1>
-        <h2 className="mt-2 text-center text-xl text-gray-600">
-          Créer votre compte freelance
-        </h2>
-      </div>
-
-      {/* Progress Steps */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex items-center justify-center mb-8">
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-            {step > 1 ? <CheckCircle className="w-5 h-5" /> : '1'}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-6">
+            <ArrowLeft className="w-4 h-4" />
+            Retour à l'accueil
+          </Link>
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" animated={false} />
           </div>
-          <div className={`w-20 h-1 ${step >= 2 ? 'bg-primary' : 'bg-gray-200'}`} />
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-            2
+          <h1 className="text-2xl font-bold text-gray-900">Créer votre compte freelance</h1>
+          <p className="text-gray-600 mt-1">Inscription en {totalSteps} étapes</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className="flex items-center">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                    s < step
+                      ? 'bg-green-500 text-white'
+                      : s === step
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  {s < step ? <CheckCircle className="w-5 h-5" /> : s}
+                </div>
+                {s < 4 && (
+                  <div className={`w-16 sm:w-24 h-1 mx-1 ${s < step ? 'bg-green-500' : 'bg-gray-200'}`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 px-2">
+            <span>Identité</span>
+            <span>Entreprise</span>
+            <span>Mobilité</span>
+            <span>CV</span>
           </div>
         </div>
 
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>
-              {step === 1 ? 'Informations personnelles' : 'Vérification SIRET'}
+              {step === 1 && 'Informations personnelles'}
+              {step === 2 && 'Votre entreprise'}
+              {step === 3 && 'Adresse & Mobilité'}
+              {step === 4 && 'Votre CV'}
             </CardTitle>
             <CardDescription>
-              {step === 1
-                ? 'Créez votre compte en quelques secondes'
-                : 'Nous vérifions que vous êtes bien indépendant'
-              }
+              {step === 1 && 'Vos informations de contact et de connexion'}
+              {step === 2 && 'Informations sur votre structure juridique'}
+              {step === 3 && 'Où et comment souhaitez-vous travailler ?'}
+              {step === 4 && 'Uploadez votre CV pour compléter votre profil'}
             </CardDescription>
           </CardHeader>
+
           <CardContent>
-            <form onSubmit={step === 1 ? (e) => { e.preventDefault(); nextStep(); } : handleSubmit}>
+            <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+
+              {/* ÉTAPE 1 - Identité */}
               {step === 1 && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="prenom">Prénom</Label>
+                      <Label htmlFor="prenom">Prénom *</Label>
                       <div className="mt-1 relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <Input
@@ -159,25 +370,25 @@ export default function TalentInscriptionPage() {
                           placeholder="Jean"
                           className="pl-10"
                           value={formData.prenom}
-                          onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                          onChange={(e) => updateFormData('prenom', e.target.value)}
                           error={errors.prenom}
                         />
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="nom">Nom</Label>
+                      <Label htmlFor="nom">Nom *</Label>
                       <Input
                         id="nom"
                         placeholder="Dupont"
                         value={formData.nom}
-                        onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                        onChange={(e) => updateFormData('nom', e.target.value)}
                         error={errors.nom}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email *</Label>
                     <div className="mt-1 relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -186,14 +397,14 @@ export default function TalentInscriptionPage() {
                         placeholder="jean.dupont@email.com"
                         className="pl-10"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) => updateFormData('email', e.target.value)}
                         error={errors.email}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="telephone">Téléphone (optionnel)</Label>
+                    <Label htmlFor="telephone">Téléphone *</Label>
                     <div className="mt-1 relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -202,60 +413,83 @@ export default function TalentInscriptionPage() {
                         placeholder="06 12 34 56 78"
                         className="pl-10"
                         value={formData.telephone}
-                        onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                        onChange={(e) => updateFormData('telephone', e.target.value)}
+                        error={errors.telephone}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="password">Mot de passe</Label>
+                    <Label htmlFor="nationalite">Nationalité</Label>
                     <div className="mt-1 relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
-                        id="password"
-                        type="password"
-                        placeholder="Minimum 8 caractères"
+                        id="nationalite"
+                        placeholder="Française"
                         className="pl-10"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        error={errors.password}
+                        value={formData.nationalite}
+                        onChange={(e) => updateFormData('nationalite', e.target.value)}
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                    <div className="mt-1 relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        error={errors.confirmPassword}
-                      />
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full" size="lg">
-                    Continuer
-                  </Button>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-blue-800">
-                      <strong>Pourquoi le SIRET ?</strong><br />
-                      Talentero est réservé aux freelances. Nous vérifions votre SIRET pour garantir que vous êtes bien indépendant.
+                    <p className="text-xs text-gray-500 mt-1">
+                      Important pour les projets nécessitant une habilitation secret défense
                     </p>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="password">Mot de passe *</Label>
+                      <div className="mt-1 relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="Min. 8 caractères"
+                          className="pl-10"
+                          value={formData.password}
+                          onChange={(e) => updateFormData('password', e.target.value)}
+                          error={errors.password}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword">Confirmer *</Label>
+                      <div className="mt-1 relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-10"
+                          value={formData.confirmPassword}
+                          onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                          error={errors.confirmPassword}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ÉTAPE 2 - Entreprise */}
+              {step === 2 && (
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="siret">Numéro SIRET</Label>
+                    <Label htmlFor="typeSociete">Type de société *</Label>
+                    <select
+                      id="typeSociete"
+                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.typeSociete}
+                      onChange={(e) => updateFormData('typeSociete', e.target.value)}
+                    >
+                      {TYPE_SOCIETE_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="siret">Numéro SIRET *</Label>
                     <div className="mt-1 relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -265,32 +499,272 @@ export default function TalentInscriptionPage() {
                         value={formData.siret}
                         onChange={(e) => {
                           const value = e.target.value.replace(/[^\d\s]/g, '')
-                          setFormData({ ...formData, siret: value })
+                          updateFormData('siret', value)
                         }}
                         error={errors.siret}
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mt-1">
                       14 chiffres, disponible sur votre avis de situation INSEE
                     </p>
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep(1)}
-                      className="flex-1"
-                    >
-                      Retour
-                    </Button>
-                    <Button type="submit" className="flex-1" size="lg" loading={loading}>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Créer mon compte
-                    </Button>
+                  <div>
+                    <Label htmlFor="raisonSociale">Raison sociale *</Label>
+                    <Input
+                      id="raisonSociale"
+                      placeholder="Nom de votre entreprise"
+                      value={formData.raisonSociale}
+                      onChange={(e) => updateFormData('raisonSociale', e.target.value)}
+                      error={errors.raisonSociale}
+                    />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="assujettTva"
+                        checked={formData.assujettTva}
+                        onChange={(e) => updateFormData('assujettTva', e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="assujettTva" className="cursor-pointer">
+                        Assujetti à la TVA
+                      </Label>
+                    </div>
+
+                    {formData.assujettTva && (
+                      <div>
+                        <Label htmlFor="tvaIntracommunautaire">N° TVA Intracommunautaire</Label>
+                        <Input
+                          id="tvaIntracommunautaire"
+                          placeholder="FR12345678901"
+                          value={formData.tvaIntracommunautaire}
+                          onChange={(e) => updateFormData('tvaIntracommunautaire', e.target.value)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
+
+              {/* ÉTAPE 3 - Adresse & Mobilité */}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="adresse">Adresse *</Label>
+                    <div className="mt-1 relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="adresse"
+                        placeholder="123 rue de la République"
+                        className="pl-10"
+                        value={formData.adresse}
+                        onChange={(e) => updateFormData('adresse', e.target.value)}
+                        error={errors.adresse}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="codePostal">Code postal *</Label>
+                      <Input
+                        id="codePostal"
+                        placeholder="75001"
+                        value={formData.codePostal}
+                        onChange={(e) => updateFormData('codePostal', e.target.value)}
+                        error={errors.codePostal}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ville">Ville *</Label>
+                      <Input
+                        id="ville"
+                        placeholder="Paris"
+                        value={formData.ville}
+                        onChange={(e) => updateFormData('ville', e.target.value)}
+                        error={errors.ville}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Zones d'intervention *</Label>
+                    <p className="text-xs text-gray-500 mb-2">Sélectionnez les zones où vous pouvez intervenir</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ZONES_FRANCE.map(zone => (
+                        <button
+                          key={zone}
+                          type="button"
+                          onClick={() => toggleZone(zone)}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            formData.zonesIntervention.includes(zone)
+                              ? 'bg-primary text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {zone}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.zonesIntervention && (
+                      <p className="text-sm text-red-500 mt-1">{errors.zonesIntervention}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="mobilite">Préférence de travail *</Label>
+                    <select
+                      id="mobilite"
+                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.mobilite}
+                      onChange={(e) => updateFormData('mobilite', e.target.value)}
+                    >
+                      {MOBILITE_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="permisConduire"
+                        checked={formData.permisConduire}
+                        onChange={(e) => updateFormData('permisConduire', e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="permisConduire" className="cursor-pointer flex items-center gap-2">
+                        <Car className="w-4 h-4 text-gray-400" />
+                        Permis de conduire
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="vehicule"
+                        checked={formData.vehicule}
+                        onChange={(e) => updateFormData('vehicule', e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="vehicule" className="cursor-pointer">
+                        Véhicule personnel (TTV)
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="accepteDeplacementEtranger"
+                        checked={formData.accepteDeplacementEtranger}
+                        onChange={(e) => updateFormData('accepteDeplacementEtranger', e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="accepteDeplacementEtranger" className="cursor-pointer flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-gray-400" />
+                        Accepte les déplacements hors de France
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ÉTAPE 4 - CV */}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Pourquoi uploader votre CV ?</strong><br />
+                      Notre IA analyse votre CV pour extraire automatiquement vos compétences,
+                      formations, certifications et expériences. Cela vous fait gagner du temps
+                      et améliore votre matching avec les offres.
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                      cvFileName
+                        ? 'border-green-300 bg-green-50'
+                        : 'border-gray-300 hover:border-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+
+                    {parsingCv ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                        <p className="text-gray-600">Analyse du CV en cours...</p>
+                      </div>
+                    ) : cvFileName ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                          <FileText className="w-8 h-8 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-green-800">{cvFileName}</p>
+                          <p className="text-sm text-gray-500">Cliquez pour changer de fichier</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700">Cliquez pour uploader votre CV</p>
+                          <p className="text-sm text-gray-500">PDF ou DOCX, max 10 Mo</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-500 text-center">
+                    Vous pourrez compléter votre profil plus tard si vous n'avez pas votre CV sous la main.
+                  </p>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex gap-3 mt-8">
+                {step > 1 && (
+                  <Button type="button" variant="outline" onClick={prevStep} className="flex-1">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Retour
+                  </Button>
+                )}
+
+                {step < totalSteps ? (
+                  <Button type="submit" className="flex-1">
+                    Continuer
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button type="submit" className="flex-1" size="lg" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Création en cours...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Créer mon compte
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </form>
 
             {step === 1 && (

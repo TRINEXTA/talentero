@@ -65,36 +65,48 @@ model Talent {
   uid                   String    @unique @default(uuid())
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                Int       @unique
-  
+
   // Identité
   prenom                String
   nom                   String
   telephone             String?
   photoUrl              String?
-  
-  // SIRET - Vérification Freelance
+  nationalite           String?   // Pour les projets secret défense
+
+  // Entreprise / SIRET
   siret                 String    @unique
   siren                 String
   raisonSociale         String
   dateCreationEntreprise DateTime?
   codeAPE               String?
   libelleAPE            String?
-  formeJuridique        String?
+  formeJuridique        String?   // SASU, EURL, Auto-entrepreneur, etc.
+  typeSociete           TypeSociete @default(AUTO_ENTREPRENEUR)
   siretVerifie          Boolean   @default(false)
   siretVerifieLe        DateTime?
-  
+
+  // TVA
+  tvaIntracommunautaire String?
+  assujettTva           Boolean   @default(false)
+
   // Adresse
   adresse               String?
   codePostal            String?
   ville                 String?
   pays                  String    @default("France")
-  
+
+  // Zone d'intervention et mobilité
+  zonesIntervention     String[]  // ["Paris", "Île-de-France", "Lyon"]
+  permisConduire        Boolean   @default(false)
+  vehicule              Boolean   @default(false)  // TTV - Transport personnel
+  accepteDeplacementEtranger Boolean @default(false)
+
   // Profil Professionnel
   titrePoste            String?   // "Développeur Full Stack Java/Angular"
   bio                   String?   // Présentation courte
   competences           String[]  // ["Java", "Spring", "Angular", "PostgreSQL"]
   anneesExperience      Int       @default(0)
-  
+
   // Conditions de travail
   tjm                   Int?      // TJM souhaité
   tjmMin                Int?      // TJM minimum acceptable
@@ -103,23 +115,32 @@ model Talent {
   zonesGeographiques    String[]  // ["Paris", "Île-de-France", "Remote"]
   disponibilite         Disponibilite @default(IMMEDIATE)
   disponibleLe          DateTime?
-  
+
   // Documents
   cvUrl                 String?
   cvOriginalName        String?
-  
+  cvParsedData          Json?     // Données extraites du CV par l'IA
+
+  // Compétences détaillées (extraites du CV)
+  logiciels             String[]  // ["VS Code", "IntelliJ", "Docker Desktop"]
+  frameworks            String[]  // ["React", "Angular", "Spring Boot"]
+  baseDonnees           String[]  // ["PostgreSQL", "MongoDB", "Redis"]
+  methodologies         String[]  // ["Agile", "Scrum", "DevOps"]
+  outils                String[]  // ["Git", "Jira", "Confluence"]
+
   // Extras
   softSkills            String[]
   langues               String[]  // ["Français:Natif", "Anglais:Courant"]
+  loisirs               String[]  // Centres d'intérêt
   certifications        String[]
   linkedinUrl           String?
   githubUrl             String?
   portfolioUrl          String?
-  
+
   // Statut
   statut                TalentStatus @default(ACTIF)
   visiblePublic         Boolean   @default(true)
-  
+
   // Relations
   experiences           Experience[]
   formations            Formation[]
@@ -128,13 +149,23 @@ model Talent {
   alertes               Alerte[]
   messagesEnvoyes       Message[] @relation("MessagesSent")
   messagesRecus         Message[] @relation("MessagesReceived")
-  
+
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-  
+
   @@index([competences])
   @@index([ville])
   @@index([disponibilite])
+}
+
+enum TypeSociete {
+  AUTO_ENTREPRENEUR
+  EURL
+  SASU
+  SARL
+  SAS
+  PORTAGE
+  AUTRE
 }
 
 enum Mobilite {
