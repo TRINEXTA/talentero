@@ -4,7 +4,7 @@ import { ChevronLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Mentions Légales | Talentero',
-  description: 'Mentions légales de la plateforme Talentero, opérée par TRINEXTA',
+  description: 'Mentions légales de la plateforme Talentero, opérée par TRINEXTA by TrusTech IT Support',
 }
 
 export default function MentionsLegalesPage() {
@@ -31,31 +31,35 @@ export default function MentionsLegalesPage() {
           <div className="prose prose-slate max-w-none">
             <h2>1. Éditeur du site</h2>
             <p>
-              Le site <strong>talentero.io</strong> est édité par :
+              Le site <strong>talentero.fr</strong> est édité par :
             </p>
-            <div className="bg-gray-50 p-4 rounded-lg my-4">
-              <p className="mb-1"><strong>TRINEXTA</strong></p>
-              <p className="mb-1">Forme juridique : [À compléter]</p>
-              <p className="mb-1">Capital social : [À compléter]</p>
-              <p className="mb-1">Siège social : [À compléter]</p>
-              <p className="mb-1">SIRET : [À compléter]</p>
-              <p className="mb-1">RCS : [À compléter]</p>
-              <p className="mb-1">N° TVA Intracommunautaire : [À compléter]</p>
+            <div className="bg-gray-50 p-6 rounded-lg my-4 not-prose">
+              <p className="font-semibold text-lg text-gray-900 mb-3">TRINEXTA by TrusTech IT Support</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
+                <p><span className="font-medium">Forme juridique :</span> Société par actions simplifiée (SAS)</p>
+                <p><span className="font-medium">Capital social :</span> 300 €</p>
+                <p><span className="font-medium">Siège social :</span> 74B Boulevard Henri Dunant, 91100 Corbeil-Essonnes</p>
+                <p><span className="font-medium">SIRET :</span> 942 020 082 00015</p>
+                <p><span className="font-medium">Code NAF/APE :</span> 6202A - Conseil en systèmes et logiciels informatiques</p>
+                <p><span className="font-medium">N° TVA Intracommunautaire :</span> FR81942020082</p>
+              </div>
             </div>
             <p>
-              <strong>Directeur de la publication :</strong> [Nom du dirigeant]<br />
-              <strong>Email :</strong> contact@trinexta.fr<br />
-              <strong>Téléphone :</strong> [À compléter]
+              <strong>Directeur de la publication :</strong> Le représentant légal de la société<br />
+              <strong>Email :</strong> <a href="mailto:contact@trinexta.fr" className="text-primary hover:underline">contact@trinexta.fr</a><br />
+              <strong>Téléphone :</strong> 09 78 25 07 46
             </p>
 
             <h2>2. Hébergement</h2>
             <p>Le site est hébergé par :</p>
-            <div className="bg-gray-50 p-4 rounded-lg my-4">
-              <p className="mb-1"><strong>OVH SAS</strong></p>
-              <p className="mb-1">2 rue Kellermann</p>
-              <p className="mb-1">59100 Roubaix - France</p>
-              <p className="mb-1">Téléphone : 1007</p>
-              <p>Site web : www.ovhcloud.com</p>
+            <div className="bg-gray-50 p-6 rounded-lg my-4 not-prose">
+              <p className="font-semibold text-gray-900 mb-2">OVH SAS</p>
+              <div className="text-sm text-gray-700 space-y-1">
+                <p>2 rue Kellermann</p>
+                <p>59100 Roubaix - France</p>
+                <p>Téléphone : 1007</p>
+                <p>Site web : <a href="https://www.ovhcloud.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.ovhcloud.com</a></p>
+              </div>
             </div>
 
             <h2>3. Propriété intellectuelle</h2>
@@ -89,7 +93,7 @@ export default function MentionsLegalesPage() {
             </p>
             <p>
               <strong>Délégué à la Protection des Données (DPO) :</strong><br />
-              Email : dpo@trinexta.fr
+              Email : <a href="mailto:dpo@trinexta.fr" className="text-primary hover:underline">dpo@trinexta.fr</a>
             </p>
 
             <h2>5. Cookies</h2>
@@ -134,7 +138,7 @@ export default function MentionsLegalesPage() {
             <p>
               Les présentes mentions légales sont régies par le droit français.
               Tout litige relatif à l'utilisation du site sera soumis à la compétence
-              exclusive des tribunaux français.
+              exclusive des tribunaux français du ressort du siège social de TRINEXTA.
             </p>
 
             <h2>9. Contact</h2>
@@ -144,12 +148,13 @@ export default function MentionsLegalesPage() {
             </p>
             <ul>
               <li>Par email : <a href="mailto:contact@trinexta.fr" className="text-primary hover:underline">contact@trinexta.fr</a></li>
-              <li>Par courrier : [Adresse à compléter]</li>
+              <li>Par téléphone : 09 78 25 07 46</li>
+              <li>Par courrier : TRINEXTA - 74B Boulevard Henri Dunant, 91100 Corbeil-Essonnes</li>
             </ul>
 
-            <div className="mt-12 p-6 bg-gray-50 rounded-lg">
-              <p className="font-medium text-gray-900 mb-2">Documents juridiques :</p>
-              <ul className="text-sm text-gray-600 space-y-1">
+            <div className="mt-12 p-6 bg-gray-50 rounded-lg not-prose">
+              <p className="font-medium text-gray-900 mb-3">Documents juridiques :</p>
+              <ul className="text-sm text-gray-600 space-y-2">
                 <li>
                   <Link href="/cgu" className="text-primary hover:underline">
                     Conditions Générales d'Utilisation

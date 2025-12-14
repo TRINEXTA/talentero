@@ -28,7 +28,7 @@ export default function CGUPage() {
             Conditions Générales d'Utilisation
           </h1>
           <p className="text-gray-500 mb-8">
-            Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            Dernière mise à jour : 14 décembre 2024
           </p>
 
           <div className="prose prose-slate max-w-none">
@@ -37,7 +37,9 @@ export default function CGUPage() {
               Talentero est une plateforme de mise en relation entre professionnels du secteur
               informatique (ci-après "Talents" ou "Freelances") et entreprises à la recherche
               de compétences IT (ci-après "Clients"). La plateforme est éditée et opérée par
-              la société TRINEXTA.
+              la société TRINEXTA by TrusTech IT Support, SAS au capital de 300€, immatriculée
+              sous le numéro SIRET 942 020 082 00015, dont le siège social est situé au
+              74B Boulevard Henri Dunant, 91100 Corbeil-Essonnes.
             </p>
 
             <h2>Article 2 - Acceptation des conditions</h2>

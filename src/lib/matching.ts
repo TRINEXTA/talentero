@@ -1,11 +1,12 @@
 /**
  * Service de Matching IA avec Claude
  * Calcule automatiquement les correspondances entre talents et offres
+ * Génère des feedbacks personnalisés (TJM, compétences manquantes)
  */
 
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from './db'
-import { sendNewOffreAlertEmail } from './email'
+import { sendMatchingWithFeedback } from './microsoft-graph'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -24,6 +25,12 @@ interface MatchResult {
   competencesMatchees: string[]
   competencesManquantes: string[]
   analyse: string
+  // Nouveau: feedback pour le talent
+  feedback: {
+    tjmTropHaut: boolean
+    tjmFourchette?: string
+    experienceManquante: string[]
+  }
 }
 
 /**
@@ -100,7 +107,12 @@ Analyse et retourne UNIQUEMENT un JSON avec cette structure:
   },
   "competencesMatchees": ["liste des compétences qui matchent"],
   "competencesManquantes": ["liste des compétences requises manquantes"],
-  "analyse": "Résumé en 2-3 phrases de la compatibilité"
+  "analyse": "Résumé en 2-3 phrases de la compatibilité",
+  "feedback": {
+    "tjmTropHaut": true/false,
+    "tjmFourchette": "si tjmTropHaut, indiquer la fourchette acceptable ex: '400-500€/jour'",
+    "experienceManquante": ["liste des compétences/expériences manquantes importantes"]
+  }
 }`
 
   try {
@@ -129,6 +141,10 @@ Analyse et retourne UNIQUEMENT un JSON avec cette structure:
       competencesMatchees: result.competencesMatchees,
       competencesManquantes: result.competencesManquantes,
       analyse: result.analyse,
+      feedback: result.feedback || {
+        tjmTropHaut: false,
+        experienceManquante: result.competencesManquantes || []
+      },
     }
   } catch (error) {
     console.error('Erreur matching IA:', error)
@@ -186,10 +202,15 @@ function calculateBasicMatch(
       ? 100
       : (talentData.anneesExperience / offreData.experienceMin) * 100
 
-  // Score TJM (15% du total)
+  // Score TJM (15% du total) et feedback
   let tjmScore = 100
+  let tjmTropHaut = false
+  let tjmFourchette: string | undefined
+
   if (offreData.tjmMax && talentData.tjmMin && talentData.tjmMin > offreData.tjmMax) {
     tjmScore = 50 // TJM trop élevé
+    tjmTropHaut = true
+    tjmFourchette = `${offreData.tjmMin || 'N/A'}-${offreData.tjmMax}€/jour`
   } else if (offreData.tjmMin && talentData.tjmMax && talentData.tjmMax < offreData.tjmMin) {
     tjmScore = 50 // TJM trop bas
   }
@@ -220,6 +241,11 @@ function calculateBasicMatch(
     competencesMatchees: [...matchedRequired, ...matchedOptional],
     competencesManquantes: missingRequired,
     analyse: `Matching ${score}% basé sur ${matchedRequired.length}/${offreData.competencesRequises.length} compétences requises.`,
+    feedback: {
+      tjmTropHaut,
+      tjmFourchette,
+      experienceManquante: missingRequired,
+    },
   }
 }
 
@@ -322,17 +348,24 @@ export async function matchTalentsForOffer(
 
       results.push(matchResult)
 
-      // Envoie une notification par email si demandé
-      if (sendNotifications && matchResult.score >= 70) {
-        sendNewOffreAlertEmail(
+      // Envoie une notification par email si demandé (score >= 60%)
+      if (sendNotifications && matchResult.score >= 60) {
+        // Utilise Microsoft Graph avec feedback TJM/expérience
+        sendMatchingWithFeedback(
           talent.user.email,
           talent.prenom,
           offre.titre,
           offre.slug,
-          matchResult.score
+          matchResult.score,
+          matchResult.competencesMatchees,
+          {
+            tjmTropHaut: matchResult.feedback.tjmTropHaut,
+            tjmFourchette: matchResult.feedback.tjmFourchette,
+            experienceManquante: matchResult.feedback.experienceManquante,
+          }
         ).catch(console.error)
 
-        // Marque la notification comme envoyée
+        // Marque la notification comme envoyée avec les détails du feedback
         await prisma.match.updateMany({
           where: {
             offreId: offre.id,
@@ -341,6 +374,30 @@ export async function matchTalentsForOffer(
           data: {
             notificationEnvoyee: true,
             notificationEnvoyeeLe: new Date(),
+            tjmTropHaut: matchResult.feedback.tjmTropHaut,
+            experienceInsuffisante: matchResult.feedback.experienceManquante.length > 0,
+            feedbackTjm: matchResult.feedback.tjmTropHaut
+              ? `Votre TJM est supérieur au budget. Fourchette: ${matchResult.feedback.tjmFourchette}`
+              : null,
+            feedbackExperience: matchResult.feedback.experienceManquante.length > 0
+              ? `Compétences manquantes: ${matchResult.feedback.experienceManquante.join(', ')}`
+              : null,
+          },
+        })
+
+        // Crée une notification dans le système
+        await prisma.notification.create({
+          data: {
+            userId: talent.userId,
+            type: 'NOUVELLE_OFFRE_MATCH',
+            titre: `Nouvelle mission ${matchResult.score}% compatible`,
+            message: `La mission "${offre.titre}" correspond à votre profil !`,
+            lien: `/offres/${offre.slug}`,
+            data: {
+              offreId: offre.id,
+              score: matchResult.score,
+              feedback: matchResult.feedback,
+            },
           },
         })
       }
