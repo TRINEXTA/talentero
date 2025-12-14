@@ -101,14 +101,15 @@ export async function PUT(request: NextRequest) {
 
     const data = validation.data
 
-    // Mise à jour du profil
+    // Mise à jour du profil (prenom/nom non modifiables par le talent)
     const updatedTalent = await prisma.talent.update({
       where: { userId: user.id },
       data: {
-        prenom: data.prenom,
-        nom: data.nom,
         telephone: data.telephone,
+        photoUrl: data.photoUrl,
+        nationalite: data.nationalite,
         titrePoste: data.titrePoste,
+        categorieProfessionnelle: data.categorieProfessionnelle as any,
         bio: data.bio,
         competences: data.competences,
         anneesExperience: data.anneesExperience,
@@ -117,10 +118,20 @@ export async function PUT(request: NextRequest) {
         tjmMax: data.tjmMax,
         mobilite: data.mobilite as any,
         zonesGeographiques: data.zonesGeographiques,
+        zonesIntervention: data.zonesIntervention,
+        permisConduire: data.permisConduire,
+        vehicule: data.vehicule,
+        accepteDeplacementEtranger: data.accepteDeplacementEtranger,
         disponibilite: data.disponibilite as any,
         disponibleLe: data.disponibleLe ? new Date(data.disponibleLe) : null,
+        logiciels: data.logiciels,
+        frameworks: data.frameworks,
+        baseDonnees: data.baseDonnees,
+        methodologies: data.methodologies,
+        outils: data.outils,
         softSkills: data.softSkills,
         langues: data.langues,
+        loisirs: data.loisirs,
         certifications: data.certifications,
         linkedinUrl: data.linkedinUrl,
         githubUrl: data.githubUrl,
@@ -128,6 +139,8 @@ export async function PUT(request: NextRequest) {
         adresse: data.adresse,
         codePostal: data.codePostal,
         ville: data.ville,
+        visiblePublic: data.visiblePublic,
+        visibleVitrine: data.visibleVitrine,
       },
     })
 
