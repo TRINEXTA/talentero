@@ -192,7 +192,7 @@ export async function PATCH(
         where: { offreId: offre.id },
         include: {
           candidats: {
-            where: { selectionne: false },
+            where: { retenuParClient: { not: true } },
             include: {
               candidature: {
                 include: {
