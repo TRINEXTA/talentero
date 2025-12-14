@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         experienceMin: body.experienceMin || null,
         secteur: body.secteur || null,
         // TJM - Le client renseigne son TJM, jamais visible
-        tjmClientReel: body.tjmClient || null,
+        tjmClientReel: body.tjmClientReel || null,
         tjmMin: body.tjmMin || null,
         tjmMax: body.tjmMax || null,
         tjmAffiche: body.tjmAffiche || null,

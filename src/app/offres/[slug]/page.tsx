@@ -26,7 +26,8 @@ interface OffreDetail {
   competencesSouhaitees: string[]
   tjmMin: number | null
   tjmMax: number | null
-  dureeJours: number | null
+  dureeNombre: number | null
+  dureeUnite: string | null
   dateDebut: string | null
   dateFin: string | null
   renouvelable: boolean
@@ -242,10 +243,10 @@ export default function OffreDetailPage() {
                   <Badge variant="outline" className="text-sm">
                     {MOBILITE_LABELS[offre.mobilite]}
                   </Badge>
-                  {offre.dureeJours && (
+                  {offre.dureeNombre && (
                     <Badge variant="outline" className="text-sm">
                       <Clock className="w-4 h-4 mr-1" />
-                      {offre.dureeJours} jours
+                      {offre.dureeNombre} {offre.dureeUnite === 'JOURS' ? 'jours' : 'mois'}
                     </Badge>
                   )}
                 </div>

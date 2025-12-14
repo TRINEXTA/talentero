@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { generateMissionCode } from '@/lib/utils'
 
 // GET - Détails d'une offre
 export async function GET(
@@ -170,8 +171,10 @@ export async function PATCH(
           })
 
         case 'dupliquer':
+          const codeUnique = await generateMissionCode()
           const newOffre = await prisma.offre.create({
             data: {
+              codeUnique,
               clientId: offre.clientId,
               titre: `${offre.titre} (copie)`,
               slug: `${offre.slug}-copie-${Date.now()}`,
@@ -183,11 +186,12 @@ export async function PATCH(
               experienceMin: offre.experienceMin,
               tjmMin: offre.tjmMin,
               tjmMax: offre.tjmMax,
-              tjmClient: offre.tjmClient,
+              tjmClientReel: offre.tjmClientReel,
               tjmAffiche: offre.tjmAffiche,
               lieu: offre.lieu,
               mobilite: offre.mobilite,
-              dureeJours: offre.dureeJours,
+              dureeNombre: offre.dureeNombre,
+              dureeUnite: offre.dureeUnite,
               dateDebut: offre.dateDebut,
               dateFin: offre.dateFin,
               renouvelable: offre.renouvelable,
@@ -215,11 +219,12 @@ export async function PATCH(
     if (body.experienceMin !== undefined) updateData.experienceMin = body.experienceMin
     if (body.tjmMin !== undefined) updateData.tjmMin = body.tjmMin
     if (body.tjmMax !== undefined) updateData.tjmMax = body.tjmMax
-    if (body.tjmClient !== undefined) updateData.tjmClient = body.tjmClient
+    if (body.tjmClientReel !== undefined) updateData.tjmClientReel = body.tjmClientReel
     if (body.tjmAffiche !== undefined) updateData.tjmAffiche = body.tjmAffiche
     if (body.lieu !== undefined) updateData.lieu = body.lieu
     if (body.mobilite !== undefined) updateData.mobilite = body.mobilite
-    if (body.dureeJours !== undefined) updateData.dureeJours = body.dureeJours
+    if (body.dureeNombre !== undefined) updateData.dureeNombre = body.dureeNombre
+    if (body.dureeUnite !== undefined) updateData.dureeUnite = body.dureeUnite
     if (body.dateDebut !== undefined) updateData.dateDebut = body.dateDebut ? new Date(body.dateDebut) : null
     if (body.dateFin !== undefined) updateData.dateFin = body.dateFin ? new Date(body.dateFin) : null
     if (body.renouvelable !== undefined) updateData.renouvelable = body.renouvelable

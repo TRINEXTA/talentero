@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { createOffreSchema } from '@/lib/validations'
+import { generateMissionCode } from '@/lib/utils'
 import slugify from 'slugify'
 
 // GET /api/offres - Liste des offres publiques
@@ -71,7 +72,8 @@ export async function GET(request: NextRequest) {
           competencesSouhaitees: true,
           tjmMin: true,
           tjmMax: true,
-          dureeJours: true,
+          dureeNombre: true,
+          dureeUnite: true,
           dateDebut: true,
           lieu: true,
           mobilite: true,
@@ -138,9 +140,13 @@ export async function POST(request: NextRequest) {
     const randomSuffix = Math.random().toString(36).substring(2, 8)
     const slug = `${baseSlug}-${randomSuffix}`
 
+    // Génère le code unique mission
+    const codeUnique = await generateMissionCode()
+
     // Crée l'offre
     const offre = await prisma.offre.create({
       data: {
+        codeUnique,
         slug,
         titre: data.titre,
         description: data.description,
@@ -150,7 +156,8 @@ export async function POST(request: NextRequest) {
         competencesSouhaitees: data.competencesSouhaitees || [],
         tjmMin: data.tjmMin,
         tjmMax: data.tjmMax,
-        dureeJours: data.dureeJours,
+        dureeNombre: data.dureeNombre,
+        dureeUnite: data.dureeUnite || 'MOIS',
         dateDebut: data.dateDebut ? new Date(data.dateDebut) : null,
         dateFin: data.dateFin ? new Date(data.dateFin) : null,
         renouvelable: data.renouvelable || false,

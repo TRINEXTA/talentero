@@ -21,7 +21,8 @@ interface Offre {
   competencesSouhaitees: string[]
   tjmMin: number | null
   tjmMax: number | null
-  dureeJours: number | null
+  dureeNombre: number | null
+  dureeUnite: string | null
   lieu: string | null
   mobilite: string
   experienceMin: number | null
@@ -278,9 +279,9 @@ export default function OffresPage() {
                             <div className="text-lg font-semibold text-primary">
                               {formatTJM(offre.tjmMin, offre.tjmMax)}
                             </div>
-                            {offre.dureeJours && (
+                            {offre.dureeNombre && (
                               <p className="text-sm text-gray-500">
-                                {offre.dureeJours} jours
+                                {offre.dureeNombre} {offre.dureeUnite === 'JOURS' ? 'jours' : 'mois'}
                               </p>
                             )}
                           </div>

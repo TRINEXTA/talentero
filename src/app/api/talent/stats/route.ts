@@ -105,7 +105,8 @@ export async function GET(request: NextRequest) {
               tjmMin: true,
               tjmMax: true,
               mobilite: true,
-              dureeJours: true,
+              dureeNombre: true,
+              dureeUnite: true,
               publieLe: true,
               client: {
                 select: {
@@ -163,7 +164,8 @@ export async function GET(request: NextRequest) {
           tjmMin: m.offre.tjmMin,
           tjmMax: m.offre.tjmMax,
           mobilite: m.offre.mobilite,
-          dureeJours: m.offre.dureeJours,
+          dureeNombre: m.offre.dureeNombre,
+          dureeUnite: m.offre.dureeUnite,
           publieLe: m.offre.publieLe,
           client: {
             nom: m.offre.client?.raisonSociale || 'Client anonyme',
