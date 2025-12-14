@@ -21,21 +21,32 @@ model User {
   id            Int       @id @default(autoincrement())
   uid           String    @unique @default(uuid())
   email         String    @unique
-  passwordHash  String
+  passwordHash  String?   // Nullable pour les comptes pré-créés par admin
   role          UserRole  @default(TALENT)
   emailVerified Boolean   @default(false)
   isActive      Boolean   @default(true)
-  
+
+  // Token pour finalisation de compte (import CV admin)
+  activationToken       String?   @unique
+  activationTokenExpiry DateTime?
+
+  // Reset password
+  resetToken            String?   @unique
+  resetTokenExpiry      DateTime?
+
   // Relations selon le rôle
   talent        Talent?
   client        Client?
-  
+
   // Sessions & Tokens
   sessions      Session[]
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
+
+  // Créé par admin (import manuel)
+  createdByAdmin Boolean  @default(false)
 }
 
 enum UserRole {
@@ -52,7 +63,7 @@ model Session {
   expiresAt DateTime
   userAgent String?
   ipAddress String?
-  
+
   createdAt DateTime @default(now())
 }
 
@@ -66,6 +77,11 @@ model Talent {
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                Int       @unique
 
+  // Statut du compte
+  compteLimite          Boolean   @default(false)  // Sans SIRET (en cours de création)
+  compteComplet         Boolean   @default(false)  // Profil entièrement rempli
+  importeParAdmin       Boolean   @default(false)  // CV importé manuellement
+
   // Identité
   prenom                String
   nom                   String
@@ -73,17 +89,18 @@ model Talent {
   photoUrl              String?
   nationalite           String?   // Pour les projets secret défense
 
-  // Entreprise / SIRET
-  siret                 String    @unique
-  siren                 String
-  raisonSociale         String
+  // Entreprise / SIRET (optionnel si compteLimite)
+  siret                 String?   @unique
+  siren                 String?
+  raisonSociale         String?
   dateCreationEntreprise DateTime?
   codeAPE               String?
   libelleAPE            String?
-  formeJuridique        String?   // SASU, EURL, Auto-entrepreneur, etc.
-  typeSociete           TypeSociete @default(AUTO_ENTREPRENEUR)
+  formeJuridique        String?
+  typeSociete           TypeSociete?
   siretVerifie          Boolean   @default(false)
   siretVerifieLe        DateTime?
+  siretEnCoursCreation  Boolean   @default(false)  // En attente de SIRET
 
   // TVA
   tvaIntracommunautaire String?
@@ -96,50 +113,51 @@ model Talent {
   pays                  String    @default("France")
 
   // Zone d'intervention et mobilité
-  zonesIntervention     String[]  // ["Paris", "Île-de-France", "Lyon"]
+  zonesIntervention     String[]
   permisConduire        Boolean   @default(false)
-  vehicule              Boolean   @default(false)  // TTV - Transport personnel
+  vehicule              Boolean   @default(false)
   accepteDeplacementEtranger Boolean @default(false)
 
   // Profil Professionnel
-  titrePoste            String?   // "Développeur Full Stack Java/Angular"
-  bio                   String?   // Présentation courte
-  competences           String[]  // ["Java", "Spring", "Angular", "PostgreSQL"]
+  titrePoste            String?
+  bio                   String?
+  competences           String[]
   anneesExperience      Int       @default(0)
 
   // Conditions de travail
-  tjm                   Int?      // TJM souhaité
-  tjmMin                Int?      // TJM minimum acceptable
-  tjmMax                Int?      // TJM maximum
+  tjm                   Int?
+  tjmMin                Int?
+  tjmMax                Int?
   mobilite              Mobilite  @default(FLEXIBLE)
-  zonesGeographiques    String[]  // ["Paris", "Île-de-France", "Remote"]
+  zonesGeographiques    String[]
   disponibilite         Disponibilite @default(IMMEDIATE)
   disponibleLe          DateTime?
 
   // Documents
   cvUrl                 String?
   cvOriginalName        String?
-  cvParsedData          Json?     // Données extraites du CV par l'IA
+  cvParsedData          Json?
 
   // Compétences détaillées (extraites du CV)
-  logiciels             String[]  // ["VS Code", "IntelliJ", "Docker Desktop"]
-  frameworks            String[]  // ["React", "Angular", "Spring Boot"]
-  baseDonnees           String[]  // ["PostgreSQL", "MongoDB", "Redis"]
-  methodologies         String[]  // ["Agile", "Scrum", "DevOps"]
-  outils                String[]  // ["Git", "Jira", "Confluence"]
+  logiciels             String[]
+  frameworks            String[]
+  baseDonnees           String[]
+  methodologies         String[]
+  outils                String[]
 
   // Extras
   softSkills            String[]
-  langues               String[]  // ["Français:Natif", "Anglais:Courant"]
-  loisirs               String[]  // Centres d'intérêt
+  langues               String[]
+  loisirs               String[]
   certifications        String[]
   linkedinUrl           String?
   githubUrl             String?
   portfolioUrl          String?
 
-  // Statut
+  // Visibilité
   statut                TalentStatus @default(ACTIF)
   visiblePublic         Boolean   @default(true)
+  visibleVitrine        Boolean   @default(false)  // Affiché sur la page vitrine
 
   // Relations
   experiences           Experience[]
@@ -156,6 +174,7 @@ model Talent {
   @@index([competences])
   @@index([ville])
   @@index([disponibilite])
+  @@index([statut])
 }
 
 enum TypeSociete {
@@ -196,7 +215,7 @@ model Experience {
   id           Int        @id @default(autoincrement())
   talent       Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
   talentId     Int
-  
+
   poste        String
   entreprise   String?
   lieu         String?
@@ -205,7 +224,7 @@ model Experience {
   enCours      Boolean    @default(false)
   description  String?
   competences  String[]
-  
+
   createdAt    DateTime   @default(now())
 }
 
@@ -213,12 +232,12 @@ model Formation {
   id           Int        @id @default(autoincrement())
   talent       Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
   talentId     Int
-  
+
   diplome      String
   etablissement String?
   annee        Int?
   description  String?
-  
+
   createdAt    DateTime   @default(now())
 }
 
@@ -231,60 +250,100 @@ model Client {
   uid                   String    @unique @default(uuid())
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                Int       @unique
-  
+
+  // Type de client
+  typeClient            TypeClient @default(DIRECT)
+
   // Entreprise
   raisonSociale         String
-  siret                 String    @unique
-  siren                 String
+  siret                 String?   @unique
+  siren                 String?
   codeAPE               String?
   formeJuridique        String?
-  
-  // Contact principal
-  contactNom            String
-  contactPrenom         String
-  contactEmail          String
-  contactTelephone      String?
-  contactPoste          String?   // "DRH", "CTO", "Responsable Recrutement"
-  
-  // Adresse
+
+  // Adresse principale
   adresse               String?
   codePostal            String?
   ville                 String?
   pays                  String    @default("France")
-  
+
   // Infos entreprise
   description           String?
   secteurActivite       String?
   tailleEntreprise      TailleEntreprise?
   siteWeb               String?
   logoUrl               String?
-  
+  nombreSites           Int       @default(1)
+
   // Statut
   statut                ClientStatus @default(EN_ATTENTE)
   valideParAdmin        Boolean   @default(false)
   valideLe              DateTime?
-  
+
   // Relations
+  sites                 ClientSite[]
+  contacts              ClientContact[]
   offres                Offre[]
   messagesEnvoyes       Message[] @relation("ClientMessagesSent")
   messagesRecus         Message[] @relation("ClientMessagesReceived")
-  
+
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 }
 
+enum TypeClient {
+  DIRECT        // Client final qu'on gère directement
+  SOUSTRAITANCE // ESN/Client intermédiaire
+}
+
 enum TailleEntreprise {
-  TPE         // 1-10
-  PME         // 11-250
-  ETI         // 251-5000
-  GRANDE      // 5000+
+  TPE
+  PME
+  ETI
+  GRANDE
 }
 
 enum ClientStatus {
-  EN_ATTENTE  // En attente validation TRINEXTA
+  EN_ATTENTE
   ACTIF
   SUSPENDU
   ARCHIVE
+}
+
+// Sites multiples pour un client
+model ClientSite {
+  id          Int      @id @default(autoincrement())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    Int
+
+  nom         String   // "Siège Paris", "Agence Lyon"
+  adresse     String
+  codePostal  String
+  ville       String
+  pays        String   @default("France")
+  telephone   String?
+
+  estSiegeSocial Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+}
+
+// Contacts multiples pour un client
+model ClientContact {
+  id          Int      @id @default(autoincrement())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    Int
+
+  prenom      String
+  nom         String
+  email       String
+  telephone   String?
+  poste       String?  // "DRH", "CTO", "Responsable Recrutement"
+
+  estContactPrincipal Boolean @default(false)
+  recevoirNotifications Boolean @default(true)
+
+  createdAt   DateTime @default(now())
 }
 
 // ============================================
@@ -294,52 +353,71 @@ enum ClientStatus {
 model Offre {
   id                    Int       @id @default(autoincrement())
   uid                   String    @unique @default(uuid())
-  slug                  String    @unique  // URL friendly: "dev-java-senior-paris-abc123"
-  
+  slug                  String    @unique
+
   // Créateur
   client                Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
   clientId              Int?
-  createdByAdmin        Boolean   @default(false)  // Si créée par TRINEXTA
-  
+  createdByAdmin        Boolean   @default(false)
+
+  // Type d'offre
+  typeOffre             TypeOffre @default(INTERNE)
+
   // Contenu
   titre                 String
   description           String
   responsabilites       String?
   profilRecherche       String?
-  
+
   // Compétences
-  competencesRequises   String[]  // Obligatoires
-  competencesSouhaitees String[]  // Nice to have
-  
-  // Conditions
-  tjmMin                Int?
-  tjmMax                Int?
-  dureeJours            Int?      // Durée mission en jours
+  competencesRequises   String[]
+  competencesSouhaitees String[]
+
+  // Conditions - TJM
+  tjmClient             Int?      // TJM réel du client (jamais affiché)
+  tjmAffiche            Int?      // TJM affiché (notre marge incluse)
+  tjmMin                Int?      // Fourchette basse affichée
+  tjmMax                Int?      // Fourchette haute affichée
+  tjmADefinir           Boolean   @default(false)  // "TJM à définir"
+
+  // Mission
+  dureeJours            Int?
   dateDebut             DateTime?
   dateFin               DateTime?
   renouvelable          Boolean   @default(false)
-  
+  nombrePostes          Int       @default(1)
+
   // Localisation
   lieu                  String?
   codePostal            String?
   mobilite              Mobilite  @default(FLEXIBLE)
-  
+  deplacementEtranger   Boolean   @default(false)
+
   // Expérience requise
-  experienceMin         Int?      // Années minimum
-  
+  experienceMin         Int?
+
+  // Habilitations
+  habilitationRequise   Boolean   @default(false)
+  typeHabilitation      String?   // "Secret Défense", "Confidentiel Défense"
+
   // Publication
   statut                OffreStatus @default(BROUILLON)
   publieLe              DateTime?
   expireLe              DateTime?
   visiblePublic         Boolean   @default(true)
-  
+
+  // Résultat appel d'offres (pour sous-traitance)
+  resultatAO            ResultatAO?
+  dateResultat          DateTime?
+
   // Métriques
   nbVues                Int       @default(0)
   nbCandidatures        Int       @default(0)
-  
+
   // Relations
   candidatures          Candidature[]
   matchs                Match[]
+  shortlist             Shortlist?
   vues                  OffreVue[]
 
   createdAt             DateTime  @default(now())
@@ -348,15 +426,83 @@ model Offre {
   @@index([competencesRequises])
   @@index([statut])
   @@index([lieu])
+  @@index([typeOffre])
+}
+
+enum TypeOffre {
+  INTERNE       // Client direct qu'on gère
+  SOUSTRAITANCE // Appel d'offres pour un donneur d'ordre
 }
 
 enum OffreStatus {
   BROUILLON
-  EN_ATTENTE    // En attente validation si créée par client
+  EN_ATTENTE    // En attente publication manuelle
   PUBLIEE
+  EN_COURS      // Candidatures en cours de traitement
   POURVUE
   FERMEE
   EXPIREE
+}
+
+enum ResultatAO {
+  EN_ATTENTE
+  GAGNEE
+  PERDUE
+}
+
+// ============================================
+// SHORTLIST (Liste de candidats pour une offre)
+// ============================================
+
+model Shortlist {
+  id          Int       @id @default(autoincrement())
+  uid         String    @unique @default(uuid())
+
+  offre       Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  offreId     Int       @unique
+
+  // Statut
+  statut      ShortlistStatus @default(EN_COURS)
+
+  // Envoi au client
+  envoyeeLe   DateTime?
+
+  // Candidats de la shortlist
+  candidats   ShortlistCandidat[]
+
+  notes       String?   // Notes internes TRINEXTA
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum ShortlistStatus {
+  EN_COURS      // En construction
+  PRETE         // Prête à être envoyée
+  ENVOYEE       // Envoyée au client
+  EN_ATTENTE_RETOUR // Attente retour client
+  FINALISEE     // Retour reçu
+}
+
+model ShortlistCandidat {
+  id            Int       @id @default(autoincrement())
+
+  shortlist     Shortlist @relation(fields: [shortlistId], references: [id], onDelete: Cascade)
+  shortlistId   Int
+
+  candidature   Candidature @relation(fields: [candidatureId], references: [id], onDelete: Cascade)
+  candidatureId Int
+
+  // Position dans la shortlist
+  ordre         Int       @default(0)
+
+  // Retour client
+  retenuParClient Boolean?
+  commentaireClient String?
+
+  createdAt     DateTime  @default(now())
+
+  @@unique([shortlistId, candidatureId])
 }
 
 // ============================================
@@ -365,28 +511,32 @@ enum OffreStatus {
 
 model Match {
   id            Int       @id @default(autoincrement())
-  
+
   offre         Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
   offreId       Int
   talent        Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
   talentId      Int
-  
+
   // Score de matching (0-100)
   score         Int
-  scoreDetails  Json?     // Détail du score par critère
-  
+  scoreDetails  Json?
+
   // Compétences matchées
   competencesMatchees   String[]
   competencesManquantes String[]
-  
+
+  // Notification
+  notificationEnvoyee Boolean @default(false)
+  notificationEnvoyeeLe DateTime?
+
   // Statut
   vuParTalent   Boolean   @default(false)
   vuParClient   Boolean   @default(false)
-  
-  notes         String?   // Notes internes TRINEXTA
-  
+
+  notes         String?
+
   createdAt     DateTime  @default(now())
-  
+
   @@unique([offreId, talentId])
   @@index([score])
 }
@@ -394,48 +544,54 @@ model Match {
 model Candidature {
   id            Int       @id @default(autoincrement())
   uid           String    @unique @default(uuid())
-  
+
   offre         Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
   offreId       Int
   talent        Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
   talentId      Int
-  
+
   // Candidature
   tjmPropose    Int?
   motivation    String?
   disponibilite Disponibilite?
-  
+
   // Matching au moment de la candidature
   scoreMatch    Int?
-  
+
   // Pipeline
   statut        CandidatureStatus @default(NOUVELLE)
-  
+
   // Dates importantes
   vueLe         DateTime?
   reponduLe     DateTime?
   entretienLe   DateTime?
-  
+
+  // Shortlist
+  shortlistCandidats ShortlistCandidat[]
+
   // Notes
-  notesTrinexta String?   // Notes internes
-  notesClient   String?   // Notes du client
-  
+  notesTrinexta String?
+  notesClient   String?
+
+  // Notification de refus envoyée
+  notificationRefusEnvoyee Boolean @default(false)
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   @@unique([offreId, talentId])
 }
 
 enum CandidatureStatus {
-  NOUVELLE          // Vient de postuler
-  VUE               // Vue par TRINEXTA/Client
-  EN_REVUE          // En cours d'analyse
-  SHORTLIST         // Présélectionné
-  PROPOSEE_CLIENT   // Proposée au client (CV anonymisé)
-  ENTRETIEN         // Entretien programmé
-  ACCEPTEE          // Mission confirmée
-  REFUSEE           // Refusée
-  RETIREE           // Talent a retiré sa candidature
+  NOUVELLE
+  VUE
+  EN_REVUE
+  SHORTLIST
+  PROPOSEE_CLIENT
+  ENTRETIEN
+  ACCEPTEE
+  REFUSEE
+  RETIREE
 }
 
 // ============================================
@@ -446,22 +602,19 @@ model Alerte {
   id              Int       @id @default(autoincrement())
   talent          Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
   talentId        Int
-  
-  // Critères de l'alerte
+
   nom             String?
   competences     String[]
   tjmMin          Int?
   mobilite        Mobilite?
   lieux           String[]
-  
-  // Paramètres
+
   frequence       AlerteFrequence @default(INSTANTANEE)
   active          Boolean   @default(true)
-  
-  // Stats
+
   derniereNotif   DateTime?
   nbOffresEnvoyees Int      @default(0)
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -474,20 +627,19 @@ enum AlerteFrequence {
 
 model Notification {
   id          Int       @id @default(autoincrement())
-  
-  // Destinataire (un des trois)
+
   userId      Int?
   type        NotificationType
-  
+
   titre       String
   message     String
   lien        String?
-  
+
   lu          Boolean   @default(false)
   luLe        DateTime?
-  
+
   createdAt   DateTime  @default(now())
-  
+
   @@index([userId, lu])
 }
 
@@ -498,7 +650,37 @@ enum NotificationType {
   MESSAGE
   ALERTE_OFFRE
   VALIDATION_COMPTE
+  RESULTAT_AO
   SYSTEME
+}
+
+// ============================================
+// EMAILS
+// ============================================
+
+model EmailLog {
+  id          Int       @id @default(autoincrement())
+
+  destinataire String
+  sujet        String
+  template     String    // Nom du template utilisé
+
+  // Contexte
+  userId       Int?
+  offreId      Int?
+  candidatureId Int?
+
+  statut       EmailStatus @default(EN_ATTENTE)
+  envoyeLe     DateTime?
+  erreur       String?
+
+  createdAt    DateTime  @default(now())
+}
+
+enum EmailStatus {
+  EN_ATTENTE
+  ENVOYE
+  ERREUR
 }
 
 // ============================================
@@ -508,31 +690,31 @@ enum NotificationType {
 model Message {
   id          Int       @id @default(autoincrement())
   uid         String    @unique @default(uuid())
-  
+
   // Expéditeur/Destinataire (Talent)
   expediteurTalent    Talent? @relation("MessagesSent", fields: [expediteurTalentId], references: [id])
   expediteurTalentId  Int?
   destinataireTalent  Talent? @relation("MessagesReceived", fields: [destinataireTalentId], references: [id])
   destinataireTalentId Int?
-  
+
   // Expéditeur/Destinataire (Client)
   expediteurClient    Client? @relation("ClientMessagesSent", fields: [expediteurClientId], references: [id])
   expediteurClientId  Int?
   destinataireClient  Client? @relation("ClientMessagesReceived", fields: [destinataireClientId], references: [id])
   destinataireClientId Int?
-  
+
   // Expéditeur Admin (TRINEXTA)
   expediteurAdmin     Boolean @default(false)
-  
+
   // Contexte
-  offreId     Int?      // Si lié à une offre
+  offreId     Int?
   sujet       String?
   contenu     String
-  
+
   // Statut
   lu          Boolean   @default(false)
   luLe        DateTime?
-  
+
   createdAt   DateTime  @default(now())
 }
 
@@ -542,18 +724,18 @@ model Message {
 
 model AuditLog {
   id          Int       @id @default(autoincrement())
-  
+
   userId      Int?
-  action      String    // "CREATE_OFFRE", "UPDATE_CANDIDATURE", etc.
-  entite      String    // "Offre", "Candidature", etc.
+  action      String
+  entite      String
   entiteId    Int?
-  
+
   details     Json?
   ipAddress   String?
   userAgent   String?
-  
+
   createdAt   DateTime  @default(now())
-  
+
   @@index([userId])
   @@index([action])
   @@index([createdAt])
@@ -563,18 +745,15 @@ model OffreVue {
   id          Int       @id @default(autoincrement())
   offre       Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
   offreId     Int
-  
-  talentId    Int?      // Si connecté
+
+  talentId    Int?
   ipAddress   String?
   userAgent   String?
-  
+
   createdAt   DateTime  @default(now())
-  
+
   @@index([offreId])
 }
-
-// Ajouter la relation inverse dans Offre
-// (déjà incluse via candidatures et matchs, mais on peut ajouter les vues)
 
 // ============================================
 // CONFIGURATION PLATEFORME
@@ -585,6 +764,27 @@ model ConfigPlateforme {
   cle         String    @unique
   valeur      String
   description String?
-  
+
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================
+// TEMPLATES EMAILS
+// ============================================
+
+model EmailTemplate {
+  id          Int       @id @default(autoincrement())
+
+  code        String    @unique  // "MATCHING_NOTIFICATION", "COMPTE_ACTIVATION", etc.
+  nom         String
+  sujet       String
+  contenuHtml String
+  contenuText String?
+
+  variables   String[]  // ["prenom", "nomOffre", "lienOffre"]
+
+  actif       Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }

@@ -37,8 +37,15 @@ export async function GET() {
           raisonSociale: true,
           logoUrl: true,
           statut: true,
-          contactNom: true,
-          contactPrenom: true,
+          typeClient: true,
+          contacts: {
+            where: { estContactPrincipal: true },
+            select: {
+              prenom: true,
+              nom: true,
+            },
+            take: 1,
+          },
         },
       })
     }

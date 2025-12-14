@@ -104,16 +104,25 @@ export async function POST(request: NextRequest) {
           siren: siret.substring(0, 9),
           codeAPE: siretInfo?.codeAPE,
           formeJuridique: siretInfo?.formeJuridique,
-          contactNom,
-          contactPrenom,
-          contactEmail,
-          contactTelephone,
-          contactPoste,
           adresse: siretInfo?.adresse ? `${siretInfo.adresse.numero} ${siretInfo.adresse.rue}`.trim() : null,
           codePostal: siretInfo?.adresse?.codePostal,
           ville: siretInfo?.adresse?.ville,
           statut: 'EN_ATTENTE', // En attente de validation TRINEXTA
           valideParAdmin: false,
+        },
+      })
+
+      // Crée le contact principal
+      await tx.clientContact.create({
+        data: {
+          clientId: client.id,
+          prenom: contactPrenom,
+          nom: contactNom,
+          email: contactEmail || email,
+          telephone: contactTelephone,
+          poste: contactPoste,
+          estContactPrincipal: true,
+          recevoirNotifications: true,
         },
       })
 

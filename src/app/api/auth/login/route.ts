@@ -34,6 +34,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Vérifie que le compte a un mot de passe (pas un compte pré-créé)
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { error: 'Ce compte n\'a pas encore été activé. Vérifiez votre email.' },
+        { status: 401 }
+      )
+    }
+
     // Vérifie le mot de passe
     const isValid = await verifyPassword(password, user.passwordHash)
     if (!isValid) {

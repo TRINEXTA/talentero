@@ -120,7 +120,11 @@ export async function POST(request: NextRequest) {
       include: {
         client: {
           select: {
-            contactEmail: true,
+            contacts: {
+              where: { estContactPrincipal: true },
+              select: { email: true },
+              take: 1,
+            },
           },
         },
       },
