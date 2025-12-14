@@ -33,7 +33,9 @@ async function main() {
     where: { slug: 'dev-fullstack-java-angular-paris' },
     update: {},
     create: {
+      codeUnique: 'MI1001',
       slug: 'dev-fullstack-java-angular-paris',
+      typeOffre: 'TRINEXTA',
       titre: 'Développeur Full Stack Java/Angular',
       description: `Nous recherchons un développeur Full Stack expérimenté pour rejoindre une équipe agile au sein d'un grand groupe bancaire.
 
@@ -55,16 +57,23 @@ Stack technique:
 - Bon niveau d'anglais`,
       competencesRequises: ['Java', 'Spring Boot', 'Angular', 'TypeScript', 'PostgreSQL', 'REST API'],
       competencesSouhaitees: ['Docker', 'Kubernetes', 'Jenkins', 'Kafka', 'MongoDB'],
+      tjmAffiche: 550,
       tjmMin: 500,
       tjmMax: 600,
-      dureeJours: 180,
+      tjmADefinir: false,
+      dureeNombre: 6,
+      dureeUnite: 'MOIS',
+      renouvelable: true,
+      secteur: 'Banque / Finance',
       lieu: 'Paris',
       codePostal: '75009',
       mobilite: 'HYBRIDE',
+      deplacementMultiSite: false,
       experienceMin: 5,
       statut: 'PUBLIEE',
       publieLe: new Date(),
       createdByAdmin: true,
+      offreTrinexta: true,
     },
   })
 
@@ -74,7 +83,9 @@ Stack technique:
     where: { slug: 'devops-engineer-aws-remote' },
     update: {},
     create: {
+      codeUnique: 'MI1002',
       slug: 'devops-engineer-aws-remote',
+      typeOffre: 'TRINEXTA',
       titre: 'DevOps Engineer AWS',
       description: `Mission 100% remote pour un DevOps Engineer confirmé. Vous interviendrez sur l'infrastructure cloud d'une scale-up en forte croissance.
 
@@ -96,15 +107,22 @@ Environnement technique:
 - Autonomie et proactivité`,
       competencesRequises: ['AWS', 'Kubernetes', 'Terraform', 'Docker', 'CI/CD'],
       competencesSouhaitees: ['Ansible', 'Prometheus', 'Grafana', 'Python', 'Go'],
+      tjmAffiche: 625,
       tjmMin: 550,
       tjmMax: 700,
-      dureeJours: 120,
+      tjmADefinir: false,
+      dureeNombre: 4,
+      dureeUnite: 'MOIS',
+      renouvelable: true,
+      secteur: 'Tech / Startup',
       lieu: 'Remote',
       mobilite: 'FULL_REMOTE',
+      deplacementMultiSite: false,
       experienceMin: 3,
       statut: 'PUBLIEE',
       publieLe: new Date(),
       createdByAdmin: true,
+      offreTrinexta: true,
     },
   })
 
@@ -114,7 +132,9 @@ Environnement technique:
     where: { slug: 'lead-dev-react-nodejs-lyon' },
     update: {},
     create: {
+      codeUnique: 'MI1003',
       slug: 'lead-dev-react-nodejs-lyon',
+      typeOffre: 'TRINEXTA',
       titre: 'Lead Developer React/Node.js',
       description: `Une PME lyonnaise innovante dans le secteur de la santé recherche un Lead Developer pour encadrer une équipe de 4 développeurs.
 
@@ -135,16 +155,23 @@ Stack:
 - Basé à Lyon ou alentours`,
       competencesRequises: ['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Docker'],
       competencesSouhaitees: ['Next.js', 'GraphQL', 'NestJS', 'AWS', 'Redis'],
+      tjmAffiche: 675,
       tjmMin: 600,
       tjmMax: 750,
-      dureeJours: 240,
+      tjmADefinir: false,
+      dureeNombre: 8,
+      dureeUnite: 'MOIS',
+      renouvelable: true,
+      secteur: 'Santé',
       lieu: 'Lyon',
       codePostal: '69000',
       mobilite: 'HYBRIDE',
+      deplacementMultiSite: false,
       experienceMin: 7,
       statut: 'PUBLIEE',
       publieLe: new Date(),
       createdByAdmin: true,
+      offreTrinexta: true,
     },
   })
 
