@@ -300,7 +300,7 @@ export async function POST(
           await prisma.candidature.update({
             where: { id: fb.candidatureId },
             data: {
-              statut: fb.retenu ? 'ENTRETIEN' : 'REFUSEE',
+              statut: fb.retenu ? 'ENTRETIEN_DEMANDE' : 'REFUSEE',
               notesClient: fb.commentaire,
             },
           })
