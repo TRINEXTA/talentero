@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 import { registerClientSchema } from '@/lib/validations'
-import { sendWelcomeClientEmail } from '@/lib/email'
+import { sendWelcomeClientEmail } from '@/lib/microsoft-graph'
 import { generateClientCode } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {

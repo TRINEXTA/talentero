@@ -905,6 +905,153 @@ export async function sendClientWelcomeEmail(
 }
 
 /**
+ * Email de bienvenue pour un talent (registration)
+ */
+export async function sendWelcomeTalentEmail(
+  email: string,
+  prenom: string
+): Promise<boolean> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+
+  return sendEmailViaGraph({
+    to: email,
+    subject: 'Bienvenue sur Talentero !',
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f4f4f5; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+            .content { padding: 32px 24px; color: #1e293b; line-height: 1.6; }
+            .steps { background: #f0f9ff; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .step { display: flex; align-items: flex-start; margin: 12px 0; }
+            .step-number { background: #2563eb; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0; }
+            .button { display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff !important; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+            .footer { padding: 24px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="header">
+                <h1>Bienvenue sur Talentero !</h1>
+              </div>
+              <div class="content">
+                <p>Bonjour ${prenom},</p>
+                <p>Votre compte Talentero a été créé avec succès. Vous faites maintenant partie de notre communauté de freelances IT.</p>
+                <div class="steps">
+                  <p style="font-weight: 600; margin-top: 0;">Prochaines étapes :</p>
+                  <div class="step">
+                    <span class="step-number">1</span>
+                    <span>Complétez votre profil pour augmenter votre visibilité</span>
+                  </div>
+                  <div class="step">
+                    <span class="step-number">2</span>
+                    <span>Parcourez les offres disponibles</span>
+                  </div>
+                  <div class="step">
+                    <span class="step-number">3</span>
+                    <span>Postulez et découvrez votre score de matching instantané</span>
+                  </div>
+                </div>
+                <p style="text-align: center;">
+                  <a href="${appUrl}/t/dashboard" class="button">Accéder à mon espace</a>
+                </p>
+                <p>L'équipe TRINEXTA est là pour vous accompagner dans votre recherche de missions.</p>
+              </div>
+              <div class="footer">
+                <p><strong>Talentero</strong> - Opéré par TRINEXTA</p>
+                <p>Cet email a été envoyé à ${email}</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  })
+}
+
+/**
+ * Email de bienvenue pour un client (registration - en attente validation)
+ */
+export async function sendWelcomeClientEmail(
+  email: string,
+  contactPrenom: string,
+  raisonSociale: string
+): Promise<boolean> {
+  return sendEmailViaGraph({
+    to: email,
+    subject: 'Bienvenue sur Talentero - Votre compte est en attente de validation',
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f4f4f5; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+            .content { padding: 32px 24px; color: #1e293b; line-height: 1.6; }
+            .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+            .features { background: #f0f9ff; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .feature { display: flex; align-items: flex-start; margin: 12px 0; }
+            .feature-icon { color: #2563eb; margin-right: 12px; font-size: 18px; }
+            .footer { padding: 24px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="header">
+                <h1>Bienvenue sur Talentero !</h1>
+              </div>
+              <div class="content">
+                <p>Bonjour ${contactPrenom},</p>
+                <p>Merci d'avoir créé un compte entreprise pour <strong>${raisonSociale}</strong> sur Talentero.</p>
+                <div class="info-box">
+                  <strong>⏳ Validation en cours</strong>
+                  <p style="margin-bottom: 0;">Votre compte est actuellement en attente de validation par notre équipe TRINEXTA. Nous vérifions chaque entreprise pour garantir la qualité de notre plateforme.</p>
+                  <p style="margin-bottom: 0;"><strong>Délai habituel : 24-48h ouvrées</strong></p>
+                </div>
+                <div class="features">
+                  <p style="font-weight: 600; margin-top: 0;">Une fois validé, vous pourrez :</p>
+                  <div class="feature">
+                    <span class="feature-icon">✓</span>
+                    <span>Publier des offres de missions</span>
+                  </div>
+                  <div class="feature">
+                    <span class="feature-icon">✓</span>
+                    <span>Recevoir des candidatures de freelances qualifiés</span>
+                  </div>
+                  <div class="feature">
+                    <span class="feature-icon">✓</span>
+                    <span>Bénéficier de notre matching intelligent</span>
+                  </div>
+                </div>
+                <p>Nous vous contacterons dès que votre compte sera activé.</p>
+              </div>
+              <div class="footer">
+                <p><strong>Talentero</strong> - Opéré par TRINEXTA</p>
+                <p>Cet email a été envoyé à ${email}</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  })
+}
+
+/**
  * Notification nouvelle offre pour validation admin
  */
 export async function sendNewOffreToAdmin(

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword, createSession } from '@/lib/auth'
 import { registerTalentSchema } from '@/lib/validations'
-import { sendWelcomeTalentEmail } from '@/lib/email'
+import { sendWelcomeTalentEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
