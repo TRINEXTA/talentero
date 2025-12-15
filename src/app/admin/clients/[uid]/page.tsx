@@ -61,9 +61,11 @@ interface Client {
     ville: string
     estSiegeSocial: boolean
   }>
-  _count: {
-    offres: number
-  }
+  offres: Array<{
+    uid: string
+    titre: string
+    statut: string
+  }>
 }
 
 const STATUT_OPTIONS = [
@@ -169,9 +171,9 @@ export default function AdminClientDetailPage() {
   const handleValidate = async () => {
     try {
       const res = await fetch(`/api/admin/clients/${uid}`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'valider' }),
+        body: JSON.stringify({ action: 'validate' }),
       })
       if (!res.ok) throw new Error('Erreur')
       toast({
@@ -191,9 +193,9 @@ export default function AdminClientDetailPage() {
   const handleSuspend = async () => {
     try {
       const res = await fetch(`/api/admin/clients/${uid}`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'suspendre' }),
+        body: JSON.stringify({ action: 'suspend' }),
       })
       if (!res.ok) throw new Error('Erreur')
       toast({
@@ -316,7 +318,7 @@ export default function AdminClientDetailPage() {
             className={activeTab !== 'offres' ? 'border-gray-700 text-gray-300' : ''}
           >
             <Briefcase className="w-4 h-4 mr-2" />
-            Offres ({client._count.offres})
+            Offres ({client.offres.length})
           </Button>
         </div>
 
@@ -581,7 +583,7 @@ export default function AdminClientDetailPage() {
                 <CardContent>
                   <div className="text-center p-4 bg-gray-700 rounded-lg">
                     <Briefcase className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-2xl font-bold text-white">{client._count.offres}</p>
+                    <p className="text-2xl font-bold text-white">{client.offres.length}</p>
                     <p className="text-sm text-gray-400">Offres</p>
                   </div>
                   <div className="mt-4 text-sm text-gray-400">
@@ -643,7 +645,7 @@ export default function AdminClientDetailPage() {
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="py-12 text-center">
               <Briefcase className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">{client._count.offres} offre(s)</p>
+              <p className="text-gray-400">{client.offres.length} offre(s)</p>
               <Link href={`/admin/offres?client=${client.uid}`}>
                 <Button className="mt-4">Voir les offres</Button>
               </Link>
