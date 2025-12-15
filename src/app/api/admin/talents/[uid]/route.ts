@@ -22,6 +22,7 @@ export async function GET(
       include: {
         user: {
           select: {
+            uid: true,
             email: true,
             emailVerified: true,
             isActive: true,
@@ -61,6 +62,12 @@ export async function GET(
           },
           orderBy: { score: 'desc' },
           take: 10,
+        },
+        _count: {
+          select: {
+            candidatures: true,
+            matchs: true,
+          },
         },
       },
     })

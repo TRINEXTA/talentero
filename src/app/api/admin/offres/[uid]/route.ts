@@ -102,6 +102,12 @@ export async function GET(
           },
           orderBy: { dateProposee: 'desc' },
         },
+        _count: {
+          select: {
+            candidatures: true,
+            matchs: true,
+          },
+        },
       },
     })
 

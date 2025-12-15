@@ -1,61 +1,59 @@
 /**
  * API Admin - Lancer le matching pour une offre
- * POST /api/admin/offres/[uid]/matching
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getCurrentUser } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
 import { matchTalentsForOffer } from '@/lib/matching'
 
+// POST - Lancer le matching pour une offre
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
-    }
-
+    await requireRole(['ADMIN'])
     const { uid } = await params
 
-    // Recupere l'offre
     const offre = await prisma.offre.findUnique({
       where: { uid },
+      select: { id: true, titre: true, statut: true },
     })
 
     if (!offre) {
       return NextResponse.json({ error: 'Offre non trouvee' }, { status: 404 })
     }
 
+    if (offre.statut !== 'PUBLIEE') {
+      return NextResponse.json(
+        { error: 'Le matching ne peut etre lance que sur une offre publiee' },
+        { status: 400 }
+      )
+    }
+
     // Lance le matching
-    const results = await matchTalentsForOffer(offre.id, 50, true)
+    const matches = await matchTalentsForOffer(offre.id, 50, true)
 
     // Log l'action
     await prisma.auditLog.create({
       data: {
-        userId: user.id,
-        action: 'RUN_MATCHING',
+        action: 'RUN_MATCHING_ADMIN',
         entite: 'Offre',
         entiteId: offre.id,
-        details: { matchCount: results.length },
+        details: { matchCount: matches.length },
       },
     })
 
     return NextResponse.json({
       success: true,
-      matchCount: results.length,
-      matches: results.map(r => ({
-        talentId: r.talentId,
-        score: r.score,
-        competencesMatchees: r.competencesMatchees,
-      })),
+      matchCount: matches.length,
+      message: `${matches.length} talents matches pour "${offre.titre}"`,
     })
   } catch (error) {
-    console.error('Erreur matching:', error)
+    console.error('Erreur POST matching offre:', error)
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: error instanceof Error ? error.message : 'Erreur serveur' },
       { status: 500 }
     )
   }
