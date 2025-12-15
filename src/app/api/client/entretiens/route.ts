@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         heureDebut,
         heureFin: heureFin || null,
         typeVisio: typeVisio || null,
-        notes: message || null,
+        notesEntretien: message || null,
         statut: 'EN_ATTENTE_CONFIRMATION',
       },
     })
