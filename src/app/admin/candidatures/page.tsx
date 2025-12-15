@@ -91,7 +91,7 @@ export default function AdminCandidaturesPage() {
       ENTRETIEN_DEMANDE: { label: 'Entretien', className: 'bg-orange-600' },
       ENTRETIEN_PLANIFIE: { label: 'Planifie', className: 'bg-orange-600' },
       ENTRETIEN_REALISE: { label: 'Realise', className: 'bg-orange-600' },
-      RETENUE: { label: 'Retenue', className: 'bg-green-600' },
+      ACCEPTEE: { label: 'Retenue', className: 'bg-green-600' },
       REFUSEE: { label: 'Refusee', className: 'bg-red-600' },
       ABANDONNEE: { label: 'Abandonnee', className: 'bg-gray-600' },
     }
@@ -204,10 +204,10 @@ export default function AdminCandidaturesPage() {
               Shortlist
             </Button>
             <Button
-              variant={filter === 'RETENUE' ? 'default' : 'outline'}
+              variant={filter === 'ACCEPTEE' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFilter('RETENUE')}
-              className={filter === 'RETENUE' ? 'bg-green-600' : 'border-gray-700 text-gray-300'}
+              onClick={() => setFilter('ACCEPTEE')}
+              className={filter === 'ACCEPTEE' ? 'bg-green-600' : 'border-gray-700 text-gray-300'}
             >
               Retenues
             </Button>

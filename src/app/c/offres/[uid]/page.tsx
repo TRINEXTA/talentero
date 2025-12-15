@@ -169,7 +169,7 @@ export default function ClientOffreDetailPage() {
       ENTRETIEN_DEMANDE: { label: 'Entretien demande', className: 'bg-orange-100 text-orange-800' },
       ENTRETIEN_PLANIFIE: { label: 'Entretien planifie', className: 'bg-orange-100 text-orange-800' },
       ENTRETIEN_REALISE: { label: 'Entretien realise', className: 'bg-orange-100 text-orange-800' },
-      RETENUE: { label: 'Retenue', className: 'bg-green-100 text-green-800' },
+      ACCEPTEE: { label: 'Retenue', className: 'bg-green-100 text-green-800' },
       REFUSEE: { label: 'Refusee', className: 'bg-red-100 text-red-800' },
       ABANDONNEE: { label: 'Abandonnee', className: 'bg-gray-100 text-gray-600' },
     }
