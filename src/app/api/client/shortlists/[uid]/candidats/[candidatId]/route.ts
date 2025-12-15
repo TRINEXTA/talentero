@@ -155,7 +155,7 @@ export async function PATCH(
         await prisma.notification.create({
           data: {
             userId: candidat.candidature.talent.user.id,
-            type: 'ENTRETIEN',
+            type: 'ENTRETIEN_DEMANDE',
             titre: 'Demande d\'entretien',
             message: `Un client souhaite vous rencontrer pour "${shortlist.offre.titre}"`,
             lien: `/t/candidatures`,

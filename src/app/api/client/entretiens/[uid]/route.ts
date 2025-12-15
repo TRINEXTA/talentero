@@ -129,7 +129,7 @@ export async function PATCH(
           await prisma.notification.create({
             data: {
               userId: talentUser.id,
-              type: 'ENTRETIEN',
+              type: 'ENTRETIEN_ANNULE',
               titre: 'Entretien annulé',
               message: `L'entretien pour "${entretien.offre.titre}" a été annulé`,
               lien: `/t/candidatures`,
@@ -172,7 +172,7 @@ export async function PATCH(
           await prisma.notification.create({
             data: {
               userId: talentUser.id,
-              type: 'ENTRETIEN',
+              type: 'ENTRETIEN_DEMANDE',
               titre: 'Entretien reprogrammé',
               message: `L'entretien pour "${entretien.offre.titre}" a été reprogrammé`,
               lien: `/t/entretiens/${uid}`,

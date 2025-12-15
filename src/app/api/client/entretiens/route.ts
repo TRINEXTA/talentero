@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       await prisma.notification.create({
         data: {
           userId: talentUser.id,
-          type: 'ENTRETIEN',
+          type: 'ENTRETIEN_DEMANDE',
           titre: 'Demande d\'entretien',
           message: `Vous avez reçu une demande d'entretien pour l'offre "${candidature.offre.titre}"`,
           lien: `/t/entretiens/${entretien.uid}`,
