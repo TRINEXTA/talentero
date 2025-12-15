@@ -7,6 +7,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from './db'
 import { sendMatchingWithFeedback } from './microsoft-graph'
+import { CategorieProfessionnelle } from '@prisma/client'
+import { CATEGORY_HIERARCHY, canCategoryMatch, getCompatibleCategories } from './category-classifier'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -53,6 +55,7 @@ export async function calculateMatchWithAI(
     accepteDeplacementEtranger: boolean
     certifications: string[]
     langues: string[]
+    categorieProfessionnelle?: CategorieProfessionnelle | null
   },
   offreData: {
     id: number
@@ -67,8 +70,26 @@ export async function calculateMatchWithAI(
     habilitationRequise: boolean
     typeHabilitation: string | null
     dateDebut: Date | null
+    categorieCible?: CategorieProfessionnelle | null
   }
 ): Promise<MatchResult> {
+  // Vérification de la compatibilité de catégorie
+  // Un ingénieur système/réseau peut accepter des missions technicien
+  let categoryBonus = 0
+  let categoryMatch = true
+
+  if (talentData.categorieProfessionnelle && offreData.categorieCible) {
+    categoryMatch = canCategoryMatch(talentData.categorieProfessionnelle, offreData.categorieCible)
+
+    // Bonus si le talent est surqualifié (catégorie supérieure)
+    if (categoryMatch && talentData.categorieProfessionnelle !== offreData.categorieCible) {
+      // Le talent a une catégorie supérieure -> bonus
+      const compatibleCats = getCompatibleCategories(talentData.categorieProfessionnelle)
+      if (compatibleCats.includes(offreData.categorieCible)) {
+        categoryBonus = 5 // +5 points pour un talent surqualifié
+      }
+    }
+  }
   const prompt = `Tu es un expert en recrutement IT. Analyse la compatibilité entre ce profil freelance et cette offre de mission.
 
 PROFIL FREELANCE:
@@ -134,13 +155,19 @@ Analyse et retourne UNIQUEMENT un JSON avec cette structure:
 
     const result = JSON.parse(jsonMatch[0])
 
+    // Applique le bonus de catégorie (talent surqualifié)
+    const finalScore = Math.min(100, result.score + categoryBonus)
+
     return {
       talentId: talentData.id,
-      score: result.score,
-      scoreDetails: result.scoreDetails,
+      score: finalScore,
+      scoreDetails: {
+        ...result.scoreDetails,
+        categoryBonus: categoryBonus > 0 ? categoryBonus : undefined
+      },
       competencesMatchees: result.competencesMatchees,
       competencesManquantes: result.competencesManquantes,
-      analyse: result.analyse,
+      analyse: result.analyse + (categoryBonus > 0 ? ' [Bonus: profil surqualifié]' : ''),
       feedback: result.feedback || {
         tjmTropHaut: false,
         experienceManquante: result.competencesManquantes || []
@@ -314,6 +341,7 @@ export async function matchTalentsForOffer(
         accepteDeplacementEtranger: talent.accepteDeplacementEtranger,
         certifications: talent.certifications,
         langues: talent.langues,
+        categorieProfessionnelle: talent.categorieProfessionnelle,
       },
       {
         id: offre.id,
@@ -328,6 +356,7 @@ export async function matchTalentsForOffer(
         habilitationRequise: offre.habilitationRequise,
         typeHabilitation: offre.typeHabilitation,
         dateDebut: offre.dateDebut,
+        // Note: categorieCible pourrait être ajoutée au modèle Offre si nécessaire
       }
     )
 

@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
         activationTokenExpiry: { gt: new Date() },
       },
       include: {
-        talent: true,
+        talent: {
+          select: {
+            compteComplet: true,
+          },
+        },
       },
     })
 
@@ -73,6 +77,13 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for') || undefined
     const sessionToken = await createSession(user.id, userAgent, ip)
 
+    // Détermine l'URL de redirection
+    // Si le talent n'a pas complété son profil, on le redirige vers l'onboarding
+    let redirectUrl = '/dashboard'
+    if (user.talent) {
+      redirectUrl = user.talent.compteComplet ? '/t/dashboard' : '/t/onboarding'
+    }
+
     // Réponse avec le cookie
     const response = NextResponse.json({
       success: true,
@@ -82,7 +93,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         role: user.role,
       },
-      redirectUrl: user.talent ? '/t/profile' : '/dashboard',
+      redirectUrl,
     })
 
     response.cookies.set('auth_token', sessionToken, {

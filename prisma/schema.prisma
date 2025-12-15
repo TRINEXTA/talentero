@@ -110,6 +110,18 @@ model Talent {
   siretVerifieLe        DateTime?
   siretEnCoursCreation  Boolean   @default(false)  // En attente de SIRET
 
+  // ===== GESTION ABSENCE SIRET =====
+  raisonAbsenceSiret       RaisonAbsenceSiret?  // Pourquoi pas de SIRET
+  dateCreationSocietePrevue DateTime?           // Date prévue création société (max 3 mois)
+  societePortage           String?              // Nom société de portage si PORTAGE_SALARIAL
+
+  // Suivi rappels SIRET (archivage auto après 3 mois)
+  dateRappel30j            DateTime?            // Rappel J-30 envoyé
+  dateRappel15j            DateTime?            // Rappel J-15 envoyé
+  dateRappel7j             DateTime?            // Rappel J-7 envoyé
+  dateArchivage            DateTime?            // Date archivage effectif
+  // ==================================
+
   // TVA
   tvaIntracommunautaire String?
   assujettTva           Boolean   @default(false)
@@ -215,6 +227,15 @@ enum TypeSociete {
   SAS
   PORTAGE
   AUTRE
+}
+
+// Raison de l'absence de SIRET (pour les comptes limités)
+enum RaisonAbsenceSiret {
+  EN_COURS_CREATION      // Société en cours de création
+  PORTAGE_SALARIAL       // Travaille via une société de portage
+  MICRO_EN_COURS         // Micro-entreprise en cours d'immatriculation
+  PREMIERE_MISSION       // Première mission, va créer sa société
+  AUTRE                  // Autre raison
 }
 
 enum Mobilite {
