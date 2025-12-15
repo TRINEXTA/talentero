@@ -144,12 +144,20 @@ function AdminTalentsContent() {
                 <h1 className="text-xl font-semibold text-gray-900">Gestion des Talents</h1>
               </div>
             </div>
-            <Link href="/admin/import-cv">
-              <Button className="bg-primary hover:bg-primary/90">
-                <Upload className="w-4 h-4 mr-2" />
-                Importer un CV
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/admin/import-cv">
+                <Button variant="outline">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import unitaire
+                </Button>
+              </Link>
+              <Link href="/admin/import-cv-masse">
+                <Button className="bg-primary hover:bg-primary/90">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import en masse
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
