@@ -202,7 +202,7 @@ export async function PATCH(
         await prisma.notification.create({
           data: {
             userId: candidat.candidature.talent.user.id,
-            type: 'MESSAGE',
+            type: 'DEMANDE_INFOS',
             titre: 'Question d\'un client',
             message: `Un client vous pose une question concernant "${shortlist.offre.titre}"`,
             lien: `/t/candidatures`,
