@@ -191,12 +191,12 @@ export function classifyTalent(
   let bestCategory: CategorieProfessionnelle = 'AUTRE'
   let bestScore = 0
 
-  for (const [category, score] of scores.entries()) {
+  scores.forEach((score, category) => {
     if (score > bestScore && category !== 'AUTRE') {
       bestScore = score
       bestCategory = category
     }
-  }
+  })
 
   // Si aucun score significatif, retourne AUTRE
   if (bestScore < 5) {
