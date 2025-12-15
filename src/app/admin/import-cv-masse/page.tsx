@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Upload, ChevronLeft, FileText, CheckCircle, AlertCircle, X,
@@ -13,12 +12,12 @@ import {
 
 interface CVFile {
   file: File
-  email: string
   status: 'pending' | 'uploading' | 'success' | 'error'
   error?: string
   result?: {
     prenom: string
     nom: string
+    email: string
     categorie: string
     competences: string[]
   }
@@ -97,7 +96,6 @@ export default function ImportCVMassePage() {
     if (files.length > 0) {
       const newCvFiles: CVFile[] = files.map(file => ({
         file,
-        email: '',
         status: 'pending'
       }))
       setCvFiles(prev => [...prev, ...newCvFiles])
@@ -110,20 +108,12 @@ export default function ImportCVMassePage() {
     if (files) {
       const newCvFiles: CVFile[] = Array.from(files).map(file => ({
         file,
-        email: '',
         status: 'pending'
       }))
       setCvFiles(prev => [...prev, ...newCvFiles])
     }
     // Reset input
     e.target.value = ''
-  }
-
-  // Mise à jour de l'email pour un fichier
-  const updateEmail = (index: number, email: string) => {
-    setCvFiles(prev => prev.map((cv, i) =>
-      i === index ? { ...cv, email } : cv
-    ))
   }
 
   // Suppression d'un fichier
@@ -138,9 +128,9 @@ export default function ImportCVMassePage() {
       return
     }
 
-    const validFiles = cvFiles.filter(cv => cv.email && cv.email.includes('@'))
-    if (validFiles.length === 0) {
-      alert('Veuillez ajouter au moins un CV avec un email valide')
+    const pendingFiles = cvFiles.filter(cv => cv.status === 'pending')
+    if (pendingFiles.length === 0) {
+      alert('Veuillez ajouter au moins un CV')
       return
     }
 
@@ -152,17 +142,14 @@ export default function ImportCVMassePage() {
       formData.append('offreId', String(selectedOffre))
       formData.append('sendEmails', String(sendEmails))
 
-      // Ajoute les fichiers
-      validFiles.forEach(cv => {
+      // Ajoute les fichiers (l'email sera extrait automatiquement du CV)
+      pendingFiles.forEach(cv => {
         formData.append('files', cv.file)
       })
 
-      // Ajoute les emails en JSON
-      formData.append('emails', JSON.stringify(validFiles.map(cv => cv.email)))
-
       // Met à jour le statut des fichiers en cours d'upload
       setCvFiles(prev => prev.map(cv =>
-        validFiles.includes(cv)
+        pendingFiles.includes(cv)
           ? { ...cv, status: 'uploading' }
           : cv
       ))
@@ -214,7 +201,7 @@ export default function ImportCVMassePage() {
   }
 
   const selectedOffreData = offres.find(o => o.id === selectedOffre)
-  const validFilesCount = cvFiles.filter(cv => cv.email && cv.email.includes('@')).length
+  const pendingFilesCount = cvFiles.filter(cv => cv.status === 'pending').length
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -296,10 +283,10 @@ export default function ImportCVMassePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-sm font-bold">2</span>
-              Ajoutez les CVs et emails
+              Ajoutez les CVs
             </CardTitle>
             <CardDescription>
-              Glissez-déposez plusieurs CVs ou sélectionnez-les, puis renseignez l'email de chaque candidat.
+              Glissez-déposez plusieurs CVs ou sélectionnez-les. L'email sera extrait automatiquement de chaque CV.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -369,10 +356,22 @@ export default function ImportCVMassePage() {
                       {/* Info fichier */}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 truncate">{cv.file.name}</p>
+                        {cv.status === 'pending' && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            <Mail className="w-3 h-3 inline mr-1" />
+                            L'email sera extrait automatiquement
+                          </p>
+                        )}
+                        {cv.status === 'uploading' && (
+                          <p className="text-xs text-primary mt-1">
+                            Analyse du CV en cours...
+                          </p>
+                        )}
                         {cv.status === 'success' && cv.result && (
                           <div className="mt-1">
                             <p className="text-sm text-green-600">
                               {cv.result.prenom} {cv.result.nom}
+                              <span className="text-gray-500 ml-2">({cv.result.email})</span>
                               <Badge variant="secondary" className="ml-2 text-xs">
                                 {CATEGORY_LABELS[cv.result.categorie] || cv.result.categorie}
                               </Badge>
@@ -397,27 +396,6 @@ export default function ImportCVMassePage() {
                           <p className="text-sm text-red-600">{cv.error}</p>
                         )}
                       </div>
-
-                      {/* Email input */}
-                      {cv.status === 'pending' && (
-                        <div className="flex-shrink-0 w-64">
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                              type="email"
-                              value={cv.email}
-                              onChange={(e) => updateEmail(index, e.target.value)}
-                              placeholder="email@exemple.com"
-                              className="pl-9 text-sm"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Email affiché après import */}
-                      {cv.status !== 'pending' && (
-                        <p className="text-sm text-gray-500 flex-shrink-0">{cv.email}</p>
-                      )}
 
                       {/* Bouton supprimer */}
                       {cv.status === 'pending' && (
@@ -471,7 +449,7 @@ export default function ImportCVMassePage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
-                    {validFilesCount} CV{validFilesCount > 1 ? 's' : ''} prêt{validFilesCount > 1 ? 's' : ''} à importer
+                    {pendingFilesCount} CV{pendingFilesCount > 1 ? 's' : ''} prêt{pendingFilesCount > 1 ? 's' : ''} à importer
                   </li>
                   {sendEmails && (
                     <li className="flex items-center gap-2">
@@ -525,7 +503,7 @@ export default function ImportCVMassePage() {
               ) : (
                 <Button
                   onClick={handleImport}
-                  disabled={!selectedOffre || validFilesCount === 0 || loading}
+                  disabled={!selectedOffre || pendingFilesCount === 0 || loading}
                   className="min-w-40"
                 >
                   {loading ? (
@@ -536,7 +514,7 @@ export default function ImportCVMassePage() {
                   ) : (
                     <>
                       <Upload className="w-4 h-4 mr-2" />
-                      Importer {validFilesCount} CV{validFilesCount > 1 ? 's' : ''}
+                      Importer {pendingFilesCount} CV{pendingFilesCount > 1 ? 's' : ''}
                     </>
                   )}
                 </Button>

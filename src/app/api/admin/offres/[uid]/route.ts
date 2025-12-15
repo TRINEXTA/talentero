@@ -158,6 +158,8 @@ export async function PATCH(
       'renouvelable',
       'nombrePostes',
       'lieu',
+      'ville',
+      'region',
       'codePostal',
       'mobilite',
       'deplacementMultiSite',

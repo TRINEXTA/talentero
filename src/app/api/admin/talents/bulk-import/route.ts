@@ -55,9 +55,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Récupère les fichiers CV et emails
+    // Récupère les fichiers CV
     const files = formData.getAll('files') as File[]
-    const emailsRaw = formData.get('emails') as string
     const sendEmails = formData.get('sendEmails') !== 'false'
 
     if (!files || files.length === 0) {
@@ -67,36 +66,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse les emails (format: "email1,email2,email3" ou JSON array)
-    let emails: string[] = []
-    try {
-      emails = emailsRaw ? JSON.parse(emailsRaw) : []
-    } catch {
-      emails = emailsRaw ? emailsRaw.split(',').map(e => e.trim()) : []
-    }
-
-    // Vérifie qu'on a autant d'emails que de fichiers
-    if (emails.length !== files.length) {
-      return NextResponse.json(
-        { error: `Nombre d'emails (${emails.length}) différent du nombre de CVs (${files.length})` },
-        { status: 400 }
-      )
-    }
-
     const results: ImportResult[] = []
 
     // Traite chaque CV
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
-      const email = emails[i]?.toLowerCase()
 
       try {
+        // Lit et parse le CV en premier pour extraire l'email
+        const cvBuffer = Buffer.from(await file.arrayBuffer())
+        const cvText = cvBuffer.toString('utf-8')
+        const parsedData = await parseCV(cvText)
+
+        // Récupère l'email extrait du CV
+        const email = parsedData.email?.toLowerCase()
+
         // Valide l'email
         if (!email || !email.includes('@')) {
           results.push({
             filename: file.name,
             success: false,
-            error: 'Email invalide ou manquant'
+            error: 'Aucun email trouvé dans le CV. Vérifiez que l\'email est présent et lisible.'
           })
           continue
         }
@@ -164,12 +154,7 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Lit et parse le CV
-        const cvBuffer = Buffer.from(await file.arrayBuffer())
-        const cvText = cvBuffer.toString('utf-8')
-        const parsedData = await parseCV(cvText)
-
-        // Classifie automatiquement la catégorie
+        // Classifie automatiquement la catégorie (parsedData est déjà disponible)
         const categorie = classifyTalent(parsedData.titrePoste, parsedData.competences)
 
         // Génère le token d'activation
