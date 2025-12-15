@@ -110,7 +110,7 @@ export async function PATCH(
           where: { uid },
           data: {
             statut: 'ANNULE',
-            notes: body.motif ? `Annulé par le client: ${body.motif}` : 'Annulé par le client',
+            notesEntretien: body.motif ? `Annulé par le client: ${body.motif}` : 'Annulé par le client',
           },
         })
 
@@ -220,7 +220,7 @@ export async function PATCH(
           where: { uid },
           data: {
             statut: 'REALISE',
-            notes: body.feedback ? `Feedback client: ${body.feedback}` : entretien.notes,
+            notesEntretien: body.feedback ? `Feedback client: ${body.feedback}` : entretien.notesEntretien,
           },
         })
 
