@@ -13,7 +13,7 @@ export async function GET() {
       )
     }
 
-    // Récupère les statistiques
+    // Récupère les statistiques de base
     const [
       totalTalents,
       totalClients,
@@ -22,6 +22,14 @@ export async function GET() {
       clientsEnAttente,
       offresEnAttente,
       candidaturesNouvelles,
+      // Talent status breakdown
+      talentsActifs,
+      talentsEnMission,
+      talentsInactifs,
+      talentsEnAttente,
+      // Offres breakdown
+      offresPubliees,
+      offresPourvues,
     ] = await Promise.all([
       prisma.talent.count(),
       prisma.client.count(),
@@ -30,7 +38,43 @@ export async function GET() {
       prisma.client.count({ where: { statut: 'EN_ATTENTE' } }),
       prisma.offre.count({ where: { statut: 'EN_ATTENTE_VALIDATION' } }),
       prisma.candidature.count({ where: { statut: 'NOUVELLE' } }),
+      // Talent status counts
+      prisma.talent.count({ where: { statut: 'ACTIF' } }),
+      prisma.talent.count({ where: { statut: 'EN_MISSION' } }),
+      prisma.talent.count({ where: { statut: 'INACTIF' } }),
+      prisma.talent.count({ where: { statut: 'EN_ATTENTE' } }),
+      // Offres counts
+      prisma.offre.count({ where: { statut: 'PUBLIEE' } }),
+      prisma.offre.count({ where: { statut: 'POURVUE' } }),
     ])
+
+    // Get recent activities
+    const recentCandidatures = await prisma.candidature.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        talent: {
+          select: { prenom: true, nom: true, uid: true }
+        },
+        offre: {
+          select: { titre: true, uid: true }
+        }
+      }
+    })
+
+    const recentTalents = await prisma.talent.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        uid: true,
+        prenom: true,
+        nom: true,
+        titrePoste: true,
+        statut: true,
+        createdAt: true,
+        importeParAdmin: true,
+      }
+    })
 
     return NextResponse.json({
       totalTalents,
@@ -40,6 +84,36 @@ export async function GET() {
       clientsEnAttente,
       offresEnAttente,
       candidaturesNouvelles,
+      // Status breakdown
+      talentsByStatus: {
+        actifs: talentsActifs,
+        enMission: talentsEnMission,
+        inactifs: talentsInactifs,
+        enAttente: talentsEnAttente,
+      },
+      offresByStatus: {
+        publiees: offresPubliees,
+        pourvues: offresPourvues,
+        enAttente: offresEnAttente,
+      },
+      // Recent activities
+      recentCandidatures: recentCandidatures.map(c => ({
+        uid: c.uid,
+        talentNom: `${c.talent.prenom} ${c.talent.nom}`,
+        talentUid: c.talent.uid,
+        offreTitre: c.offre.titre,
+        offreUid: c.offre.uid,
+        statut: c.statut,
+        createdAt: c.createdAt,
+      })),
+      recentTalents: recentTalents.map(t => ({
+        uid: t.uid,
+        nom: `${t.prenom} ${t.nom}`,
+        titrePoste: t.titrePoste,
+        statut: t.statut,
+        importeParAdmin: t.importeParAdmin,
+        createdAt: t.createdAt,
+      })),
     })
   } catch (error) {
     console.error('Erreur GET /api/admin/stats:', error)

@@ -29,7 +29,7 @@ interface Offre {
   client: {
     uid: string
     raisonSociale: string
-  }
+  } | null
   _count: {
     candidatures: number
     matchs: number
@@ -73,16 +73,34 @@ export default function AdminOffresPage() {
 
   const handleAction = async (uid: string, action: string) => {
     try {
-      const res = await fetch(`/api/admin/offres/${uid}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
-      })
-      if (res.ok) {
-        fetchOffres()
+      // Pour publish, utiliser POST avec action
+      if (action === 'publish') {
+        const res = await fetch(`/api/admin/offres/${uid}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'publish' }),
+        })
+        if (res.ok) {
+          fetchOffres()
+        } else {
+          const data = await res.json()
+          alert(data.error || 'Erreur')
+        }
       } else {
-        const data = await res.json()
-        alert(data.error || 'Erreur')
+        // Pour les autres actions, utiliser PATCH avec statut
+        const res = await fetch(`/api/admin/offres/${uid}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            statut: action === 'valider' ? 'PUBLIEE' : action === 'refuser' ? 'FERMEE' : action
+          }),
+        })
+        if (res.ok) {
+          fetchOffres()
+        } else {
+          const data = await res.json()
+          alert(data.error || 'Erreur')
+        }
       }
     } catch (error) {
       console.error('Erreur:', error)
@@ -275,7 +293,7 @@ export default function AdminOffresPage() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
-                          {offre.client.raisonSociale}
+                          {offre.client?.raisonSociale || 'TRINEXTA'}
                         </span>
                         {offre.lieu && (
                           <span className="flex items-center gap-1">
@@ -314,6 +332,16 @@ export default function AdminOffresPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {offre.statut === 'BROUILLON' && (
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => handleAction(offre.uid, 'publish')}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Publier
+                        </Button>
+                      )}
                       {offre.statut === 'EN_ATTENTE_VALIDATION' && (
                         <>
                           <Button

@@ -206,7 +206,7 @@ export default function AdminNouvelleOffrePage() {
           nombrePostes: parseInt(formData.nombrePostes) || 1,
           experienceMin: formData.experienceMin ? parseInt(formData.experienceMin) : null,
           dateDebut: formData.dateDebut || null,
-          statut: publish ? 'PUBLIEE' : 'BROUILLON',
+          publierMaintenant: publish,
           createdByAdmin: true,
         }),
       })

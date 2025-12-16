@@ -41,17 +41,26 @@ export async function GET(request: NextRequest) {
       // Pas connecté ou pas un talent, on continue sans matching
     }
 
-    // Construction des filtres
+    // Construction des filtres - pour les talents connectés, on montre toutes les offres publiées
     const where: any = {
       statut: 'PUBLIEE',
-      visiblePublic: true,
     }
 
+    // Pour les visiteurs non connectés, on ne montre que les offres publiques
+    if (talentCompetences.length === 0) {
+      where.visiblePublic = true
+    }
+
+    // Array pour stocker les conditions AND
+    const andConditions: any[] = []
+
     if (search) {
-      where.OR = [
-        { titre: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ]
+      andConditions.push({
+        OR: [
+          { titre: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ]
+      })
     }
 
     if (competences.length > 0) {
@@ -65,12 +74,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (lieu) {
-      where.OR = [
-        ...(where.OR || []),
-        { lieu: { contains: lieu, mode: 'insensitive' } },
-        { ville: { contains: lieu, mode: 'insensitive' } },
-        { secteur: { contains: lieu, mode: 'insensitive' } },
-      ]
+      andConditions.push({
+        OR: [
+          { lieu: { contains: lieu, mode: 'insensitive' } },
+          { ville: { contains: lieu, mode: 'insensitive' } },
+          { secteur: { contains: lieu, mode: 'insensitive' } },
+          { codePostal: { startsWith: lieu } },
+        ]
+      })
     }
 
     if (tjmMin) {
@@ -79,6 +90,11 @@ export async function GET(request: NextRequest) {
 
     if (tjmMax) {
       where.tjmMin = { lte: tjmMax }
+    }
+
+    // Combine les conditions AND si nécessaire
+    if (andConditions.length > 0) {
+      where.AND = andConditions
     }
 
     // Requête avec pagination

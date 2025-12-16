@@ -10,7 +10,7 @@ import { Logo } from '@/components/ui/logo'
 import {
   User, Briefcase, FileText, Bell, Settings, LogOut,
   Search, TrendingUp, Clock, CheckCircle, AlertCircle,
-  ChevronRight, Upload, MapPin, Building2, Star, Zap
+  ChevronRight, Upload, MapPin, Building2, Star, Zap, Calendar
 } from 'lucide-react'
 
 interface Stats {
@@ -52,7 +52,7 @@ interface OffreRecommandee {
     client: {
       nom: string
       logo: string | null
-    }
+    } | null
   }
 }
 
@@ -189,6 +189,9 @@ export default function TalentDashboardPage() {
                 <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
                   Candidatures
                 </Link>
+                <Link href="/t/planning" className="text-gray-600 hover:text-primary">
+                  Planning
+                </Link>
                 <Link href="/t/profil" className="text-gray-600 hover:text-primary">
                   Mon profil
                 </Link>
@@ -317,7 +320,7 @@ export default function TalentDashboardPage() {
               ) : (
                 <div className="space-y-4">
                   {candidaturesRecentes.map((candidature) => (
-                    <Link key={candidature.uid} href={`/offres/${candidature.offre.slug}`}>
+                    <Link key={candidature.uid} href={`/t/offres/${candidature.offre.slug}`}>
                       <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -379,7 +382,7 @@ export default function TalentDashboardPage() {
               ) : (
                 <div className="space-y-4">
                   {offresRecommandees.map((match) => (
-                    <Link key={match.offre.uid} href={`/offres/${match.offre.slug}`}>
+                    <Link key={match.offre.uid} href={`/t/offres/${match.offre.slug}`}>
                       <div className="p-4 rounded-lg border hover:border-primary hover:shadow-md transition-all">
                         <div className="flex items-start justify-between mb-2">
                           <h4 className="font-medium text-gray-900">{match.offre.titre}</h4>
@@ -388,7 +391,7 @@ export default function TalentDashboardPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-500 mb-2">
-                          {match.offre.client.nom}
+                          {match.offre.client?.nom || 'TRINEXTA'}
                         </p>
                         <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                           {match.offre.lieu && (
@@ -428,11 +431,17 @@ export default function TalentDashboardPage() {
             <CardTitle>Actions rapides</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-5 gap-4">
               <Link href="/t/offres" className="block">
                 <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition border border-primary/20">
                   <Search className="w-5 h-5 text-primary" />
                   <span className="font-medium text-primary">Voir les offres</span>
+                </div>
+              </Link>
+              <Link href="/t/planning" className="block">
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition border border-blue-200">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-blue-700">Mon planning</span>
                 </div>
               </Link>
               <Link href="/t/profil" className="block">
