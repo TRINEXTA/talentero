@@ -1343,3 +1343,158 @@ export async function sendProfessionalActivationEmail(
     importance: 'high',
   })
 }
+
+/**
+ * Envoie un rappel d'activation de compte
+ */
+export async function sendActivationReminder(
+  email: string,
+  prenom: string,
+  numeroRappel: number,
+  joursRestants: number
+): Promise<boolean> {
+  const activationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'}/activation`
+  const urgence = joursRestants <= 2
+
+  return sendEmailViaGraph({
+    to: email,
+    subject: urgence
+      ? `⚠️ URGENT: Votre compte TALENTERO sera supprimé dans ${joursRestants} jour${joursRestants > 1 ? 's' : ''}`
+      : `Rappel: Activez votre compte TALENTERO (${joursRestants} jours restants)`,
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <!-- Header -->
+              <div style="background: ${urgence ? '#dc2626' : '#f59e0b'}; padding: 24px; text-align: center;">
+                <h1 style="margin: 0; color: white; font-size: 20px; font-weight: 600;">
+                  ${urgence ? '⚠️ Action urgente requise' : '⏰ Rappel d\'activation'}
+                </h1>
+              </div>
+
+              <!-- Content -->
+              <div style="padding: 32px 24px;">
+                <p style="color: #1e293b; font-size: 16px; margin: 0 0 20px;">
+                  Bonjour <strong>${prenom}</strong>,
+                </p>
+
+                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">
+                  ${urgence
+                    ? `<strong style="color: #dc2626;">Attention !</strong> Votre compte TALENTERO n'a toujours pas été activé. Il sera <strong>automatiquement supprimé dans ${joursRestants} jour${joursRestants > 1 ? 's' : ''}</strong> si vous n'effectuez pas l'activation.`
+                    : `Nous avons remarqué que votre compte TALENTERO n'a pas encore été activé. N'oubliez pas de finaliser votre inscription pour accéder aux missions freelance IT.`
+                  }
+                </p>
+
+                <!-- CTA Button -->
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${activationUrl}"
+                     style="display: inline-block; background: ${urgence ? '#dc2626' : '#2563eb'}; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                    Activer mon compte maintenant
+                  </a>
+                </div>
+
+                ${urgence ? `
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #991b1b; font-size: 14px;">
+                    <strong>Important :</strong> Une fois supprimé, votre profil et toutes les données associées seront définitivement perdus.
+                  </p>
+                </div>
+                ` : ''}
+
+                <div style="background: #f0f9ff; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #0369a1; font-size: 14px;">
+                    💡 <strong>Pourquoi activer votre compte ?</strong><br><br>
+                    • Accédez aux offres de missions freelance IT<br>
+                    • Soyez visible auprès des entreprises<br>
+                    • Recevez des matchings personnalisés
+                  </p>
+                </div>
+
+                <p style="color: #64748b; font-size: 13px; margin: 0;">
+                  Si vous avez des difficultés, répondez simplement à cet email.
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div style="background: #1e293b; padding: 20px 24px; text-align: center;">
+                <p style="margin: 0 0 4px; color: #ffffff; font-weight: 600; font-size: 13px;">TRINEXTA</p>
+                <p style="margin: 0; color: #94a3b8; font-size: 11px;">by TrusTech IT Support</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    importance: urgence ? 'high' : 'normal',
+  })
+}
+
+/**
+ * Envoie un avertissement de suppression de compte
+ */
+export async function sendAccountDeletionWarning(
+  email: string,
+  prenom: string,
+  joursInactif: number
+): Promise<boolean> {
+  return sendEmailViaGraph({
+    to: email,
+    subject: `Votre compte TALENTERO a été supprimé`,
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <!-- Header -->
+              <div style="background: #64748b; padding: 24px; text-align: center;">
+                <h1 style="margin: 0; color: white; font-size: 20px; font-weight: 600;">
+                  Compte supprimé
+                </h1>
+              </div>
+
+              <!-- Content -->
+              <div style="padding: 32px 24px;">
+                <p style="color: #1e293b; font-size: 16px; margin: 0 0 20px;">
+                  Bonjour <strong>${prenom}</strong>,
+                </p>
+
+                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">
+                  Votre compte TALENTERO a été supprimé car il n'a pas été activé dans les délais (${joursInactif} jours).
+                </p>
+
+                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">
+                  Si vous souhaitez rejoindre notre plateforme, vous pouvez vous réinscrire.
+                </p>
+
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'}/t/inscription"
+                     style="display: inline-block; background: #2563eb; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                    Me réinscrire
+                  </a>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div style="background: #1e293b; padding: 20px 24px; text-align: center;">
+                <p style="margin: 0 0 4px; color: #ffffff; font-weight: 600; font-size: 13px;">TRINEXTA</p>
+                <p style="margin: 0; color: #94a3b8; font-size: 11px;">by TrusTech IT Support</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    importance: 'normal',
+  })
+}

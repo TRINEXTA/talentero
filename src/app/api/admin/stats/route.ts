@@ -30,6 +30,9 @@ export async function GET() {
       // Offres breakdown
       offresPubliees,
       offresPourvues,
+      // NOUVEAU: Comptes non activés (en attente d'activation)
+      talentsNonActives,
+      talentsActifsReels, // Actifs ET compte activé
     ] = await Promise.all([
       prisma.talent.count(),
       prisma.client.count(),
@@ -46,6 +49,19 @@ export async function GET() {
       // Offres counts
       prisma.offre.count({ where: { statut: 'PUBLIEE' } }),
       prisma.offre.count({ where: { statut: 'POURVUE' } }),
+      // Comptes non activés (emailVerified = false)
+      prisma.talent.count({
+        where: {
+          user: { emailVerified: false, activationToken: { not: null } }
+        }
+      }),
+      // Talents vraiment actifs (statut ACTIF + compte activé)
+      prisma.talent.count({
+        where: {
+          statut: 'ACTIF',
+          user: { isActive: true, emailVerified: true }
+        }
+      }),
     ])
 
     // Get recent activities
@@ -87,9 +103,11 @@ export async function GET() {
       // Status breakdown
       talentsByStatus: {
         actifs: talentsActifs,
+        actifsReels: talentsActifsReels, // NOUVEAU: vraiment disponibles pour matching
         enMission: talentsEnMission,
         inactifs: talentsInactifs,
         suspendus: talentsSuspendus,
+        nonActives: talentsNonActives, // NOUVEAU: en attente d'activation
       },
       offresByStatus: {
         publiees: offresPubliees,

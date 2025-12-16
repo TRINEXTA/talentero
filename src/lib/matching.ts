@@ -1,24 +1,95 @@
 /**
- * Service de Matching IA avec Claude
+ * Service de Matching IA avec Claude - Version Améliorée
  * Calcule automatiquement les correspondances entre talents et offres
  * Génère des feedbacks personnalisés (TJM, compétences manquantes)
+ *
+ * ALGORITHME DE SCORING STRICT:
+ * - 50% Compétences requises (OBLIGATOIRES - pénalité forte si manquantes)
+ * - 15% Compétences souhaitées (bonus)
+ * - 15% Expérience
+ * - 10% TJM compatible
+ * - 10% Disponibilité/Mobilité
+ *
+ * RÈGLES:
+ * - Si < 50% des compétences requises -> score plafonné à 40%
+ * - Si TJM > budget + 20% -> pénalité de 30 points
+ * - Si expérience < 50% du requis -> pénalité de 20 points
  */
 
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from './db'
 import { sendMatchingWithFeedback } from './microsoft-graph'
 import { CategorieProfessionnelle } from '@prisma/client'
-import { CATEGORY_HIERARCHY, canCategoryMatch, getCompatibleCategories } from './category-classifier'
+import { canCategoryMatch, getCompatibleCategories } from './category-classifier'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
+
+// Normalisation des compétences pour comparaison
+const normalizeSkill = (skill: string): string => {
+  return skill
+    .toLowerCase()
+    .trim()
+    .replace(/[.\-_]/g, '')
+    .replace(/\s+/g, ' ')
+    // Normalisations courantes
+    .replace(/^js$/, 'javascript')
+    .replace(/^ts$/, 'typescript')
+    .replace(/^node$/, 'nodejs')
+    .replace(/^react\.js$/, 'react')
+    .replace(/^vue\.js$/, 'vue')
+    .replace(/^angular\.js$/, 'angular')
+    .replace(/^c#$/, 'csharp')
+    .replace(/^\.net$/, 'dotnet')
+}
+
+// Vérifie si deux compétences sont équivalentes
+const skillsMatch = (skill1: string, skill2: string): boolean => {
+  const s1 = normalizeSkill(skill1)
+  const s2 = normalizeSkill(skill2)
+
+  // Match exact
+  if (s1 === s2) return true
+
+  // Match partiel (ex: "React" match "React Native" partiellement)
+  if (s1.includes(s2) || s2.includes(s1)) return true
+
+  // Synonymes courants
+  const synonyms: Record<string, string[]> = {
+    'javascript': ['js', 'ecmascript', 'es6', 'es2015'],
+    'typescript': ['ts'],
+    'nodejs': ['node', 'node js'],
+    'react': ['reactjs', 'react js'],
+    'vue': ['vuejs', 'vue js'],
+    'angular': ['angularjs', 'angular js'],
+    'python': ['py', 'python3'],
+    'postgresql': ['postgres', 'pgsql'],
+    'mysql': ['mariadb'],
+    'mongodb': ['mongo'],
+    'kubernetes': ['k8s'],
+    'docker': ['conteneur', 'container'],
+    'aws': ['amazon web services'],
+    'azure': ['microsoft azure'],
+    'gcp': ['google cloud', 'google cloud platform'],
+    'ci/cd': ['cicd', 'pipeline', 'devops'],
+    'agile': ['scrum', 'kanban'],
+  }
+
+  for (const [key, values] of Object.entries(synonyms)) {
+    const allVariants = [key, ...values]
+    if (allVariants.includes(s1) && allVariants.includes(s2)) return true
+  }
+
+  return false
+}
 
 interface MatchResult {
   talentId: number
   score: number
   scoreDetails: {
     competences: number
+    competencesSouhaitees: number
     experience: number
     mobilite: number
     disponibilite: number
@@ -26,17 +97,26 @@ interface MatchResult {
   }
   competencesMatchees: string[]
   competencesManquantes: string[]
+  competencesSouhaiteesMatchees: string[]
   analyse: string
-  // Nouveau: feedback pour le talent
   feedback: {
     tjmTropHaut: boolean
     tjmFourchette?: string
     experienceManquante: string[]
+    raisonScore: string
+  }
+  // Indicateurs de blocage
+  bloqueurs: {
+    competencesInsuffisantes: boolean
+    tjmIncompatible: boolean
+    experienceInsuffisante: boolean
+    indisponible: boolean
   }
 }
 
 /**
- * Calcule le score de matching entre un talent et une offre avec Claude
+ * Calcule le score de matching entre un talent et une offre
+ * Utilise d'abord un calcul algorithmique strict, puis affine avec l'IA si nécessaire
  */
 export async function calculateMatchWithAI(
   talentData: {
@@ -73,208 +153,245 @@ export async function calculateMatchWithAI(
     categorieCible?: CategorieProfessionnelle | null
   }
 ): Promise<MatchResult> {
-  // Vérification de la compatibilité de catégorie
-  // Un ingénieur système/réseau peut accepter des missions technicien
-  let categoryBonus = 0
-  let categoryMatch = true
+  // ==== ÉTAPE 1: CALCUL ALGORITHMIQUE STRICT ====
 
-  if (talentData.categorieProfessionnelle && offreData.categorieCible) {
-    categoryMatch = canCategoryMatch(talentData.categorieProfessionnelle, offreData.categorieCible)
+  // 1. Analyse des compétences REQUISES (le plus important)
+  const competencesMatchees: string[] = []
+  const competencesManquantes: string[] = []
 
-    // Bonus si le talent est surqualifié (catégorie supérieure)
-    if (categoryMatch && talentData.categorieProfessionnelle !== offreData.categorieCible) {
-      // Le talent a une catégorie supérieure -> bonus
-      const compatibleCats = getCompatibleCategories(talentData.categorieProfessionnelle)
-      if (compatibleCats.includes(offreData.categorieCible)) {
-        categoryBonus = 5 // +5 points pour un talent surqualifié
-      }
+  for (const reqSkill of offreData.competencesRequises) {
+    const found = talentData.competences.some(talentSkill =>
+      skillsMatch(talentSkill, reqSkill)
+    )
+    if (found) {
+      competencesMatchees.push(reqSkill)
+    } else {
+      competencesManquantes.push(reqSkill)
     }
   }
-  const prompt = `Tu es un expert en recrutement IT. Analyse la compatibilité entre ce profil freelance et cette offre de mission.
 
-PROFIL FREELANCE:
-- Compétences: ${talentData.competences.join(', ')}
-- Années d'expérience: ${talentData.anneesExperience}
-- TJM souhaité: ${talentData.tjm || 'Non défini'} (min: ${talentData.tjmMin || 'N/A'}, max: ${talentData.tjmMax || 'N/A'})
-- Mobilité: ${talentData.mobilite}
-- Zones géographiques: ${talentData.zonesGeographiques.join(', ') || 'Toutes'}
-- Disponibilité: ${talentData.disponibilite}${talentData.disponibleLe ? ` (à partir du ${talentData.disponibleLe.toLocaleDateString('fr-FR')})` : ''}
-- Nationalité: ${talentData.nationalite || 'Non précisée'}
-- Permis de conduire: ${talentData.permisConduire ? 'Oui' : 'Non'}
-- Accepte déplacements étranger: ${talentData.accepteDeplacementEtranger ? 'Oui' : 'Non'}
-- Certifications: ${talentData.certifications.join(', ') || 'Aucune'}
-- Langues: ${talentData.langues.join(', ') || 'Non précisé'}
-
-OFFRE DE MISSION:
-- Compétences requises: ${offreData.competencesRequises.join(', ')}
-- Compétences souhaitées: ${offreData.competencesSouhaitees.join(', ') || 'Aucune'}
-- Expérience minimum: ${offreData.experienceMin || 'Non précisé'} ans
-- TJM: ${offreData.tjmMin || 'N/A'} - ${offreData.tjmMax || 'N/A'}
-- Mobilité: ${offreData.mobilite}
-- Lieu: ${offreData.lieu || 'Non précisé'}
-- Déplacements étranger: ${offreData.deplacementEtranger ? 'Oui' : 'Non'}
-- Habilitation requise: ${offreData.habilitationRequise ? offreData.typeHabilitation || 'Oui' : 'Non'}
-- Début mission: ${offreData.dateDebut ? offreData.dateDebut.toLocaleDateString('fr-FR') : 'Flexible'}
-
-Analyse et retourne UNIQUEMENT un JSON avec cette structure:
-{
-  "score": <score global 0-100>,
-  "scoreDetails": {
-    "competences": <0-100>,
-    "experience": <0-100>,
-    "mobilite": <0-100>,
-    "disponibilite": <0-100>,
-    "tjm": <0-100>
-  },
-  "competencesMatchees": ["liste des compétences qui matchent"],
-  "competencesManquantes": ["liste des compétences requises manquantes"],
-  "analyse": "Résumé en 2-3 phrases de la compatibilité",
-  "feedback": {
-    "tjmTropHaut": true/false,
-    "tjmFourchette": "si tjmTropHaut, indiquer la fourchette acceptable ex: '400-500€/jour'",
-    "experienceManquante": ["liste des compétences/expériences manquantes importantes"]
-  }
-}`
-
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const textContent = response.content.find(c => c.type === 'text')
-    if (!textContent || textContent.type !== 'text') {
-      throw new Error('Réponse invalide de Claude')
+  // 2. Analyse des compétences SOUHAITÉES (bonus)
+  const competencesSouhaiteesMatchees: string[] = []
+  for (const optSkill of offreData.competencesSouhaitees) {
+    const found = talentData.competences.some(talentSkill =>
+      skillsMatch(talentSkill, optSkill)
+    )
+    if (found) {
+      competencesSouhaiteesMatchees.push(optSkill)
     }
-
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error('Pas de JSON trouvé')
-    }
-
-    const result = JSON.parse(jsonMatch[0])
-
-    // Applique le bonus de catégorie (talent surqualifié)
-    const finalScore = Math.min(100, result.score + categoryBonus)
-
-    return {
-      talentId: talentData.id,
-      score: finalScore,
-      scoreDetails: {
-        ...result.scoreDetails,
-        categoryBonus: categoryBonus > 0 ? categoryBonus : undefined
-      },
-      competencesMatchees: result.competencesMatchees,
-      competencesManquantes: result.competencesManquantes,
-      analyse: result.analyse + (categoryBonus > 0 ? ' [Bonus: profil surqualifié]' : ''),
-      feedback: result.feedback || {
-        tjmTropHaut: false,
-        experienceManquante: result.competencesManquantes || []
-      },
-    }
-  } catch (error) {
-    console.error('Erreur matching IA:', error)
-    // Fallback: calcul basique sans IA
-    return calculateBasicMatch(talentData, offreData)
   }
-}
 
-/**
- * Calcul de matching basique (fallback si IA indisponible)
- */
-function calculateBasicMatch(
-  talentData: {
-    id: number
-    competences: string[]
-    anneesExperience: number
-    tjm: number | null
-    tjmMin: number | null
-    tjmMax: number | null
-    mobilite: string
-    disponibilite: string
-  },
-  offreData: {
-    competencesRequises: string[]
-    competencesSouhaitees: string[]
-    experienceMin: number | null
-    tjmMin: number | null
-    tjmMax: number | null
-    mobilite: string
+  // 3. Calcul des scores partiels
+  const nbRequired = offreData.competencesRequises.length || 1
+  const nbOptional = offreData.competencesSouhaitees.length || 1
+  const ratioRequired = competencesMatchees.length / nbRequired
+  const ratioOptional = competencesSouhaiteesMatchees.length / nbOptional
+
+  // Score compétences requises (0-100)
+  const scoreCompetences = Math.round(ratioRequired * 100)
+
+  // Score compétences souhaitées (0-100)
+  const scoreCompSouhaitees = Math.round(ratioOptional * 100)
+
+  // 4. Score expérience
+  let scoreExperience = 100
+  const expMin = offreData.experienceMin || 0
+  if (expMin > 0) {
+    if (talentData.anneesExperience >= expMin) {
+      scoreExperience = 100
+    } else if (talentData.anneesExperience >= expMin * 0.7) {
+      // 70-99% de l'expérience requise
+      scoreExperience = 70
+    } else if (talentData.anneesExperience >= expMin * 0.5) {
+      // 50-69% de l'expérience requise
+      scoreExperience = 50
+    } else {
+      // Moins de 50% -> pénalité forte
+      scoreExperience = 30
+    }
   }
-): MatchResult {
-  const normalize = (s: string) => s.toLowerCase().trim()
-  const talentSkills = talentData.competences.map(normalize)
 
-  // Compétences matchées
-  const matchedRequired = offreData.competencesRequises.filter(skill =>
-    talentSkills.includes(normalize(skill))
-  )
-  const matchedOptional = offreData.competencesSouhaitees.filter(skill =>
-    talentSkills.includes(normalize(skill))
-  )
-  const missingRequired = offreData.competencesRequises.filter(skill =>
-    !talentSkills.includes(normalize(skill))
-  )
-
-  // Score compétences (60% du total)
-  const competenceScore = offreData.competencesRequises.length > 0
-    ? (matchedRequired.length / offreData.competencesRequises.length) * 100
-    : 100
-
-  // Score expérience (15% du total)
-  const experienceScore = !offreData.experienceMin
-    ? 100
-    : talentData.anneesExperience >= offreData.experienceMin
-      ? 100
-      : (talentData.anneesExperience / offreData.experienceMin) * 100
-
-  // Score TJM (15% du total) et feedback
-  let tjmScore = 100
+  // 5. Score TJM
+  let scoreTjm = 100
   let tjmTropHaut = false
   let tjmFourchette: string | undefined
 
-  if (offreData.tjmMax && talentData.tjmMin && talentData.tjmMin > offreData.tjmMax) {
-    tjmScore = 50 // TJM trop élevé
-    tjmTropHaut = true
-    tjmFourchette = `${offreData.tjmMin || 'N/A'}-${offreData.tjmMax}€/jour`
-  } else if (offreData.tjmMin && talentData.tjmMax && talentData.tjmMax < offreData.tjmMin) {
-    tjmScore = 50 // TJM trop bas
+  const talentTjm = talentData.tjmMin || talentData.tjm
+  const offreTjmMax = offreData.tjmMax
+
+  if (talentTjm && offreTjmMax) {
+    if (talentTjm <= offreTjmMax) {
+      scoreTjm = 100
+    } else if (talentTjm <= offreTjmMax * 1.1) {
+      // TJM jusqu'à +10% -> léger dépassement acceptable
+      scoreTjm = 80
+    } else if (talentTjm <= offreTjmMax * 1.2) {
+      // TJM +10-20% -> négociable
+      scoreTjm = 60
+      tjmTropHaut = true
+      tjmFourchette = `${offreData.tjmMin || 'N/A'}-${offreData.tjmMax}€/jour`
+    } else {
+      // TJM > +20% -> problème
+      scoreTjm = 30
+      tjmTropHaut = true
+      tjmFourchette = `${offreData.tjmMin || 'N/A'}-${offreData.tjmMax}€/jour`
+    }
   }
 
-  // Score mobilité (10% du total)
-  const mobiliteScore = talentData.mobilite === 'FLEXIBLE' || talentData.mobilite === offreData.mobilite
-    ? 100
-    : 70
+  // 6. Score disponibilité
+  let scoreDisponibilite = 100
+  if (talentData.disponibilite === 'NON_DISPONIBLE') {
+    scoreDisponibilite = 0
+  } else if (talentData.disponibilite === 'SOUS_3_MOIS') {
+    scoreDisponibilite = 70
+  } else if (talentData.disponibilite === 'SOUS_2_MOIS') {
+    scoreDisponibilite = 80
+  }
 
-  // Score final pondéré
-  const score = Math.round(
-    competenceScore * 0.6 +
-    experienceScore * 0.15 +
-    tjmScore * 0.15 +
-    mobiliteScore * 0.1
+  // 7. Score mobilité
+  let scoreMobilite = 100
+  if (talentData.mobilite !== offreData.mobilite && talentData.mobilite !== 'FLEXIBLE') {
+    // Vérifications croisées
+    if (offreData.mobilite === 'SUR_SITE' && talentData.mobilite === 'FULL_REMOTE') {
+      scoreMobilite = 30 // Incompatibilité forte
+    } else if (offreData.mobilite === 'FULL_REMOTE' && talentData.mobilite === 'SUR_SITE') {
+      scoreMobilite = 50
+    } else {
+      scoreMobilite = 70 // Autres cas
+    }
+  }
+
+  // Vérification catégorie professionnelle
+  let categoryBonus = 0
+  if (talentData.categorieProfessionnelle && offreData.categorieCible) {
+    const categoryMatch = canCategoryMatch(talentData.categorieProfessionnelle, offreData.categorieCible)
+    if (!categoryMatch) {
+      // Catégorie incompatible
+      scoreMobilite = Math.min(scoreMobilite, 50)
+    } else if (talentData.categorieProfessionnelle !== offreData.categorieCible) {
+      const compatibleCats = getCompatibleCategories(talentData.categorieProfessionnelle)
+      if (compatibleCats.includes(offreData.categorieCible)) {
+        categoryBonus = 3
+      }
+    }
+  }
+
+  // ==== ÉTAPE 2: CALCUL DU SCORE FINAL AVEC PONDÉRATION ====
+
+  // Pondérations strictes
+  const weights = {
+    competences: 0.50,      // 50% - Les compétences requises sont primordiales
+    compSouhaitees: 0.10,   // 10% - Bonus pour les souhaitées
+    experience: 0.15,       // 15%
+    tjm: 0.10,              // 10%
+    disponibilite: 0.08,    // 8%
+    mobilite: 0.07,         // 7%
+  }
+
+  let scoreBase = Math.round(
+    scoreCompetences * weights.competences +
+    scoreCompSouhaitees * weights.compSouhaitees +
+    scoreExperience * weights.experience +
+    scoreTjm * weights.tjm +
+    scoreDisponibilite * weights.disponibilite +
+    scoreMobilite * weights.mobilite
   )
+
+  // ==== ÉTAPE 3: RÈGLES DE PLAFONNEMENT STRICTES ====
+
+  const bloqueurs = {
+    competencesInsuffisantes: false,
+    tjmIncompatible: false,
+    experienceInsuffisante: false,
+    indisponible: false,
+  }
+
+  let raisonScore = ''
+
+  // RÈGLE 1: Si moins de 50% des compétences requises -> plafonné à 40%
+  if (ratioRequired < 0.5) {
+    scoreBase = Math.min(scoreBase, 40)
+    bloqueurs.competencesInsuffisantes = true
+    raisonScore = `Seulement ${competencesMatchees.length}/${nbRequired} compétences requises (${Math.round(ratioRequired * 100)}%)`
+  }
+  // RÈGLE 2: Si moins de 70% des compétences requises -> plafonné à 60%
+  else if (ratioRequired < 0.7) {
+    scoreBase = Math.min(scoreBase, 60)
+    raisonScore = `${competencesMatchees.length}/${nbRequired} compétences requises - profil partiel`
+  }
+  // RÈGLE 3: Si moins de 85% des compétences requises -> plafonné à 75%
+  else if (ratioRequired < 0.85) {
+    scoreBase = Math.min(scoreBase, 75)
+    raisonScore = `Quelques compétences manquantes: ${competencesManquantes.join(', ')}`
+  }
+
+  // RÈGLE 4: TJM trop élevé -> pénalité
+  if (scoreTjm <= 30) {
+    bloqueurs.tjmIncompatible = true
+    scoreBase = Math.min(scoreBase, 50)
+    if (!raisonScore) raisonScore = 'TJM significativement au-dessus du budget'
+  }
+
+  // RÈGLE 5: Expérience insuffisante
+  if (scoreExperience <= 30) {
+    bloqueurs.experienceInsuffisante = true
+    scoreBase = Math.min(scoreBase, 55)
+    if (!raisonScore) raisonScore = `Expérience insuffisante (${talentData.anneesExperience} ans vs ${expMin} requis)`
+  }
+
+  // RÈGLE 6: Indisponible
+  if (scoreDisponibilite === 0) {
+    bloqueurs.indisponible = true
+    scoreBase = Math.min(scoreBase, 20)
+    raisonScore = 'Candidat actuellement non disponible'
+  }
+
+  // Bonus catégorie (talent surqualifié)
+  const finalScore = Math.min(100, scoreBase + categoryBonus)
+
+  // Génération de l'analyse
+  let analyse = ''
+  if (finalScore >= 80) {
+    analyse = `Excellent match (${finalScore}%). ${competencesMatchees.length}/${nbRequired} compétences requises.`
+  } else if (finalScore >= 60) {
+    analyse = `Bon profil (${finalScore}%). ${competencesManquantes.length > 0 ? `Manque: ${competencesManquantes.join(', ')}.` : ''}`
+  } else if (finalScore >= 40) {
+    analyse = `Profil partiel (${finalScore}%). ${raisonScore || `${competencesManquantes.length} compétences manquantes.`}`
+  } else {
+    analyse = `Profil peu adapté (${finalScore}%). ${raisonScore || 'Compétences insuffisantes pour cette mission.'}`
+  }
+
+  if (categoryBonus > 0) {
+    analyse += ' [Bonus: profil surqualifié]'
+  }
 
   return {
     talentId: talentData.id,
-    score,
+    score: finalScore,
     scoreDetails: {
-      competences: Math.round(competenceScore),
-      experience: Math.round(experienceScore),
-      mobilite: Math.round(mobiliteScore),
-      disponibilite: 100,
-      tjm: Math.round(tjmScore),
+      competences: scoreCompetences,
+      competencesSouhaitees: scoreCompSouhaitees,
+      experience: scoreExperience,
+      mobilite: scoreMobilite,
+      disponibilite: scoreDisponibilite,
+      tjm: scoreTjm,
     },
-    competencesMatchees: [...matchedRequired, ...matchedOptional],
-    competencesManquantes: missingRequired,
-    analyse: `Matching ${score}% basé sur ${matchedRequired.length}/${offreData.competencesRequises.length} compétences requises.`,
+    competencesMatchees,
+    competencesManquantes,
+    competencesSouhaiteesMatchees,
+    analyse,
     feedback: {
       tjmTropHaut,
       tjmFourchette,
-      experienceManquante: missingRequired,
+      experienceManquante: competencesManquantes,
+      raisonScore: raisonScore || 'Score calculé selon les critères de l\'offre',
     },
+    bloqueurs,
   }
 }
+
+// Note: L'ancienne fonction calculateBasicMatch a été supprimée
+// Le calcul se fait maintenant de manière algorithmique dans calculateMatchWithAI
 
 /**
  * Trouve et crée les matches pour une offre nouvellement créée
@@ -295,16 +412,24 @@ export async function matchTalentsForOffer(
     throw new Error('Offre non trouvée')
   }
 
-  // Récupère tous les talents actifs et disponibles
+  // Récupère UNIQUEMENT les talents vraiment actifs et avec compte activé
+  // IMPORTANT: Un talent doit avoir:
+  // 1. statut ACTIF
+  // 2. user.isActive = true
+  // 3. user.emailVerified = true (compte activé)
+  // 4. Au moins une compétence définie
   const talents = await prisma.talent.findMany({
     where: {
       statut: 'ACTIF',
-      user: { isActive: true },
+      user: {
+        isActive: true,
+        emailVerified: true, // NOUVEAU: compte doit être activé
+      },
       // On ne prend que les profils avec au moins une compétence
       competences: { isEmpty: false },
     },
     include: {
-      user: { select: { email: true } },
+      user: { select: { email: true, emailVerified: true } },
     },
   })
 

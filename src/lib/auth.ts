@@ -8,8 +8,14 @@ import { cookies } from 'next/headers'
 import { prisma } from './db'
 import { UserRole } from '@prisma/client'
 
+// Vérification du secret JWT au démarrage
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-me'
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as string
+
+// Avertissement si le secret n'est pas configuré correctement
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.warn('[SECURITE] JWT_SECRET non configuré ou trop court. Configurez une clé de 32+ caractères en production.')
+}
 
 export interface JWTPayload {
   userId: number
