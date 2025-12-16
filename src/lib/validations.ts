@@ -64,7 +64,7 @@ export const newPasswordSchema = z.object({
 export const updateTalentProfileSchema = z.object({
   // Non modifiable: prenom, nom, siret (seulement par admin)
   telephone: z.string().optional(),
-  photoUrl: z.string().url().optional().nullable(),
+  photoUrl: z.string().url().optional().nullable().or(z.literal('')),
   nationalite: z.string().optional(),
 
   // Adresse
@@ -120,7 +120,7 @@ export const updateTalentProfileSchema = z.object({
     'DATE_PRECISE',
     'NON_DISPONIBLE',
   ]).optional(),
-  disponibleLe: z.string().datetime().optional().nullable(),
+  disponibleLe: z.string().datetime().optional().nullable().or(z.literal('')),
 
   // Compétences détaillées
   logiciels: z.array(z.string()).optional(),
@@ -134,9 +134,9 @@ export const updateTalentProfileSchema = z.object({
   langues: z.array(z.string()).optional(),
   loisirs: z.array(z.string()).optional(),
   certifications: z.array(z.string()).optional(),
-  linkedinUrl: z.string().url().optional().nullable(),
-  githubUrl: z.string().url().optional().nullable(),
-  portfolioUrl: z.string().url().optional().nullable(),
+  linkedinUrl: z.string().url().optional().nullable().or(z.literal('')),
+  githubUrl: z.string().url().optional().nullable().or(z.literal('')),
+  portfolioUrl: z.string().url().optional().nullable().or(z.literal('')),
 
   // Visibilité
   visiblePublic: z.boolean().optional(),
@@ -169,8 +169,8 @@ export const updateClientProfileSchema = z.object({
   description: z.string().max(2000).optional(),
   secteurActivite: z.string().optional(),
   tailleEntreprise: z.enum(['TPE', 'PME', 'ETI', 'GRANDE']).optional(),
-  siteWeb: z.string().url().optional().nullable(),
-  logoUrl: z.string().url().optional().nullable(),
+  siteWeb: z.string().url().optional().nullable().or(z.literal('')),
+  logoUrl: z.string().url().optional().nullable().or(z.literal('')),
   nombreSites: z.number().min(1).optional(),
   adresse: z.string().optional(),
   codePostal: z.string().optional(),
