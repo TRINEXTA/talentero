@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Logo } from '@/components/ui/logo'
+import { NotificationBell } from '@/components/ui/notification-bell'
 import {
   User, Briefcase, FileText, Bell, Settings, LogOut,
-  Search, TrendingUp, Clock, CheckCircle, AlertCircle,
-  ChevronRight, Upload, MapPin, Building2, Star, Zap, Calendar
+  Search, TrendingUp, Clock, CheckCircle,
+  ChevronRight, MapPin, Building2, Zap, Calendar
 } from 'lucide-react'
 
 interface Stats {
@@ -189,18 +190,19 @@ export default function TalentDashboardPage() {
                 <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
                   Candidatures
                 </Link>
-                <Link href="/t/planning" className="text-gray-600 hover:text-primary">
-                  Planning
+                <Link href="/t/entretiens" className="text-gray-600 hover:text-primary">
+                  Entretiens
+                </Link>
+                <Link href="/t/alertes" className="text-gray-600 hover:text-primary">
+                  Alertes
                 </Link>
                 <Link href="/t/profil" className="text-gray-600 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon">
-                <Bell className="w-5 h-5" />
-              </Button>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
               <Button variant="ghost" size="icon">
                 <Settings className="w-5 h-5" />
               </Button>
