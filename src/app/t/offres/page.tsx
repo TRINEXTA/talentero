@@ -28,11 +28,15 @@ interface Offre {
   dateDebut: string | null
   competencesRequises: string[]
   experienceMin: number | null
-  createdAt: string
+  publieLe: string
   client: {
     raisonSociale: string
   } | null
-  matchScore?: number
+  matchScore?: number | null
+  matchDetails?: {
+    matched: string[]
+    missing: string[]
+  } | null
 }
 
 export default function TalentOffresPage() {
@@ -230,10 +234,14 @@ export default function TalentOffresPage() {
                             {offre.titre}
                           </h3>
                         </Link>
-                        {offre.matchScore && offre.matchScore >= 70 && (
-                          <Badge className="bg-green-100 text-green-800">
-                            <Star className="w-3 h-3 mr-1" />
-                            {offre.matchScore}% match
+                        {offre.matchScore && offre.matchScore > 0 && (
+                          <Badge className={`${
+                            offre.matchScore >= 70 ? 'bg-green-100 text-green-800' :
+                            offre.matchScore >= 40 ? 'bg-amber-100 text-amber-800' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            <Star className={`w-3 h-3 mr-1 ${offre.matchScore >= 70 ? 'fill-current' : ''}`} />
+                            {offre.matchScore}% compatible
                           </Badge>
                         )}
                       </div>
@@ -284,14 +292,24 @@ export default function TalentOffresPage() {
 
                       {offre.competencesRequises.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {offre.competencesRequises.slice(0, 5).map((comp, i) => (
-                            <Badge key={i} variant="outline" className="text-xs">
-                              {comp}
-                            </Badge>
-                          ))}
-                          {offre.competencesRequises.length > 5 && (
+                          {offre.competencesRequises.slice(0, 6).map((comp, i) => {
+                            const isMatched = offre.matchDetails?.matched.some(
+                              m => m.toLowerCase() === comp.toLowerCase()
+                            )
+                            return (
+                              <Badge
+                                key={i}
+                                variant="outline"
+                                className={`text-xs ${isMatched ? 'bg-green-50 border-green-300 text-green-700' : ''}`}
+                              >
+                                {isMatched && <Star className="w-3 h-3 mr-1 fill-current" />}
+                                {comp}
+                              </Badge>
+                            )
+                          })}
+                          {offre.competencesRequises.length > 6 && (
                             <Badge variant="outline" className="text-xs text-gray-400">
-                              +{offre.competencesRequises.length - 5}
+                              +{offre.competencesRequises.length - 6}
                             </Badge>
                           )}
                         </div>
@@ -300,7 +318,7 @@ export default function TalentOffresPage() {
 
                     <div className="flex flex-col items-end gap-3 ml-4">
                       <span className="text-xs text-gray-400">
-                        Publiee le {formatDate(offre.createdAt)}
+                        Publiée le {formatDate(offre.publieLe)}
                       </span>
                       <Link href={`/offres/${offre.slug}`}>
                         <Button>

@@ -106,14 +106,24 @@ export default function AdminNouvelleOffrePage() {
     }
   }
 
+  // Parse et ajoute plusieurs compétences (séparées par virgule)
   const addCompetenceRequise = () => {
-    if (newCompetenceRequise.trim() && !formData.competencesRequises.includes(newCompetenceRequise.trim())) {
+    const input = newCompetenceRequise.trim()
+    if (!input) return
+
+    // Sépare par virgule et nettoie chaque compétence
+    const newComps = input
+      .split(',')
+      .map(c => c.trim())
+      .filter(c => c.length > 0 && !formData.competencesRequises.includes(c))
+
+    if (newComps.length > 0) {
       setFormData({
         ...formData,
-        competencesRequises: [...formData.competencesRequises, newCompetenceRequise.trim()]
+        competencesRequises: [...formData.competencesRequises, ...newComps]
       })
-      setNewCompetenceRequise('')
     }
+    setNewCompetenceRequise('')
   }
 
   const removeCompetenceRequise = (comp: string) => {
@@ -123,14 +133,24 @@ export default function AdminNouvelleOffrePage() {
     })
   }
 
+  // Parse et ajoute plusieurs compétences (séparées par virgule)
   const addCompetenceSouhaitee = () => {
-    if (newCompetenceSouhaitee.trim() && !formData.competencesSouhaitees.includes(newCompetenceSouhaitee.trim())) {
+    const input = newCompetenceSouhaitee.trim()
+    if (!input) return
+
+    // Sépare par virgule et nettoie chaque compétence
+    const newComps = input
+      .split(',')
+      .map(c => c.trim())
+      .filter(c => c.length > 0 && !formData.competencesSouhaitees.includes(c))
+
+    if (newComps.length > 0) {
       setFormData({
         ...formData,
-        competencesSouhaitees: [...formData.competencesSouhaitees, newCompetenceSouhaitee.trim()]
+        competencesSouhaitees: [...formData.competencesSouhaitees, ...newComps]
       })
-      setNewCompetenceSouhaitee('')
     }
+    setNewCompetenceSouhaitee('')
   }
 
   const removeCompetenceSouhaitee = (comp: string) => {
@@ -390,7 +410,7 @@ export default function AdminNouvelleOffrePage() {
                   <Input
                     value={newCompetenceRequise}
                     onChange={(e) => setNewCompetenceRequise(e.target.value)}
-                    placeholder="Java, React, Docker..."
+                    placeholder="Ex: Windows, Office 365, réseaux, WIFI (séparés par virgule)"
                     className="bg-gray-700 border-gray-600 text-white"
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCompetenceRequise())}
                   />
@@ -398,6 +418,7 @@ export default function AdminNouvelleOffrePage() {
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">Astuce: séparez plusieurs compétences par des virgules</p>
               </div>
               <div>
                 <Label className="text-gray-300">Competences souhaitees</Label>
@@ -419,7 +440,7 @@ export default function AdminNouvelleOffrePage() {
                   <Input
                     value={newCompetenceSouhaitee}
                     onChange={(e) => setNewCompetenceSouhaitee(e.target.value)}
-                    placeholder="AWS, Kubernetes..."
+                    placeholder="Ex: AWS, Kubernetes, Docker (séparés par virgule)"
                     className="bg-gray-700 border-gray-600 text-white"
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCompetenceSouhaitee())}
                   />

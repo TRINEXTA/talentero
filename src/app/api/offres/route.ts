@@ -10,15 +10,36 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '20')
     const search = searchParams.get('search') || ''
-    const competences = searchParams.get('competences')?.split(',').filter(Boolean) || []
+    // Support pour 'competence' (singulier) et 'competences' (pluriel)
+    const competenceParam = searchParams.get('competence') || searchParams.get('competences') || ''
+    const competences = competenceParam.split(',').map(c => c.trim()).filter(Boolean)
     const mobilite = searchParams.get('mobilite')
     const lieu = searchParams.get('lieu')
     const tjmMin = searchParams.get('tjmMin') ? parseInt(searchParams.get('tjmMin')!) : undefined
     const tjmMax = searchParams.get('tjmMax') ? parseInt(searchParams.get('tjmMax')!) : undefined
 
     const skip = (page - 1) * limit
+
+    // Récupérer le profil du talent connecté pour le matching
+    let talentCompetences: string[] = []
+    let talentExperience: number | null = null
+    try {
+      const user = await getCurrentUser()
+      if (user && user.role === 'TALENT') {
+        const talent = await prisma.talent.findUnique({
+          where: { userId: user.id },
+          select: { competences: true, anneesExperience: true }
+        })
+        if (talent) {
+          talentCompetences = talent.competences.map(c => c.toLowerCase())
+          talentExperience = talent.anneesExperience
+        }
+      }
+    } catch {
+      // Pas connecté ou pas un talent, on continue sans matching
+    }
 
     // Construction des filtres
     const where: any = {
@@ -44,7 +65,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (lieu) {
-      where.lieu = { contains: lieu, mode: 'insensitive' }
+      where.OR = [
+        ...(where.OR || []),
+        { lieu: { contains: lieu, mode: 'insensitive' } },
+        { ville: { contains: lieu, mode: 'insensitive' } },
+        { secteur: { contains: lieu, mode: 'insensitive' } },
+      ]
     }
 
     if (tjmMin) {
@@ -92,8 +118,48 @@ export async function GET(request: NextRequest) {
       prisma.offre.count({ where }),
     ])
 
+    // Calcul du score de matching pour chaque offre si on a les compétences du talent
+    const offresWithMatch = offres.map(offre => {
+      let matchScore = 0
+      let matchDetails: { matched: string[], missing: string[] } | null = null
+
+      if (talentCompetences.length > 0 && offre.competencesRequises.length > 0) {
+        const offreComps = offre.competencesRequises.map((c: string) => c.toLowerCase())
+        const matched = offreComps.filter((c: string) => talentCompetences.some(tc => tc.includes(c) || c.includes(tc)))
+        const missing = offreComps.filter((c: string) => !talentCompetences.some(tc => tc.includes(c) || c.includes(tc)))
+
+        // Score basé sur les compétences requises matchées
+        matchScore = Math.round((matched.length / offreComps.length) * 100)
+
+        // Bonus pour l'expérience si elle correspond
+        if (talentExperience && offre.experienceMin) {
+          if (talentExperience >= offre.experienceMin) {
+            matchScore = Math.min(100, matchScore + 10)
+          } else {
+            matchScore = Math.max(0, matchScore - 15)
+          }
+        }
+
+        matchDetails = {
+          matched: matched.map((c: string) => c),
+          missing: missing.map((c: string) => c)
+        }
+      }
+
+      return {
+        ...offre,
+        matchScore: matchScore > 0 ? matchScore : null,
+        matchDetails
+      }
+    })
+
+    // Trier par score de matching si disponible
+    if (talentCompetences.length > 0) {
+      offresWithMatch.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+    }
+
     return NextResponse.json({
-      offres,
+      offres: offresWithMatch,
       pagination: {
         page,
         limit,

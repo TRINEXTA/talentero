@@ -1220,3 +1220,126 @@ export async function sendNewOffreToAdmin(
     importance: 'high',
   })
 }
+
+/**
+ * Email d'activation professionnel - Version simplifiée et claire
+ */
+export async function sendProfessionalActivationEmail(
+  email: string,
+  prenom: string,
+  _nom: string,
+  activationToken: string,
+  _profileInfo: {
+    titrePoste: string | null
+    competences: string[]
+    anneesExperience: number | null
+    langues: string[]
+    certifications: string[]
+    experiences: { poste: string; entreprise: string; periode: string }[]
+    formations: { diplome: string; etablissement: string | null; annee: number | null }[]
+    experiencesCount: number
+    formationsCount: number
+  },
+  offre?: {
+    titre: string
+    slug: string
+  }
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const activationUrl = `${appUrl}/activation?token=${activationToken}`
+  const offreUrl = offre ? `${appUrl}/offres/${offre.slug}` : null
+
+  return sendEmailViaGraph({
+    to: email,
+    subject: `${prenom}, activez votre compte TALENTERO`,
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; line-height: 1.7;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <!-- Card principale -->
+            <div style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 30px 24px; text-align: center;">
+                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">TALENTERO</h1>
+                <p style="margin: 8px 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Plateforme freelances IT × Entreprises</p>
+              </div>
+
+              <!-- Contenu -->
+              <div style="padding: 32px 28px;">
+                <p style="font-size: 16px; color: #1e293b; margin: 0 0 20px;">
+                  Bonjour <strong>${prenom}</strong>,
+                </p>
+
+                <p style="color: #475569; margin: 0 0 20px;">
+                  Votre profil a été créé sur <strong>TALENTERO</strong>, la plateforme de mise en relation entre freelances IT et entreprises.
+                </p>
+
+                <p style="color: #475569; margin: 0 0 24px;">
+                  Pour finaliser votre inscription et accéder à votre espace personnel, cliquez sur le bouton ci-dessous :
+                </p>
+
+                <!-- Bouton CTA -->
+                <div style="text-align: center; margin: 28px 0;">
+                  <a href="${activationUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
+                    👉 Activer mon compte
+                  </a>
+                </div>
+
+                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 0 0 28px;">
+                  Ce lien est valide pendant <strong>48 heures</strong>
+                </p>
+
+                ${offre ? `
+                  <div style="background: #eff6ff; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; border-left: 3px solid #2563eb;">
+                    <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Mission proposée</p>
+                    <p style="margin: 0; color: #1e40af; font-size: 15px; font-weight: 600;">${offre.titre}</p>
+                    <a href="${offreUrl}" style="display: inline-block; margin-top: 8px; color: #2563eb; font-size: 13px; text-decoration: none;">Voir les détails →</a>
+                  </div>
+                ` : ''}
+
+                <!-- Ce que vous pourrez faire -->
+                <div style="background: #f0fdf4; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                  <p style="margin: 0 0 14px; color: #166534; font-weight: 600; font-size: 14px;">Une fois votre compte activé, vous pourrez :</p>
+                  <ul style="margin: 0; padding: 0 0 0 20px; color: #15803d;">
+                    <li style="margin-bottom: 8px;">Compléter votre profil et mettre à jour vos compétences</li>
+                    <li style="margin-bottom: 8px;">Consulter les offres de missions correspondant à votre expertise</li>
+                    <li style="margin-bottom: 0;">Être visible auprès des entreprises qui recrutent</li>
+                  </ul>
+                </div>
+
+                <!-- Contact -->
+                <p style="color: #64748b; font-size: 14px; margin: 0 0 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                  💬 Une question ? Répondez simplement à cet email, nous vous répondrons rapidement.
+                </p>
+
+                <p style="color: #1e293b; font-size: 15px; margin: 0; font-weight: 500;">
+                  À très bientôt sur TALENTERO !
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div style="background: #1e293b; padding: 20px 24px; text-align: center;">
+                <p style="margin: 0 0 4px; color: #ffffff; font-weight: 600; font-size: 13px;">TRINEXTA</p>
+                <p style="margin: 0; color: #94a3b8; font-size: 11px;">by TrusTech IT Support</p>
+                <p style="margin: 12px 0 0; color: #64748b; font-size: 11px;">
+                  74B Boulevard Henri Dunant, 91100 Corbeil-Essonnes
+                </p>
+              </div>
+            </div>
+
+            <p style="text-align: center; margin-top: 16px; color: #94a3b8; font-size: 11px;">
+              Cet email a été envoyé à ${email}
+            </p>
+          </div>
+        </body>
+      </html>
+    `,
+    importance: 'high',
+  })
+}

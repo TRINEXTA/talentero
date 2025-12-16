@@ -7,20 +7,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import {
   Upload, ChevronLeft, FileText, CheckCircle, AlertCircle, X,
-  Mail, Briefcase, Code, Loader2, Users, FolderUp, Trash2, Plus
+  Mail, Briefcase, Code, Loader2, Users, FolderUp, Trash2, Plus,
+  Send, UserCheck, ArrowRight, Eye, Phone, Globe, Award, GraduationCap
 } from 'lucide-react'
+
+interface ImportedTalent {
+  id: number
+  uid: string
+  prenom: string
+  nom: string
+  email: string
+  telephone: string | null
+  titrePoste: string | null
+  categorie: string
+  competences: string[]
+  anneesExperience: number | null
+  langues: string[]
+  certifications: string[]
+  experiencesCount: number
+  formationsCount: number
+}
 
 interface CVFile {
   file: File
   status: 'pending' | 'uploading' | 'success' | 'error'
   error?: string
-  result?: {
-    prenom: string
-    nom: string
-    email: string
-    categorie: string
-    competences: string[]
-  }
+  talent?: ImportedTalent
 }
 
 interface Offre {
@@ -49,20 +61,32 @@ const CATEGORY_LABELS: Record<string, string> = {
   AUTRE: 'Autre'
 }
 
+type Step = 'upload' | 'review' | 'done'
+
 export default function ImportCVMassePage() {
+  const [step, setStep] = useState<Step>('upload')
   const [offres, setOffres] = useState<Offre[]>([])
   const [selectedOffre, setSelectedOffre] = useState<number | null>(null)
   const [cvFiles, setCvFiles] = useState<CVFile[]>([])
-  const [sendEmails, setSendEmails] = useState(true)
   const [loading, setLoading] = useState(false)
   const [loadingOffres, setLoadingOffres] = useState(true)
   const [dragOver, setDragOver] = useState(false)
-  const [importComplete, setImportComplete] = useState(false)
   const [importSummary, setImportSummary] = useState<{
     total: number
     imported: number
     failed: number
   } | null>(null)
+
+  // Pour l'étape de revue et envoi
+  const [selectedTalents, setSelectedTalents] = useState<Set<number>>(new Set())
+  const [sendingEmails, setSendingEmails] = useState(false)
+  const [emailSendSummary, setEmailSendSummary] = useState<{
+    total: number
+    sent: number
+    failed: number
+    alreadySent: number
+  } | null>(null)
+  const [assignOffre, setAssignOffre] = useState<number | null>(null)
 
   // Charge les offres au démarrage
   useEffect(() => {
@@ -112,7 +136,6 @@ export default function ImportCVMassePage() {
       }))
       setCvFiles(prev => [...prev, ...newCvFiles])
     }
-    // Reset input
     e.target.value = ''
   }
 
@@ -121,13 +144,8 @@ export default function ImportCVMassePage() {
     setCvFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  // Import en masse
+  // Import en masse (Étape 1)
   const handleImport = async () => {
-    if (!selectedOffre) {
-      alert('Veuillez sélectionner une offre')
-      return
-    }
-
     const pendingFiles = cvFiles.filter(cv => cv.status === 'pending')
     if (pendingFiles.length === 0) {
       alert('Veuillez ajouter au moins un CV')
@@ -135,19 +153,17 @@ export default function ImportCVMassePage() {
     }
 
     setLoading(true)
-    setImportComplete(false)
 
     try {
       const formData = new FormData()
-      formData.append('offreId', String(selectedOffre))
-      formData.append('sendEmails', String(sendEmails))
+      if (selectedOffre) {
+        formData.append('offreId', String(selectedOffre))
+      }
 
-      // Ajoute les fichiers (l'email sera extrait automatiquement du CV)
       pendingFiles.forEach(cv => {
         formData.append('files', cv.file)
       })
 
-      // Met à jour le statut des fichiers en cours d'upload
       setCvFiles(prev => prev.map(cv =>
         pendingFiles.includes(cv)
           ? { ...cv, status: 'uploading' }
@@ -162,7 +178,6 @@ export default function ImportCVMassePage() {
       const data = await res.json()
 
       if (res.ok && data.success) {
-        // Met à jour les résultats
         setCvFiles(prev => prev.map((cv, index) => {
           const result = data.results[index]
           if (result) {
@@ -170,14 +185,23 @@ export default function ImportCVMassePage() {
               ...cv,
               status: result.success ? 'success' : 'error',
               error: result.error,
-              result: result.talent
+              talent: result.talent
             }
           }
           return cv
         }))
 
         setImportSummary(data.summary)
-        setImportComplete(true)
+
+        // Passe à l'étape de revue si des profils ont été importés
+        if (data.summary.imported > 0) {
+          setStep('review')
+          // Sélectionne tous les profils importés par défaut
+          const importedIds = data.results
+            .filter((r: { success: boolean; talent?: ImportedTalent }) => r.success && r.talent)
+            .map((r: { talent: ImportedTalent }) => r.talent.id)
+          setSelectedTalents(new Set(importedIds))
+        }
       } else {
         throw new Error(data.error || 'Erreur lors de l\'import')
       }
@@ -193,14 +217,79 @@ export default function ImportCVMassePage() {
     }
   }
 
+  // Envoi des emails d'activation (Étape 2)
+  const handleSendActivation = async () => {
+    if (selectedTalents.size === 0) {
+      alert('Veuillez sélectionner au moins un talent')
+      return
+    }
+
+    setSendingEmails(true)
+
+    try {
+      const res = await fetch('/api/admin/talents/send-activation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          talentIds: Array.from(selectedTalents),
+          offreId: assignOffre || undefined
+        })
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setEmailSendSummary(data.summary)
+        setStep('done')
+      } else {
+        throw new Error(data.error || 'Erreur lors de l\'envoi')
+      }
+    } catch (error) {
+      console.error('Erreur envoi:', error)
+      alert(error instanceof Error ? error.message : 'Erreur lors de l\'envoi')
+    } finally {
+      setSendingEmails(false)
+    }
+  }
+
+  // Toggle sélection d'un talent
+  const toggleTalentSelection = (talentId: number) => {
+    setSelectedTalents(prev => {
+      const next = new Set(prev)
+      if (next.has(talentId)) {
+        next.delete(talentId)
+      } else {
+        next.add(talentId)
+      }
+      return next
+    })
+  }
+
+  // Sélectionner/désélectionner tous
+  const toggleSelectAll = () => {
+    const importedTalents = cvFiles
+      .filter(cv => cv.status === 'success' && cv.talent)
+      .map(cv => cv.talent!.id)
+
+    if (selectedTalents.size === importedTalents.length) {
+      setSelectedTalents(new Set())
+    } else {
+      setSelectedTalents(new Set(importedTalents))
+    }
+  }
+
   // Reset pour nouvel import
   const handleReset = () => {
     setCvFiles([])
-    setImportComplete(false)
+    setSelectedOffre(null)
+    setSelectedTalents(new Set())
     setImportSummary(null)
+    setEmailSendSummary(null)
+    setAssignOffre(null)
+    setStep('upload')
   }
 
-  const selectedOffreData = offres.find(o => o.id === selectedOffre)
+  const importedTalents = cvFiles.filter(cv => cv.status === 'success' && cv.talent)
   const pendingFilesCount = cvFiles.filter(cv => cv.status === 'pending').length
 
   return (
@@ -223,364 +312,541 @@ export default function ImportCVMassePage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Étape 1: Sélection de l'offre */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-sm font-bold">1</span>
-              Sélectionnez l'offre cible
-            </CardTitle>
-            <CardDescription>
-              Tous les CVs importés seront associés à cette offre comme candidatures.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingOffres ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <span className="ml-2 text-gray-500">Chargement des offres...</span>
-              </div>
-            ) : offres.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Aucune offre publiée disponible</p>
-                <Link href="/admin/offres/nouvelle">
-                  <Button variant="outline" className="mt-3">
-                    Créer une offre
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {offres.map(offre => (
-                  <button
-                    key={offre.id}
-                    onClick={() => setSelectedOffre(offre.id)}
-                    className={`text-left p-4 rounded-lg border-2 transition-all ${selectedOffre === offre.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900 line-clamp-1">{offre.titre}</p>
-                        <p className="text-sm text-gray-500">{offre.codeUnique}</p>
-                      </div>
-                      {selectedOffre === offre.id && (
-                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Étape 2: Upload des CVs */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-sm font-bold">2</span>
-              Ajoutez les CVs
-            </CardTitle>
-            <CardDescription>
-              Glissez-déposez plusieurs CVs ou sélectionnez-les. L'email sera extrait automatiquement de chaque CV.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Zone de drop */}
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-6 ${dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'
-                }`}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-            >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">
-                Glissez-déposez vos CVs ici ou
-              </p>
-              <label className="cursor-pointer">
-                <span className="text-primary hover:text-primary/80 font-medium">
-                  parcourez vos fichiers
-                </span>
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.doc"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-xs text-gray-400 mt-2">
-                Formats acceptés : PDF, DOCX, DOC
-              </p>
+      {/* Indicateur d'étapes */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-center gap-4">
+            <div className={`flex items-center gap-2 ${step === 'upload' ? 'text-primary font-semibold' : step === 'review' || step === 'done' ? 'text-green-600' : 'text-gray-400'}`}>
+              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'upload' ? 'bg-primary text-white' : step === 'review' || step === 'done' ? 'bg-green-100 text-green-600' : 'bg-gray-200'}`}>
+                {step === 'review' || step === 'done' ? <CheckCircle className="w-5 h-5" /> : '1'}
+              </span>
+              <span className="hidden sm:inline">Import des CVs</span>
             </div>
+            <ArrowRight className="w-5 h-5 text-gray-300" />
+            <div className={`flex items-center gap-2 ${step === 'review' ? 'text-primary font-semibold' : step === 'done' ? 'text-green-600' : 'text-gray-400'}`}>
+              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'review' ? 'bg-primary text-white' : step === 'done' ? 'bg-green-100 text-green-600' : 'bg-gray-200'}`}>
+                {step === 'done' ? <CheckCircle className="w-5 h-5" /> : '2'}
+              </span>
+              <span className="hidden sm:inline">Revue & Activation</span>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-300" />
+            <div className={`flex items-center gap-2 ${step === 'done' ? 'text-green-600 font-semibold' : 'text-gray-400'}`}>
+              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'done' ? 'bg-green-100 text-green-600' : 'bg-gray-200'}`}>
+                {step === 'done' ? <CheckCircle className="w-5 h-5" /> : '3'}
+              </span>
+              <span className="hidden sm:inline">Terminé</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Liste des fichiers */}
-            {cvFiles.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">
-                    {cvFiles.length} fichier{cvFiles.length > 1 ? 's' : ''} ajouté{cvFiles.length > 1 ? 's' : ''}
-                  </h3>
-                  {!importComplete && (
-                    <Button variant="ghost" size="sm" onClick={() => setCvFiles([])}>
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Tout supprimer
-                    </Button>
-                  )}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ÉTAPE 1: UPLOAD */}
+        {step === 'upload' && (
+          <>
+            {/* Sélection offre (optionnel) */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-gray-400" />
+                  Offre cible (optionnel)
+                </CardTitle>
+                <CardDescription>
+                  Vous pouvez associer les talents à une offre dès l'import, ou le faire plus tard.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingOffres ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary mr-2" />
+                    <span className="text-gray-500">Chargement des offres...</span>
+                  </div>
+                ) : offres.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500">
+                    <p>Aucune offre publiée disponible</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedOffre(null)}
+                      className={`px-4 py-2 rounded-lg text-sm transition-all ${!selectedOffre
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        }`}
+                    >
+                      Sans offre
+                    </button>
+                    {offres.map(offre => (
+                      <button
+                        key={offre.id}
+                        onClick={() => setSelectedOffre(offre.id)}
+                        className={`px-4 py-2 rounded-lg text-sm transition-all ${selectedOffre === offre.id
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          }`}
+                      >
+                        {offre.titre}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Upload des CVs */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-primary" />
+                  Ajouter les CVs
+                </CardTitle>
+                <CardDescription>
+                  Glissez-déposez plusieurs CVs. L'email sera extrait automatiquement de chaque CV.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors mb-6 ${dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                >
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">
+                    Glissez-déposez vos CVs ici ou
+                  </p>
+                  <label className="cursor-pointer">
+                    <span className="text-primary hover:text-primary/80 font-medium">
+                      parcourez vos fichiers
+                    </span>
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.doc"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Formats acceptés : PDF, DOCX, DOC
+                  </p>
                 </div>
 
-                <div className="border rounded-lg divide-y max-h-96 overflow-y-auto">
-                  {cvFiles.map((cv, index) => (
-                    <div key={index} className="p-4 flex items-center gap-4">
-                      {/* Icône statut */}
-                      <div className="flex-shrink-0">
-                        {cv.status === 'pending' && (
-                          <FileText className="w-8 h-8 text-gray-400" />
-                        )}
-                        {cv.status === 'uploading' && (
-                          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                        )}
-                        {cv.status === 'success' && (
-                          <CheckCircle className="w-8 h-8 text-green-500" />
-                        )}
-                        {cv.status === 'error' && (
-                          <AlertCircle className="w-8 h-8 text-red-500" />
-                        )}
-                      </div>
+                {cvFiles.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">
+                        {cvFiles.length} fichier{cvFiles.length > 1 ? 's' : ''} ajouté{cvFiles.length > 1 ? 's' : ''}
+                      </h3>
+                      <Button variant="ghost" size="sm" onClick={() => setCvFiles([])}>
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Tout supprimer
+                      </Button>
+                    </div>
 
-                      {/* Info fichier */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{cv.file.name}</p>
-                        {cv.status === 'pending' && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            <Mail className="w-3 h-3 inline mr-1" />
-                            L'email sera extrait automatiquement
-                          </p>
-                        )}
-                        {cv.status === 'uploading' && (
-                          <p className="text-xs text-primary mt-1">
-                            Analyse du CV en cours...
-                          </p>
-                        )}
-                        {cv.status === 'success' && cv.result && (
-                          <div className="mt-1">
-                            <p className="text-sm text-green-600">
-                              {cv.result.prenom} {cv.result.nom}
-                              <span className="text-gray-500 ml-2">({cv.result.email})</span>
-                              <Badge variant="secondary" className="ml-2 text-xs">
-                                {CATEGORY_LABELS[cv.result.categorie] || cv.result.categorie}
+                    <div className="border rounded-lg divide-y max-h-64 overflow-y-auto">
+                      {cvFiles.map((cv, index) => (
+                        <div key={index} className="p-3 flex items-center gap-3">
+                          <FileText className="w-6 h-6 text-gray-400 flex-shrink-0" />
+                          <span className="flex-1 truncate text-sm">{cv.file.name}</span>
+                          <button
+                            onClick={() => removeFile(index)}
+                            className="p-1 text-gray-400 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Bouton import */}
+            <div className="flex justify-end">
+              <Button
+                onClick={handleImport}
+                disabled={pendingFilesCount === 0 || loading}
+                size="lg"
+                className="min-w-48"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyse en cours...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Importer {pendingFilesCount} CV{pendingFilesCount > 1 ? 's' : ''}
+                  </>
+                )}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ÉTAPE 2: REVUE ET ACTIVATION */}
+        {step === 'review' && (
+          <>
+            {/* Résumé import */}
+            {importSummary && (
+              <div className={`rounded-lg p-4 mb-6 ${importSummary.failed === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+                <div className="flex items-center gap-3">
+                  {importSummary.failed === 0 ? (
+                    <CheckCircle className="w-6 h-6 text-green-500" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6 text-amber-500" />
+                  )}
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {importSummary.imported} profil{importSummary.imported > 1 ? 's' : ''} importé{importSummary.imported > 1 ? 's' : ''} avec succès
+                    </p>
+                    {importSummary.failed > 0 && (
+                      <p className="text-sm text-amber-600">
+                        {importSummary.failed} échec{importSummary.failed > 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Liste des profils importés */}
+            <Card className="mb-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="w-5 h-5 text-primary" />
+                      Profils importés
+                    </CardTitle>
+                    <CardDescription>
+                      Sélectionnez les profils auxquels envoyer l'email d'activation
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+                    {selectedTalents.size === importedTalents.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {importedTalents.map(({ talent }) => {
+                    if (!talent) return null
+                    const isSelected = selectedTalents.has(talent.id)
+
+                    return (
+                      <div
+                        key={talent.id}
+                        onClick={() => toggleTalentSelection(talent.id)}
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${isSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Checkbox */}
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${isSelected ? 'border-primary bg-primary' : 'border-gray-300'}`}>
+                            {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
+                          </div>
+
+                          {/* Infos talent */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-gray-900">
+                                {talent.prenom} {talent.nom}
+                              </h3>
+                              <Badge variant="secondary" className="text-xs">
+                                {CATEGORY_LABELS[talent.categorie] || talent.categorie}
                               </Badge>
-                            </p>
-                            {cv.result.competences.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {cv.result.competences.slice(0, 5).map((comp, i) => (
+                            </div>
+
+                            {talent.titrePoste && (
+                              <p className="text-primary font-medium text-sm mb-2">{talent.titrePoste}</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-3">
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-4 h-4" />
+                                {talent.email}
+                              </span>
+                              {talent.telephone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-4 h-4" />
+                                  {talent.telephone}
+                                </span>
+                              )}
+                              {talent.anneesExperience && (
+                                <span className="flex items-center gap-1">
+                                  <Briefcase className="w-4 h-4" />
+                                  {talent.anneesExperience} ans d'exp.
+                                </span>
+                              )}
+                              {talent.experiencesCount > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Code className="w-4 h-4" />
+                                  {talent.experiencesCount} expérience{talent.experiencesCount > 1 ? 's' : ''}
+                                </span>
+                              )}
+                              {talent.formationsCount > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <GraduationCap className="w-4 h-4" />
+                                  {talent.formationsCount} formation{talent.formationsCount > 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Compétences */}
+                            {talent.competences.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {talent.competences.slice(0, 8).map((comp, i) => (
                                   <Badge key={i} variant="outline" className="text-xs">
                                     {comp}
                                   </Badge>
                                 ))}
-                                {cv.result.competences.length > 5 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{cv.result.competences.length - 5}
+                                {talent.competences.length > 8 && (
+                                  <Badge variant="outline" className="text-xs bg-gray-100">
+                                    +{talent.competences.length - 8}
                                   </Badge>
                                 )}
                               </div>
                             )}
+
+                            {/* Langues et certifications */}
+                            <div className="flex flex-wrap gap-2">
+                              {talent.langues.length > 0 && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Globe className="w-3 h-3" />
+                                  {talent.langues.join(', ')}
+                                </div>
+                              )}
+                              {talent.certifications.length > 0 && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Award className="w-3 h-3" />
+                                  {talent.certifications.slice(0, 3).join(', ')}
+                                  {talent.certifications.length > 3 && ` +${talent.certifications.length - 3}`}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        {cv.status === 'error' && (
-                          <p className="text-sm text-red-600">{cv.error}</p>
-                        )}
+
+                          {/* Bouton voir profil */}
+                          <Link
+                            href={`/admin/talents/${talent.uid}`}
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-gray-400 hover:text-primary p-2"
+                            title="Ouvrir dans un nouvel onglet"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </Link>
+                        </div>
                       </div>
-
-                      {/* Bouton supprimer */}
-                      {cv.status === 'pending' && (
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Étape 3: Options et lancement */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-white text-sm font-bold">3</span>
-              Lancez l'import
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Options */}
-            <div className="flex items-center gap-6 mb-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={sendEmails}
-                  onChange={(e) => setSendEmails(e.target.checked)}
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <span className="text-sm text-gray-700">
-                  Envoyer les emails de bienvenue immédiatement
-                </span>
-              </label>
-            </div>
-
-            {/* Résumé */}
-            {selectedOffreData && cvFiles.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-gray-900 mb-2">Résumé de l'import</h4>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    Offre : <strong>{selectedOffreData.titre}</strong> ({selectedOffreData.codeUnique})
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    {pendingFilesCount} CV{pendingFilesCount > 1 ? 's' : ''} prêt{pendingFilesCount > 1 ? 's' : ''} à importer
-                  </li>
-                  {sendEmails && (
-                    <li className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Emails de bienvenue : activés
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
-
-            {/* Résultat de l'import */}
-            {importComplete && importSummary && (
-              <div className={`rounded-lg p-4 mb-6 ${importSummary.failed === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
-                }`}>
-                <div className="flex items-center gap-3">
-                  {importSummary.failed === 0 ? (
-                    <CheckCircle className="w-8 h-8 text-green-500" />
-                  ) : (
-                    <AlertCircle className="w-8 h-8 text-amber-500" />
-                  )}
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
-                      Import terminé !
+                {/* Erreurs d'import */}
+                {cvFiles.filter(cv => cv.status === 'error').length > 0 && (
+                  <div className="mt-6 pt-6 border-t">
+                    <h4 className="font-medium text-red-600 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Échecs d'import
                     </h4>
-                    <p className="text-sm text-gray-600">
-                      {importSummary.imported} importé{importSummary.imported > 1 ? 's' : ''} sur {importSummary.total}
-                      {importSummary.failed > 0 && (
-                        <span className="text-amber-600"> ({importSummary.failed} erreur{importSummary.failed > 1 ? 's' : ''})</span>
-                      )}
-                    </p>
+                    <div className="space-y-2">
+                      {cvFiles.filter(cv => cv.status === 'error').map((cv, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm">
+                          <FileText className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-600">{cv.file.name}</span>
+                          <span className="text-red-500">- {cv.error}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
+              </CardContent>
+            </Card>
 
-            {/* Boutons d'action */}
-            <div className="flex gap-3">
-              {importComplete ? (
-                <>
-                  <Button variant="outline" onClick={handleReset}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nouvel import
+            {/* Options d'envoi */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="w-5 h-5 text-primary" />
+                  Options d'envoi
+                </CardTitle>
+                <CardDescription>
+                  Choisissez si vous souhaitez associer les talents à une offre lors de l'activation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setAssignOffre(null)}
+                      className={`px-4 py-2 rounded-lg text-sm transition-all ${!assignOffre
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        }`}
+                    >
+                      Activer sans offre
+                    </button>
+                    {offres.map(offre => (
+                      <button
+                        key={offre.id}
+                        onClick={() => setAssignOffre(offre.id)}
+                        className={`px-4 py-2 rounded-lg text-sm transition-all ${assignOffre === offre.id
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          }`}
+                      >
+                        {offre.titre}
+                      </button>
+                    ))}
+                  </div>
+                  {assignOffre && (
+                    <p className="text-sm text-gray-500">
+                      Les talents sélectionnés seront associés à cette offre et recevront un email mentionnant la mission.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="flex justify-between items-center">
+              <Button variant="outline" onClick={() => setStep('upload')}>
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Retour
+              </Button>
+              <div className="flex gap-3">
+                <Link href="/admin/talents">
+                  <Button variant="outline">
+                    Terminer sans envoyer
                   </Button>
-                  <Link href="/admin/talents">
-                    <Button>
-                      Voir les talents
-                    </Button>
-                  </Link>
-                </>
-              ) : (
+                </Link>
                 <Button
-                  onClick={handleImport}
-                  disabled={!selectedOffre || pendingFilesCount === 0 || loading}
-                  className="min-w-40"
+                  onClick={handleSendActivation}
+                  disabled={selectedTalents.size === 0 || sendingEmails}
+                  size="lg"
+                  className="min-w-48"
                 >
-                  {loading ? (
+                  {sendingEmails ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Import en cours...
+                      Envoi en cours...
                     </>
                   ) : (
                     <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Importer {pendingFilesCount} CV{pendingFilesCount > 1 ? 's' : ''}
+                      <Mail className="w-4 h-4 mr-2" />
+                      Envoyer à {selectedTalents.size} talent{selectedTalents.size > 1 ? 's' : ''}
                     </>
                   )}
                 </Button>
-              )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </>
+        )}
+
+        {/* ÉTAPE 3: TERMINÉ */}
+        {step === 'done' && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Import terminé avec succès !
+              </h2>
+              {emailSendSummary && (
+                <div className="text-gray-600 mb-6 space-y-1">
+                  <p><strong>{emailSendSummary.sent}</strong> email{emailSendSummary.sent > 1 ? 's' : ''} d'activation envoyé{emailSendSummary.sent > 1 ? 's' : ''}</p>
+                  {emailSendSummary.failed > 0 && (
+                    <p className="text-red-500">{emailSendSummary.failed} échec{emailSendSummary.failed > 1 ? 's' : ''} d'envoi</p>
+                  )}
+                  {emailSendSummary.alreadySent > 0 && (
+                    <p className="text-amber-500">{emailSendSummary.alreadySent} déjà envoyé{emailSendSummary.alreadySent > 1 ? 's' : ''}</p>
+                  )}
+                </div>
+              )}
+              <div className="flex justify-center gap-4">
+                <Button variant="outline" onClick={handleReset}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvel import
+                </Button>
+                <Link href="/admin/talents">
+                  <Button>
+                    <Users className="w-4 h-4 mr-2" />
+                    Voir les talents
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Instructions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Comment fonctionne l'import en masse ?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                    1
+        {step === 'upload' && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="text-lg">Comment fonctionne l'import en masse ?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                      1
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Parsing automatique</p>
+                      <p className="text-sm text-gray-500">
+                        Chaque CV est analysé par l'IA pour extraire nom, compétences, expériences
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Parsing automatique</p>
-                    <p className="text-sm text-gray-500">
-                      Chaque CV est analysé par l'IA pour extraire nom, compétences, expériences
-                    </p>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                      2
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Création des profils</p>
+                      <p className="text-sm text-gray-500">
+                        Les comptes sont créés automatiquement (sans envoi d'email)
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                    2
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                      3
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Revue des profils</p>
+                      <p className="text-sm text-gray-500">
+                        Vérifiez les informations extraites avant d'envoyer les emails
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Classification automatique</p>
-                    <p className="text-sm text-gray-500">
-                      Le talent est classé automatiquement (Dev, Tech, Ingénieur, etc.)
-                    </p>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                      4
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Activation sélective</p>
+                      <p className="text-sm text-gray-500">
+                        Envoyez l'email d'activation aux profils sélectionnés uniquement
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                    3
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Création du compte</p>
-                    <p className="text-sm text-gray-500">
-                      Un compte est créé avec candidature liée à l'offre sélectionnée
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                    4
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Email personnalisé</p>
-                    <p className="text-sm text-gray-500">
-                      Le talent reçoit un email l'invitant à activer son compte
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   )
