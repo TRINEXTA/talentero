@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         if (extractedData.competences?.length > 0) {
           // Merge with existing competences
           const existingCompetences = talent.competences || []
-          const newCompetences = [...new Set([...existingCompetences, ...extractedData.competences])]
+          const newCompetences = Array.from(new Set([...existingCompetences, ...extractedData.competences]))
           updateData.competences = newCompetences
         }
         if (extractedData.anneesExperience && (!talent.anneesExperience || talent.anneesExperience === 0)) {
@@ -97,15 +97,15 @@ export async function POST(request: NextRequest) {
         }
         if (extractedData.langues?.length > 0) {
           const existingLangues = talent.langues || []
-          updateData.langues = [...new Set([...existingLangues, ...extractedData.langues])]
+          updateData.langues = Array.from(new Set([...existingLangues, ...extractedData.langues]))
         }
         if (extractedData.certifications?.length > 0) {
           const existingCerts = talent.certifications || []
-          updateData.certifications = [...new Set([...existingCerts, ...extractedData.certifications])]
+          updateData.certifications = Array.from(new Set([...existingCerts, ...extractedData.certifications]))
         }
         if (extractedData.softSkills?.length > 0) {
           const existingSoftSkills = talent.softSkills || []
-          updateData.softSkills = [...new Set([...existingSoftSkills, ...extractedData.softSkills])]
+          updateData.softSkills = Array.from(new Set([...existingSoftSkills, ...extractedData.softSkills]))
         }
         if (extractedData.linkedinUrl && !talent.linkedinUrl) {
           updateData.linkedinUrl = extractedData.linkedinUrl
