@@ -272,7 +272,7 @@ export default function AdminCandidaturesPage() {
                           {candidature.offre.titre}
                         </span>
                         <span className="text-gray-500">
-                          ({candidature.offre.client.raisonSociale})
+                          ({candidature.offre.client?.raisonSociale || 'TRINEXTA'})
                         </span>
                         {candidature.talent.ville && (
                           <span className="flex items-center gap-1">

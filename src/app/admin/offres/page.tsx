@@ -29,7 +29,7 @@ interface Offre {
   client: {
     uid: string
     raisonSociale: string
-  }
+  } | null
   _count: {
     candidatures: number
     matchs: number
@@ -275,7 +275,7 @@ export default function AdminOffresPage() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
-                          {offre.client.raisonSociale}
+                          {offre.client?.raisonSociale || 'TRINEXTA'}
                         </span>
                         {offre.lieu && (
                           <span className="flex items-center gap-1">

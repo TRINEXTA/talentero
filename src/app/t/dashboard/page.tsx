@@ -52,7 +52,7 @@ interface OffreRecommandee {
     client: {
       nom: string
       logo: string | null
-    }
+    } | null
   }
 }
 
@@ -388,7 +388,7 @@ export default function TalentDashboardPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-500 mb-2">
-                          {match.offre.client.nom}
+                          {match.offre.client?.nom || 'TRINEXTA'}
                         </p>
                         <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                           {match.offre.lieu && (
