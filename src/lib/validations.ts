@@ -5,21 +5,9 @@
 
 import { z } from 'zod'
 
-// Helper pour les URLs optionnelles (accepte avec ou sans https://)
-const optionalUrl = z.string()
-  .transform(val => {
-    if (!val || val.trim() === '') return null
-    // Ajoute https:// si pas de protocole
-    if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
-      return `https://${val}`
-    }
-    return val
-  })
-  .pipe(z.string().url().nullable())
-  .optional()
-  .nullable()
-  .or(z.literal(''))
-  .or(z.null())
+// Helper pour les URLs optionnelles (accepte tout string sans validation stricte)
+// Note: On ne valide pas le format URL car les utilisateurs entrent souvent des URLs sans https://
+const optionalUrl = z.string().optional().nullable().or(z.literal(''))
 
 // ============================================
 // AUTH

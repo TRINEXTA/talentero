@@ -51,8 +51,8 @@ export default function TalentPlanningPage() {
 
   const fetchPlanning = async () => {
     try {
-      const authRes = await fetch('/api/auth/me')
-      if (!authRes.ok) {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
+      if (authRes.status === 401) {
         router.push('/t/connexion')
         return
       }
@@ -62,7 +62,7 @@ export default function TalentPlanningPage() {
       const end = new Date()
       end.setMonth(end.getMonth() + 6)
 
-      const res = await fetch(`/api/talent/planning?start=${start.toISOString().split('T')[0]}&end=${end.toISOString().split('T')[0]}`)
+      const res = await fetch(`/api/talent/planning?start=${start.toISOString().split('T')[0]}&end=${end.toISOString().split('T')[0]}`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setPlanning(data.planning)
