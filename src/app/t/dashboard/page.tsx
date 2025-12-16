@@ -86,14 +86,14 @@ export default function TalentDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       // Récupère les infos utilisateur
-      const userRes = await fetch('/api/auth/me')
-      if (!userRes.ok) {
+      const userRes = await fetch('/api/auth/me', { credentials: 'include' })
+      if (userRes.status === 401) {
         router.push('/t/connexion')
         return
       }
       const userData = await userRes.json()
 
-      if (userData.user.role !== 'TALENT') {
+      if (userData.user?.role !== 'TALENT') {
         router.push('/t/connexion')
         return
       }

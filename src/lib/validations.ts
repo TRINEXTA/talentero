@@ -5,21 +5,9 @@
 
 import { z } from 'zod'
 
-// Helper pour les URLs optionnelles (accepte avec ou sans https://)
-const optionalUrl = z.string()
-  .transform(val => {
-    if (!val || val.trim() === '') return null
-    // Ajoute https:// si pas de protocole
-    if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
-      return `https://${val}`
-    }
-    return val
-  })
-  .pipe(z.string().url().nullable())
-  .optional()
-  .nullable()
-  .or(z.literal(''))
-  .or(z.null())
+// Helper pour les URLs optionnelles (accepte tout string sans validation stricte)
+// Note: On ne valide pas le format URL car les utilisateurs entrent souvent des URLs sans https://
+const optionalUrl = z.string().optional().nullable().or(z.literal(''))
 
 // ============================================
 // AUTH
@@ -79,27 +67,27 @@ export const newPasswordSchema = z.object({
 
 export const updateTalentProfileSchema = z.object({
   // Informations personnelles
-  telephone: z.string().optional(),
+  telephone: z.string().optional().nullable(),
   photoUrl: optionalUrl,
-  nationalite: z.string().optional(),
+  nationalite: z.string().optional().nullable(),
 
   // Société
-  siret: z.string().regex(/^\d{14}$/, 'SIRET invalide').optional().nullable().or(z.literal('')),
+  siret: z.string().optional().nullable().or(z.literal('')),
   raisonSociale: z.string().optional().nullable(),
 
   // Adresse
-  adresse: z.string().optional(),
-  codePostal: z.string().optional(),
-  ville: z.string().optional(),
+  adresse: z.string().optional().nullable(),
+  codePostal: z.string().optional().nullable(),
+  ville: z.string().optional().nullable(),
 
   // Mobilité
-  zonesIntervention: z.array(z.string()).optional(),
-  permisConduire: z.boolean().optional(),
-  vehicule: z.boolean().optional(),
-  accepteDeplacementEtranger: z.boolean().optional(),
+  zonesIntervention: z.array(z.string()).optional().nullable(),
+  permisConduire: z.boolean().optional().nullable(),
+  vehicule: z.boolean().optional().nullable(),
+  accepteDeplacementEtranger: z.boolean().optional().nullable(),
 
   // Profil Professionnel
-  titrePoste: z.string().optional(),
+  titrePoste: z.string().optional().nullable(),
   categorieProfessionnelle: z.enum([
     'DEVELOPPEUR',
     'CHEF_DE_PROJET',
@@ -116,19 +104,19 @@ export const updateTalentProfileSchema = z.object({
     'SCRUM_MASTER',
     'PRODUCT_OWNER',
     'AUTRE',
-  ]).optional(),
-  bio: z.string().max(2000).optional(),
-  competences: z.array(z.string()).optional(),
-  anneesExperience: z.number().min(0).optional(),
+  ]).optional().nullable(),
+  bio: z.string().max(2000).optional().nullable(),
+  competences: z.array(z.string()).optional().nullable(),
+  anneesExperience: z.union([z.number(), z.string()]).optional().nullable(),
 
   // TJM
-  tjm: z.number().min(0).optional(),
-  tjmMin: z.number().min(0).optional(),
-  tjmMax: z.number().min(0).optional(),
+  tjm: z.union([z.number(), z.string()]).optional().nullable(),
+  tjmMin: z.union([z.number(), z.string()]).optional().nullable(),
+  tjmMax: z.union([z.number(), z.string()]).optional().nullable(),
 
   // Mobilité de travail
-  mobilite: z.enum(['FULL_REMOTE', 'HYBRIDE', 'SUR_SITE', 'FLEXIBLE', 'DEPLACEMENT_MULTI_SITE']).optional(),
-  zonesGeographiques: z.array(z.string()).optional(),
+  mobilite: z.enum(['FULL_REMOTE', 'HYBRIDE', 'SUR_SITE', 'FLEXIBLE', 'DEPLACEMENT_MULTI_SITE']).optional().nullable(),
+  zonesGeographiques: z.array(z.string()).optional().nullable(),
 
   // Disponibilité
   disponibilite: z.enum([
@@ -139,21 +127,21 @@ export const updateTalentProfileSchema = z.object({
     'SOUS_3_MOIS',
     'DATE_PRECISE',
     'NON_DISPONIBLE',
-  ]).optional(),
-  disponibleLe: z.string().datetime().optional().nullable().or(z.literal('')),
+  ]).optional().nullable(),
+  disponibleLe: z.string().optional().nullable().or(z.literal('')),
 
   // Compétences détaillées
-  logiciels: z.array(z.string()).optional(),
-  frameworks: z.array(z.string()).optional(),
-  baseDonnees: z.array(z.string()).optional(),
-  methodologies: z.array(z.string()).optional(),
-  outils: z.array(z.string()).optional(),
+  logiciels: z.array(z.string()).optional().nullable(),
+  frameworks: z.array(z.string()).optional().nullable(),
+  baseDonnees: z.array(z.string()).optional().nullable(),
+  methodologies: z.array(z.string()).optional().nullable(),
+  outils: z.array(z.string()).optional().nullable(),
 
   // Extras
-  softSkills: z.array(z.string()).optional(),
-  langues: z.array(z.string()).optional(),
-  loisirs: z.array(z.string()).optional(),
-  certifications: z.array(z.string()).optional(),
+  softSkills: z.array(z.string()).optional().nullable(),
+  langues: z.array(z.string()).optional().nullable(),
+  loisirs: z.array(z.string()).optional().nullable(),
+  certifications: z.array(z.string()).optional().nullable(),
   linkedinUrl: optionalUrl,
   githubUrl: optionalUrl,
   portfolioUrl: optionalUrl,

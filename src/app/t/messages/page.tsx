@@ -54,13 +54,13 @@ export default function TalentMessagesPage() {
   const fetchConversations = async () => {
     setLoading(true)
     try {
-      const authRes = await fetch('/api/auth/me')
-      if (!authRes.ok) {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
+      if (authRes.status === 401) {
         router.push('/t/connexion')
         return
       }
 
-      const res = await fetch('/api/messages')
+      const res = await fetch('/api/messages', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setConversations(data.conversations || [])

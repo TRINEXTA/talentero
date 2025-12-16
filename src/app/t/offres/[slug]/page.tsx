@@ -92,13 +92,17 @@ export default function TalentOffreDetailPage() {
 
   const fetchOffre = async () => {
     try {
-      const authRes = await fetch('/api/auth/me')
-      if (!authRes.ok) {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
+      if (authRes.status === 401) {
         router.push('/t/connexion')
         return
       }
+      // Si erreur serveur, on continue quand même (l'utilisateur est peut-être connecté)
+      if (!authRes.ok && authRes.status !== 401) {
+        console.warn('Auth check failed but continuing:', authRes.status)
+      }
 
-      const res = await fetch(`/api/offres/${slug}`)
+      const res = await fetch(`/api/offres/${slug}`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setOffre(data.offre)
@@ -117,7 +121,7 @@ export default function TalentOffreDetailPage() {
   const fetchMatching = async (offreId: string) => {
     setMatchingLoading(true)
     try {
-      const res = await fetch(`/api/talent/matching/${offreId}`)
+      const res = await fetch(`/api/talent/matching/${offreId}`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setMatching(data)

@@ -77,13 +77,13 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
 
   const fetchConversation = async () => {
     try {
-      const authRes = await fetch('/api/auth/me')
-      if (!authRes.ok) {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
+      if (authRes.status === 401) {
         router.push('/t/connexion')
         return
       }
 
-      const res = await fetch(`/api/messages/${uid}`)
+      const res = await fetch(`/api/messages/${uid}`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setConversation(data.conversation)

@@ -55,10 +55,14 @@ export default function TalentOffresPage() {
     setLoading(true)
     try {
       // Verifier l'authentification
-      const authRes = await fetch('/api/auth/me')
-      if (!authRes.ok) {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
+      if (authRes.status === 401) {
         router.push('/t/connexion')
         return
+      }
+      // Si erreur serveur, on continue quand même
+      if (!authRes.ok && authRes.status !== 401) {
+        console.warn('Auth check warning:', authRes.status)
       }
 
       const params = new URLSearchParams()
@@ -66,7 +70,7 @@ export default function TalentOffresPage() {
       if (competence) params.set('competence', competence)
       if (lieu) params.set('lieu', lieu)
 
-      const res = await fetch(`/api/offres?${params.toString()}`)
+      const res = await fetch(`/api/offres?${params.toString()}`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setOffres(data.offres)

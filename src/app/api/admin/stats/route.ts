@@ -26,7 +26,7 @@ export async function GET() {
       talentsActifs,
       talentsEnMission,
       talentsInactifs,
-      talentsEnAttente,
+      talentsSuspendus,
       // Offres breakdown
       offresPubliees,
       offresPourvues,
@@ -42,7 +42,7 @@ export async function GET() {
       prisma.talent.count({ where: { statut: 'ACTIF' } }),
       prisma.talent.count({ where: { statut: 'EN_MISSION' } }),
       prisma.talent.count({ where: { statut: 'INACTIF' } }),
-      prisma.talent.count({ where: { statut: 'EN_ATTENTE' } }),
+      prisma.talent.count({ where: { statut: 'SUSPENDU' } }),
       // Offres counts
       prisma.offre.count({ where: { statut: 'PUBLIEE' } }),
       prisma.offre.count({ where: { statut: 'POURVUE' } }),
@@ -89,7 +89,7 @@ export async function GET() {
         actifs: talentsActifs,
         enMission: talentsEnMission,
         inactifs: talentsInactifs,
-        enAttente: talentsEnAttente,
+        suspendus: talentsSuspendus,
       },
       offresByStatus: {
         publiees: offresPubliees,
