@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       data: {
         passwordHash,
         emailVerified: true,
+        isActive: true,
         activationToken: null,
         activationTokenExpiry: null,
       },
