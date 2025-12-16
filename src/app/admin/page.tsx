@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { NotificationBell } from '@/components/ui/notification-bell'
 import {
-  Shield, Users, Briefcase, Building2, FileText, Bell, Settings, LogOut,
+  Shield, Users, Briefcase, Building2, FileText, Settings, LogOut,
   Plus, ChevronRight, TrendingUp, Clock, CheckCircle, AlertCircle, Eye, Activity,
   UserCheck, UserX, Pause, Upload
 } from 'lucide-react'
@@ -172,10 +173,8 @@ export default function AdminDashboardPage() {
                 Candidatures
               </Link>
             </nav>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
-                <Bell className="w-5 h-5" />
-              </Button>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
               <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white" onClick={handleLogout}>
                 <LogOut className="w-5 h-5" />
               </Button>

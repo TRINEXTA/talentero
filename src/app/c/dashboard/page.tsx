@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Logo } from '@/components/ui/logo'
+import { NotificationBell } from '@/components/ui/notification-bell'
 import {
-  Building2, Briefcase, Users, FileText, Bell, Settings, LogOut,
-  Plus, ChevronRight, TrendingUp, Clock, CheckCircle, Eye, Star,
-  AlertCircle, User, Calendar
+  Building2, Briefcase, Users, FileText, Settings, LogOut,
+  Plus, ChevronRight, TrendingUp, Clock, CheckCircle, Eye,
+  User, Calendar
 } from 'lucide-react'
 
 interface DashboardData {
@@ -189,15 +190,8 @@ export default function ClientDashboardPage() {
                 </Link>
               </nav>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                {stats.candidaturesNouvelles > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {stats.candidaturesNouvelles}
-                  </span>
-                )}
-              </Button>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
               <Button variant="ghost" size="icon">
                 <Settings className="w-5 h-5" />
               </Button>
