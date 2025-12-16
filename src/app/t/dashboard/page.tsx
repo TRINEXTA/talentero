@@ -183,7 +183,7 @@ export default function TalentDashboardPage() {
                 <Link href="/t/dashboard" className="text-primary font-medium">
                   Dashboard
                 </Link>
-                <Link href="/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
                   Offres
                 </Link>
                 <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
@@ -220,7 +220,7 @@ export default function TalentDashboardPage() {
               {getDisponibiliteLabel(user.details?.disponibilite || null)}
             </p>
           </div>
-          <Link href="/offres">
+          <Link href="/t/offres">
             <Button size="lg">
               <Search className="w-4 h-4 mr-2" />
               Rechercher des offres
@@ -307,7 +307,7 @@ export default function TalentDashboardPage() {
                 <div className="text-center py-8">
                   <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500">Aucune candidature pour le moment</p>
-                  <Link href="/offres">
+                  <Link href="/t/offres">
                     <Button className="mt-4">
                       <Search className="w-4 h-4 mr-2" />
                       Voir les offres
@@ -357,7 +357,7 @@ export default function TalentDashboardPage() {
                 <CardTitle>Offres pour vous</CardTitle>
                 <CardDescription>Basées sur votre profil et vos compétences</CardDescription>
               </div>
-              <Link href="/offres">
+              <Link href="/t/offres">
                 <Button variant="ghost" size="sm">
                   Voir tout
                   <ChevronRight className="w-4 h-4 ml-1" />
@@ -429,7 +429,7 @@ export default function TalentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-4 gap-4">
-              <Link href="/offres" className="block">
+              <Link href="/t/offres" className="block">
                 <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition border border-primary/20">
                   <Search className="w-5 h-5 text-primary" />
                   <span className="font-medium text-primary">Voir les offres</span>

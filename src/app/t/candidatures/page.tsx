@@ -123,7 +123,7 @@ export default function TalentCandidaturesPage() {
             <h1 className="text-2xl font-bold text-gray-900">Mes candidatures</h1>
             <p className="text-gray-600 mt-1">Suivez l'état de vos candidatures</p>
           </div>
-          <Link href="/offres">
+          <Link href="/t/offres">
             <Button>
               <Briefcase className="w-4 h-4 mr-2" />
               Voir les offres
@@ -174,7 +174,7 @@ export default function TalentCandidaturesPage() {
               <p className="text-gray-500 mb-4">
                 Vous n'avez pas encore postulé à des offres
               </p>
-              <Link href="/offres">
+              <Link href="/t/offres">
                 <Button>Voir les offres disponibles</Button>
               </Link>
             </CardContent>
