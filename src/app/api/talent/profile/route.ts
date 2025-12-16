@@ -151,8 +151,8 @@ export async function PUT(request: NextRequest) {
         adresse: data.adresse || null,
         codePostal: data.codePostal || null,
         ville: data.ville || null,
-        visiblePublic: data.visiblePublic ?? null,
-        visibleVitrine: data.visibleVitrine ?? null,
+        visiblePublic: data.visiblePublic ?? undefined,
+        visibleVitrine: data.visibleVitrine ?? undefined,
       },
     })
 
