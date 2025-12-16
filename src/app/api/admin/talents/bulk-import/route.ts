@@ -12,6 +12,9 @@ import { generateTalentCode } from '@/lib/utils'
 import { classifyTalent } from '@/lib/category-classifier'
 import crypto from 'crypto'
 
+// Pour Next.js 14 App Router - timeout étendu pour traiter beaucoup de CVs
+export const maxDuration = 300 // 5 minutes
+
 interface ImportResult {
   filename: string
   success: boolean
