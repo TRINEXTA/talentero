@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Logo } from '@/components/ui/logo'
 import {
-  Search, MapPin, Euro, Clock, Briefcase, Building2, ChevronRight, Filter, X
+  Search, MapPin, Briefcase, Building2, Filter, X
 } from 'lucide-react'
 
 interface Offre {
@@ -41,6 +42,24 @@ const MOBILITE_LABELS: Record<string, string> = {
   FLEXIBLE: 'Flexible',
 }
 
+const VILLES_FRANCE = [
+  'Paris',
+  'Lyon',
+  'Marseille',
+  'Toulouse',
+  'Nice',
+  'Nantes',
+  'Strasbourg',
+  'Montpellier',
+  'Bordeaux',
+  'Lille',
+  'Rennes',
+  'Grenoble',
+  'Aix-en-Provence',
+  'Saint-Etienne',
+  'Toulon',
+]
+
 export default function OffresPage() {
   const [offres, setOffres] = useState<Offre[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,9 +74,13 @@ export default function OffresPage() {
     totalPages: 0,
   })
 
+  // Debounce search
   useEffect(() => {
-    fetchOffres()
-  }, [pagination.page])
+    const timer = setTimeout(() => {
+      fetchOffres()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search, mobilite, lieu, pagination.page])
 
   const fetchOffres = async () => {
     setLoading(true)
@@ -81,12 +104,6 @@ export default function OffresPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setPagination({ ...pagination, page: 1 })
-    fetchOffres()
   }
 
   const clearFilters = () => {
@@ -114,18 +131,29 @@ export default function OffresPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-primary">
-              Talentero
+            <Link href="/">
+              <Logo size="sm" showText />
             </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/offres" className="text-primary font-medium">
+                Offres
+              </Link>
+              <Link href="/freelances" className="text-gray-600 hover:text-gray-900">
+                Freelances
+              </Link>
+              <Link href="/apropos" className="text-gray-600 hover:text-gray-900">
+                A propos
+              </Link>
+            </nav>
             <div className="flex items-center gap-4">
               <Link href="/t/connexion">
                 <Button variant="ghost">Connexion</Button>
               </Link>
               <Link href="/t/inscription">
-                <Button>S'inscrire</Button>
+                <Button>S&apos;inscrire</Button>
               </Link>
             </div>
           </div>
@@ -133,67 +161,41 @@ export default function OffresPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary-700 text-white py-12">
+      <section className="bg-gradient-hero text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Trouvez votre prochaine mission IT
           </h1>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-gray-300 mb-8">
             {pagination.total} offres disponibles
           </p>
 
           {/* Search Form */}
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher par mot-clé, compétence..."
-                className="pl-12 h-12 text-gray-900"
+                placeholder="Rechercher par mot-cle, competence..."
+                className="pl-12 h-12 text-gray-900 bg-white"
               />
             </div>
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                value={lieu}
-                onChange={(e) => setLieu(e.target.value)}
-                placeholder="Lieu"
-                className="pl-12 h-12 w-full md:w-48 text-gray-900"
-              />
-            </div>
-            <Button type="submit" size="lg" className="bg-white text-primary hover:bg-gray-100">
-              Rechercher
-            </Button>
-          </form>
-        </div>
-      </section>
-
-      {/* Filters */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filtres
-              </Button>
-
-              {(search || mobilite || lieu) && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  <X className="w-4 h-4 mr-2" />
-                  Effacer les filtres
-                </Button>
-              )}
-            </div>
-
+            <Select value={lieu} onValueChange={setLieu}>
+              <SelectTrigger className="h-12 w-full md:w-48 bg-white text-gray-900">
+                <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                <SelectValue placeholder="Ville" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les villes</SelectItem>
+                {VILLES_FRANCE.map((ville) => (
+                  <SelectItem key={ville} value={ville}>{ville}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={mobilite} onValueChange={setMobilite}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Mobilité" />
+              <SelectTrigger className="h-12 w-full md:w-48 bg-white text-gray-900">
+                <SelectValue placeholder="Mobilite" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
@@ -205,7 +207,39 @@ export default function OffresPage() {
             </Select>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Active Filters */}
+      {(search || (mobilite && mobilite !== 'all') || (lieu && lieu !== 'all')) && (
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Filtres actifs:</span>
+              {search && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {search}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSearch('')} />
+                </Badge>
+              )}
+              {lieu && lieu !== 'all' && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {lieu}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setLieu('')} />
+                </Badge>
+              )}
+              {mobilite && mobilite !== 'all' && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {MOBILITE_LABELS[mobilite]}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setMobilite('')} />
+                </Badge>
+              )}
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
+                Tout effacer
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Results */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
