@@ -92,7 +92,9 @@ export default function ImportCVMassePage() {
   useEffect(() => {
     async function loadOffres() {
       try {
-        const res = await fetch('/api/admin/offres?statut=PUBLIEE&limit=100')
+        const res = await fetch('/api/admin/offres?statut=PUBLIEE&limit=100', {
+          credentials: 'include',
+        })
         const data = await res.json()
         if (data.offres) {
           setOffres(data.offres)
@@ -173,6 +175,7 @@ export default function ImportCVMassePage() {
       const res = await fetch('/api/admin/talents/bulk-import', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       })
 
       const data = await res.json()
@@ -230,6 +233,7 @@ export default function ImportCVMassePage() {
       const res = await fetch('/api/admin/talents/send-activation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           talentIds: Array.from(selectedTalents),
           offreId: assignOffre || undefined
