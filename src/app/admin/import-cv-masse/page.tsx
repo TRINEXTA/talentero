@@ -636,8 +636,10 @@ export default function ImportCVMassePage() {
                           {/* Bouton voir profil */}
                           <Link
                             href={`/admin/talents/${talent.uid}`}
+                            target="_blank"
                             onClick={(e) => e.stopPropagation()}
                             className="text-gray-400 hover:text-primary p-2"
+                            title="Ouvrir dans un nouvel onglet"
                           >
                             <Eye className="w-5 h-5" />
                           </Link>
