@@ -258,6 +258,9 @@ export default function ClientReviewsPage() {
                 <Link href="/c/reviews" className="text-primary font-medium">
                   Évaluations
                 </Link>
+                <Link href="/c/factures" className="text-gray-600 hover:text-primary">
+                  Factures
+                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-2">

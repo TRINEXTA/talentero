@@ -350,6 +350,7 @@ model Client {
   offres                Offre[]
   conversations         ConversationParticipant[]
   reviews               Review[]                    // Avis laissés sur les talents
+  factures              Facture[]                   // Factures émises
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -1274,4 +1275,134 @@ enum MissionStatus {
   EN_COURS
   TERMINEE
   ANNULEE
+}
+
+// ============================================
+// FACTURATION
+// ============================================
+
+model Facture {
+  id              Int       @id @default(autoincrement())
+  uid             String    @unique @default(uuid())
+
+  // Numéro de facture unique (FAC-2024-0001)
+  numero          String    @unique
+
+  // Client facturé
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId        Int
+
+  // Mission concernée (optionnel)
+  missionId       Int?
+
+  // Offre concernée (optionnel)
+  offreId         Int?
+
+  // Talent concerné (pour info)
+  talentId        Int?
+
+  // Informations client au moment de la facturation
+  clientNom       String
+  clientAdresse   String?
+  clientSiret     String?
+
+  // Détails facturation
+  description     String
+
+  // Période facturée
+  periodeDebut    DateTime?
+  periodeFin      DateTime?
+
+  // Montants
+  nbJours         Float?            // Nombre de jours facturés
+  tjm             Int?              // TJM appliqué
+  montantHT       Float             // Montant hors taxes
+  tauxTVA         Float   @default(20)  // Taux TVA (%)
+  montantTVA      Float             // Montant TVA
+  montantTTC      Float             // Montant TTC
+
+  // Frais additionnels
+  frais           Json?             // [{description, montant}]
+
+  // Remises
+  remise          Float?            // Montant de remise
+  remiseMotif     String?
+
+  // Statut
+  statut          FactureStatut @default(BROUILLON)
+
+  // Dates
+  dateEmission    DateTime?
+  dateEcheance    DateTime?
+  datePaiement    DateTime?
+
+  // Paiement
+  modePaiement    ModePaiement?
+  referencePaiement String?
+
+  // Notes
+  notes           String?
+  notesInternes   String?           // Notes visibles seulement par admin
+
+  // PDF
+  pdfUrl          String?
+
+  // Envoi
+  envoyeParEmail  Boolean   @default(false)
+  envoyeLe        DateTime?
+
+  // Relances
+  nbRelances      Int       @default(0)
+  derniereRelance DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       Int?              // Admin qui a créé
+
+  // Lignes de facture détaillées
+  lignes          LigneFacture[]
+
+  @@index([clientId])
+  @@index([statut])
+  @@index([dateEmission])
+  @@index([numero])
+}
+
+model LigneFacture {
+  id              Int       @id @default(autoincrement())
+
+  facture         Facture   @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  factureId       Int
+
+  description     String
+  quantite        Float     @default(1)
+  unite           String?   @default("jour")  // jour, heure, forfait
+  prixUnitaire    Float
+  montantHT       Float
+
+  // Ordre d'affichage
+  ordre           Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+
+  @@index([factureId])
+}
+
+enum FactureStatut {
+  BROUILLON       // En cours de rédaction
+  EMISE           // Envoyée au client
+  PAYEE           // Paiement reçu
+  PARTIELLEMENT_PAYEE  // Paiement partiel
+  EN_RETARD       // Échéance dépassée
+  ANNULEE         // Annulée
+  AVOIR           // Avoir (remboursement)
+}
+
+enum ModePaiement {
+  VIREMENT
+  CHEQUE
+  CB
+  PRELEVEMENT
+  ESPECES
+  AUTRE
 }
