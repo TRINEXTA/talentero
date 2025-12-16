@@ -1,5 +1,5 @@
 /**
- * API Talent - Upload/Delete CV
+ * API Talent - Upload/Delete CV with automatic data extraction
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -8,8 +8,9 @@ import { requireRole, getCurrentUser } from '@/lib/auth'
 import { writeFile, unlink, mkdir } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
+import { extractTextFromFile, parseCV } from '@/lib/cv-parser'
 
-// POST - Upload CV
+// POST - Upload CV with extraction
 export async function POST(request: NextRequest) {
   try {
     await requireRole(['TALENT'])
@@ -66,19 +67,124 @@ export async function POST(request: NextRequest) {
 
     const cvUrl = `/uploads/cv/${filename}`
 
-    // Update talent
-    await prisma.talent.update({
-      where: { id: talent.id },
-      data: {
-        cvUrl,
-        cvOriginalName: file.name,
-      },
-    })
+    // Extract and parse CV data
+    let extractedData = null
+    try {
+      const cvText = await extractTextFromFile(buffer, file.name)
+      if (cvText && cvText.trim().length > 50) {
+        extractedData = await parseCV(cvText)
+
+        // Update talent with extracted data (only non-empty fields)
+        const updateData: Record<string, unknown> = {
+          cvUrl,
+          cvOriginalName: file.name,
+        }
+
+        if (extractedData.titrePoste && !talent.titrePoste) {
+          updateData.titrePoste = extractedData.titrePoste
+        }
+        if (extractedData.bio && !talent.bio) {
+          updateData.bio = extractedData.bio
+        }
+        if (extractedData.competences?.length > 0) {
+          // Merge with existing competences
+          const existingCompetences = talent.competences || []
+          const newCompetences = [...new Set([...existingCompetences, ...extractedData.competences])]
+          updateData.competences = newCompetences
+        }
+        if (extractedData.anneesExperience && (!talent.anneesExperience || talent.anneesExperience === 0)) {
+          updateData.anneesExperience = extractedData.anneesExperience
+        }
+        if (extractedData.langues?.length > 0) {
+          const existingLangues = talent.langues || []
+          updateData.langues = [...new Set([...existingLangues, ...extractedData.langues])]
+        }
+        if (extractedData.certifications?.length > 0) {
+          const existingCerts = talent.certifications || []
+          updateData.certifications = [...new Set([...existingCerts, ...extractedData.certifications])]
+        }
+        if (extractedData.softSkills?.length > 0) {
+          const existingSoftSkills = talent.softSkills || []
+          updateData.softSkills = [...new Set([...existingSoftSkills, ...extractedData.softSkills])]
+        }
+        if (extractedData.linkedinUrl && !talent.linkedinUrl) {
+          updateData.linkedinUrl = extractedData.linkedinUrl
+        }
+        if (extractedData.githubUrl && !talent.githubUrl) {
+          updateData.githubUrl = extractedData.githubUrl
+        }
+        if (extractedData.telephone && !talent.telephone) {
+          updateData.telephone = extractedData.telephone
+        }
+
+        await prisma.talent.update({
+          where: { id: talent.id },
+          data: updateData,
+        })
+
+        // Add experiences if any
+        if (extractedData.experiences?.length > 0) {
+          for (const exp of extractedData.experiences) {
+            await prisma.experience.create({
+              data: {
+                talentId: talent.id,
+                poste: exp.poste,
+                entreprise: exp.entreprise || '',
+                lieu: exp.lieu,
+                dateDebut: new Date(exp.dateDebut),
+                dateFin: exp.dateFin ? new Date(exp.dateFin) : null,
+                description: exp.description,
+                competences: exp.competences || [],
+              },
+            })
+          }
+        }
+
+        // Add formations if any
+        if (extractedData.formations?.length > 0) {
+          for (const formation of extractedData.formations) {
+            await prisma.formation.create({
+              data: {
+                talentId: talent.id,
+                diplome: formation.diplome,
+                etablissement: formation.etablissement,
+                annee: formation.annee,
+              },
+            })
+          }
+        }
+      } else {
+        // Just update CV URL without extraction
+        await prisma.talent.update({
+          where: { id: talent.id },
+          data: {
+            cvUrl,
+            cvOriginalName: file.name,
+          },
+        })
+      }
+    } catch (extractionError) {
+      console.error('Erreur extraction CV (non bloquant):', extractionError)
+      // Still save the CV even if extraction fails
+      await prisma.talent.update({
+        where: { id: talent.id },
+        data: {
+          cvUrl,
+          cvOriginalName: file.name,
+        },
+      })
+    }
 
     return NextResponse.json({
       success: true,
       cvUrl,
       cvOriginalName: file.name,
+      extracted: extractedData !== null,
+      extractedData: extractedData ? {
+        competences: extractedData.competences,
+        experiences: extractedData.experiences?.length || 0,
+        formations: extractedData.formations?.length || 0,
+      } : null,
     })
 
   } catch (error) {
