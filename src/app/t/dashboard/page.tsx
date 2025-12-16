@@ -128,7 +128,7 @@ export default function TalentDashboardPage() {
       PRESELECTION: { label: 'Présélection', className: 'bg-purple-100 text-purple-800' },
       SHORTLIST: { label: 'Shortlist', className: 'bg-green-100 text-green-800' },
       ENTRETIEN: { label: 'Entretien', className: 'bg-orange-100 text-orange-800' },
-      RETENUE: { label: 'Retenue', className: 'bg-green-100 text-green-800' },
+      ACCEPTEE: { label: 'Retenue', className: 'bg-green-100 text-green-800' },
       REFUSEE: { label: 'Refusée', className: 'bg-red-100 text-red-800' },
     }
     const config = configs[statut] || { label: statut, className: 'bg-gray-100 text-gray-800' }

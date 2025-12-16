@@ -22,6 +22,7 @@ export async function GET(
       include: {
         user: {
           select: {
+            uid: true,
             email: true,
             emailVerified: true,
             isActive: true,
@@ -61,6 +62,12 @@ export async function GET(
           },
           orderBy: { score: 'desc' },
           take: 10,
+        },
+        _count: {
+          select: {
+            candidatures: true,
+            matchs: true,
+          },
         },
       },
     })
@@ -105,11 +112,30 @@ export async function PATCH(
       'compteComplet',
       'visibleVitrine',
       'visiblePublic',
+      'prenom',
+      'nom',
+      'telephone',
       'titrePoste',
+      'bio',
       'competences',
+      'anneesExperience',
       'tjm',
       'tjmMin',
       'tjmMax',
+      'mobilite',
+      'zonesGeographiques',
+      'disponibilite',
+      'disponibleLe',
+      'ville',
+      'codePostal',
+      'adresse',
+      'siret',
+      'raisonSociale',
+      'langues',
+      'certifications',
+      'linkedinUrl',
+      'githubUrl',
+      'portfolioUrl',
     ]
 
     const updateData: Record<string, unknown> = {}

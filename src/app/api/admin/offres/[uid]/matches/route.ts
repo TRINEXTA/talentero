@@ -1,41 +1,34 @@
 /**
- * API Admin - Recuperer les matches d'une offre
- * GET /api/admin/offres/[uid]/matches
+ * API Admin - Matches pour une offre
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getCurrentUser } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
 
+// GET - Liste des matches pour une offre
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
-    }
-
+    await requireRole(['ADMIN'])
     const { uid } = await params
 
-    // Recupere l'offre
     const offre = await prisma.offre.findUnique({
       where: { uid },
+      select: { id: true },
     })
 
     if (!offre) {
       return NextResponse.json({ error: 'Offre non trouvee' }, { status: 404 })
     }
 
-    // Recupere les matches
     const matches = await prisma.match.findMany({
       where: { offreId: offre.id },
-      orderBy: { score: 'desc' },
       include: {
         talent: {
           select: {
-            id: true,
             uid: true,
             codeUnique: true,
             prenom: true,
@@ -46,34 +39,20 @@ export async function GET(
             tjmMin: true,
             tjmMax: true,
             disponibilite: true,
-            mobilite: true,
             ville: true,
             photoUrl: true,
-            anneesExperience: true,
           },
         },
       },
+      orderBy: { score: 'desc' },
+      take: 50,
     })
 
-    return NextResponse.json({
-      matches: matches.map(m => ({
-        id: m.id,
-        score: m.score,
-        scoreDetails: m.scoreDetails,
-        competencesMatchees: m.competencesMatchees,
-        competencesManquantes: m.competencesManquantes,
-        feedbackTjm: m.feedbackTjm,
-        feedbackExperience: m.feedbackExperience,
-        tjmTropHaut: m.tjmTropHaut,
-        experienceInsuffisante: m.experienceInsuffisante,
-        notificationEnvoyee: m.notificationEnvoyee,
-        talent: m.talent,
-      })),
-    })
+    return NextResponse.json({ matches })
   } catch (error) {
-    console.error('Erreur:', error)
+    console.error('Erreur GET matches offre:', error)
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: error instanceof Error ? error.message : 'Erreur serveur' },
       { status: 500 }
     )
   }

@@ -154,7 +154,7 @@ export default function AdminTalentDetailPage() {
     setSaving(true)
     try {
       const res = await fetch(`/api/admin/talents/${uid}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prenom: talent.prenom,

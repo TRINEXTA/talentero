@@ -359,6 +359,123 @@ export async function sendAccountActivationEmail(
   })
 }
 
+/**
+ * Email de bienvenue suite à une candidature (import en masse)
+ * Explique au freelance qu'il a postulé à une offre TRINEXTA
+ */
+export async function sendCandidatureWelcomeEmail(
+  email: string,
+  prenom: string,
+  offreTitre: string,
+  offreSlug: string,
+  activationToken: string
+): Promise<boolean> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.io'
+  const activationUrl = `${appUrl}/activation?token=${activationToken}`
+  const offreUrl = `${appUrl}/offres/${offreSlug}`
+
+  return sendEmailViaGraph({
+    to: email,
+    subject: `Votre candidature TRINEXTA - ${offreTitre}`,
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f4f4f5; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+            .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+            .header p { margin: 8px 0 0; opacity: 0.9; font-size: 14px; }
+            .content { padding: 32px 24px; color: #1e293b; line-height: 1.6; }
+            .offer-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; margin: 20px 0; border-radius: 8px; }
+            .offer-box h3 { margin: 0 0 8px; color: #1e40af; font-size: 16px; }
+            .offer-box p { margin: 0; color: #64748b; font-size: 14px; }
+            .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+            .steps { margin: 24px 0; }
+            .step { display: flex; align-items: flex-start; margin: 16px 0; }
+            .step-number { background: #2563eb; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; margin-right: 12px; flex-shrink: 0; }
+            .step-content { flex: 1; }
+            .step-content strong { display: block; margin-bottom: 4px; }
+            .step-content p { margin: 0; color: #64748b; font-size: 14px; }
+            .button { display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+            .footer { padding: 24px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; }
+            .footer img { height: 40px; margin-bottom: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="header">
+                <h1>Bienvenue chez TRINEXTA !</h1>
+                <p>Votre candidature a été enregistrée</p>
+              </div>
+              <div class="content">
+                <p>Bonjour ${prenom},</p>
+
+                <p>Suite à votre candidature, nous avons le plaisir de vous informer que votre profil a été <strong>sélectionné</strong> pour rejoindre notre vivier de talents IT.</p>
+
+                <div class="offer-box">
+                  <h3>Mission concernée</h3>
+                  <p>${offreTitre}</p>
+                </div>
+
+                <p><strong>TRINEXTA</strong> est une ESN spécialisée dans le placement de consultants IT indépendants. Nous avons analysé votre CV et créé votre espace personnel sur notre plateforme <strong>Talentero</strong>.</p>
+
+                <div class="info-box">
+                  <strong>Votre compte est prêt !</strong><br>
+                  Il vous suffit de l'activer pour accéder à toutes nos opportunités.
+                </div>
+
+                <div class="steps">
+                  <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                      <strong>Activez votre compte</strong>
+                      <p>Créez votre mot de passe en cliquant sur le bouton ci-dessous</p>
+                    </div>
+                  </div>
+                  <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                      <strong>Complétez votre profil</strong>
+                      <p>Renseignez vos informations administratives (SIRET, adresse...)</p>
+                    </div>
+                  </div>
+                  <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                      <strong>Découvrez nos missions</strong>
+                      <p>Accédez à toutes les opportunités correspondant à votre profil</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p style="text-align: center;">
+                  <a href="${activationUrl}" class="button">Activer mon compte</a>
+                </p>
+
+                <p style="font-size: 13px; color: #64748b; text-align: center;">
+                  Ce lien est valable 7 jours.<br>
+                  <a href="${offreUrl}" style="color: #2563eb;">Voir le détail de la mission</a>
+                </p>
+              </div>
+              <div class="footer">
+                <p><strong>TRINEXTA</strong> by TrusTech IT Support</p>
+                <p>Plateforme Talentero - Where IT talent meets opportunity</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    importance: 'high',
+  })
+}
+
 export async function sendAOResultNotification(
   talentEmail: string,
   talentPrenom: string,

@@ -102,6 +102,12 @@ export async function GET(
           },
           orderBy: { dateProposee: 'desc' },
         },
+        _count: {
+          select: {
+            candidatures: true,
+            matchs: true,
+          },
+        },
       },
     })
 
@@ -158,6 +164,8 @@ export async function PATCH(
       'renouvelable',
       'nombrePostes',
       'lieu',
+      'ville',
+      'region',
       'codePostal',
       'mobilite',
       'deplacementMultiSite',
