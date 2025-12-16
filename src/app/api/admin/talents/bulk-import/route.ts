@@ -12,6 +12,9 @@ import { generateTalentCode } from '@/lib/utils'
 import { classifyTalent } from '@/lib/category-classifier'
 import crypto from 'crypto'
 
+// Pour Next.js 14 App Router - timeout étendu pour traiter beaucoup de CVs
+export const maxDuration = 300 // 5 minutes
+
 interface ImportResult {
   filename: string
   success: boolean
@@ -37,6 +40,14 @@ interface ImportResult {
 // POST - Import en masse de CVs (sans envoi d'email)
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier que l'API Anthropic est configurée
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'ANTHROPIC_API_KEY non configurée sur le serveur' },
+        { status: 500 }
+      )
+    }
+
     await requireRole(['ADMIN'])
 
     const formData = await request.formData()

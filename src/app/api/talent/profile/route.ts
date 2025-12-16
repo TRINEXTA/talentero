@@ -104,11 +104,11 @@ export async function PUT(request: NextRequest) {
 
     const data = validation.data
 
-    // Helper pour convertir string en number ou null
-    const toNumber = (val: string | number | null | undefined): number | null => {
-      if (val === null || val === undefined || val === '') return null
+    // Helper pour convertir string en number ou undefined
+    const toNumber = (val: string | number | null | undefined): number | undefined => {
+      if (val === null || val === undefined || val === '') return undefined
       const num = typeof val === 'string' ? parseFloat(val) : val
-      return isNaN(num) ? null : num
+      return isNaN(num) ? undefined : num
     }
 
     // Mise à jour du profil (prenom/nom non modifiables par le talent)
@@ -131,9 +131,9 @@ export async function PUT(request: NextRequest) {
         mobilite: data.mobilite as any || null,
         zonesGeographiques: data.zonesGeographiques || [],
         zonesIntervention: data.zonesIntervention || [],
-        permisConduire: data.permisConduire ?? null,
-        vehicule: data.vehicule ?? null,
-        accepteDeplacementEtranger: data.accepteDeplacementEtranger ?? null,
+        permisConduire: data.permisConduire ?? undefined,
+        vehicule: data.vehicule ?? undefined,
+        accepteDeplacementEtranger: data.accepteDeplacementEtranger ?? undefined,
         disponibilite: data.disponibilite as any || null,
         disponibleLe: data.disponibleLe ? new Date(data.disponibleLe) : null,
         logiciels: data.logiciels || [],
@@ -151,8 +151,8 @@ export async function PUT(request: NextRequest) {
         adresse: data.adresse || null,
         codePostal: data.codePostal || null,
         ville: data.ville || null,
-        visiblePublic: data.visiblePublic ?? null,
-        visibleVitrine: data.visibleVitrine ?? null,
+        visiblePublic: data.visiblePublic ?? undefined,
+        visibleVitrine: data.visibleVitrine ?? undefined,
       },
     })
 

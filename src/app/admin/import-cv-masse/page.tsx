@@ -92,7 +92,9 @@ export default function ImportCVMassePage() {
   useEffect(() => {
     async function loadOffres() {
       try {
-        const res = await fetch('/api/admin/offres?statut=PUBLIEE&limit=100')
+        const res = await fetch('/api/admin/offres?statut=PUBLIEE&limit=100', {
+          credentials: 'include',
+        })
         const data = await res.json()
         if (data.offres) {
           setOffres(data.offres)
@@ -144,7 +146,7 @@ export default function ImportCVMassePage() {
     setCvFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  // Import en masse (Étape 1)
+  // Import en masse (Étape 1) - Upload CV par CV pour éviter limite nginx
   const handleImport = async () => {
     const pendingFiles = cvFiles.filter(cv => cv.status === 'pending')
     if (pendingFiles.length === 0) {
@@ -154,67 +156,93 @@ export default function ImportCVMassePage() {
 
     setLoading(true)
 
-    try {
-      const formData = new FormData()
-      if (selectedOffre) {
-        formData.append('offreId', String(selectedOffre))
-      }
+    // Traiter les CVs un par un
+    const allResults: Array<{ success: boolean; talent?: ImportedTalent; error?: string; filename: string }> = []
+    let imported = 0
+    let failed = 0
 
-      pendingFiles.forEach(cv => {
-        formData.append('files', cv.file)
-      })
+    for (let i = 0; i < pendingFiles.length; i++) {
+      const cv = pendingFiles[i]
 
-      setCvFiles(prev => prev.map(cv =>
-        pendingFiles.includes(cv)
-          ? { ...cv, status: 'uploading' }
-          : cv
+      // Marquer ce CV comme en cours d'upload
+      setCvFiles(prev => prev.map(c =>
+        c.file === cv.file ? { ...c, status: 'uploading' } : c
       ))
 
-      const res = await fetch('/api/admin/talents/bulk-import', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await res.json()
-
-      if (res.ok && data.success) {
-        setCvFiles(prev => prev.map((cv, index) => {
-          const result = data.results[index]
-          if (result) {
-            return {
-              ...cv,
-              status: result.success ? 'success' : 'error',
-              error: result.error,
-              talent: result.talent
-            }
-          }
-          return cv
-        }))
-
-        setImportSummary(data.summary)
-
-        // Passe à l'étape de revue si des profils ont été importés
-        if (data.summary.imported > 0) {
-          setStep('review')
-          // Sélectionne tous les profils importés par défaut
-          const importedIds = data.results
-            .filter((r: { success: boolean; talent?: ImportedTalent }) => r.success && r.talent)
-            .map((r: { talent: ImportedTalent }) => r.talent.id)
-          setSelectedTalents(new Set(importedIds))
+      try {
+        const formData = new FormData()
+        if (selectedOffre) {
+          formData.append('offreId', String(selectedOffre))
         }
-      } else {
-        throw new Error(data.error || 'Erreur lors de l\'import')
+        formData.append('files', cv.file)
+
+        const res = await fetch('/api/admin/talents/bulk-import', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        })
+
+        // Vérifier le type de contenu retourné
+        const contentType = res.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await res.text()
+          console.error('Réponse non-JSON:', res.status, text.substring(0, 200))
+          throw new Error(`Erreur serveur (${res.status})`)
+        }
+
+        const data = await res.json()
+
+        if (res.ok && data.success && data.results?.[0]) {
+          const result = data.results[0]
+          allResults.push({ ...result, filename: cv.file.name })
+
+          if (result.success) {
+            imported++
+            setCvFiles(prev => prev.map(c =>
+              c.file === cv.file ? { ...c, status: 'success', talent: result.talent } : c
+            ))
+          } else {
+            failed++
+            setCvFiles(prev => prev.map(c =>
+              c.file === cv.file ? { ...c, status: 'error', error: result.error } : c
+            ))
+          }
+        } else {
+          failed++
+          const errorMsg = data.error || 'Erreur inconnue'
+          allResults.push({ success: false, error: errorMsg, filename: cv.file.name })
+          setCvFiles(prev => prev.map(c =>
+            c.file === cv.file ? { ...c, status: 'error', error: errorMsg } : c
+          ))
+        }
+      } catch (error) {
+        failed++
+        const errorMsg = error instanceof Error ? error.message : 'Erreur'
+        allResults.push({ success: false, error: errorMsg, filename: cv.file.name })
+        setCvFiles(prev => prev.map(c =>
+          c.file === cv.file ? { ...c, status: 'error', error: errorMsg } : c
+        ))
       }
-    } catch (error) {
-      console.error('Erreur import:', error)
-      setCvFiles(prev => prev.map(cv => ({
-        ...cv,
-        status: cv.status === 'uploading' ? 'error' : cv.status,
-        error: error instanceof Error ? error.message : 'Erreur'
-      })))
-    } finally {
-      setLoading(false)
     }
+
+    // Résumé final
+    setImportSummary({
+      total: pendingFiles.length,
+      imported,
+      failed
+    })
+
+    // Passe à l'étape de revue si des profils ont été importés
+    if (imported > 0) {
+      setStep('review')
+      // Sélectionne tous les profils importés par défaut
+      const importedIds = allResults
+        .filter(r => r.success && r.talent)
+        .map(r => r.talent!.id)
+      setSelectedTalents(new Set(importedIds))
+    }
+
+    setLoading(false)
   }
 
   // Envoi des emails d'activation (Étape 2)
@@ -230,6 +258,7 @@ export default function ImportCVMassePage() {
       const res = await fetch('/api/admin/talents/send-activation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           talentIds: Array.from(selectedTalents),
           offreId: assignOffre || undefined

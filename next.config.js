@@ -13,6 +13,12 @@ const nextConfig = {
   // Optimisations pour production
   poweredByHeader: false,
   compress: true,
+  // Augmenter la limite de taille pour les uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
+  },
 }
 
 module.exports = nextConfig
