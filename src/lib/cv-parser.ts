@@ -4,6 +4,8 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require('pdf-parse')
 
 interface ParsedCV {
   prenom: string
@@ -38,6 +40,33 @@ interface ParsedCV {
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
+
+/**
+ * Extrait le texte d'un fichier PDF
+ */
+export async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
+  try {
+    const data = await pdfParse(pdfBuffer)
+    return data.text || ''
+  } catch (error) {
+    console.error('Erreur extraction PDF:', error)
+    throw new Error('Impossible de lire le fichier PDF')
+  }
+}
+
+/**
+ * Extrait le texte d'un fichier (PDF ou texte)
+ */
+export async function extractTextFromFile(buffer: Buffer, filename: string): Promise<string> {
+  const extension = filename.toLowerCase().split('.').pop()
+
+  if (extension === 'pdf') {
+    return extractTextFromPDF(buffer)
+  }
+
+  // Pour les fichiers texte (.txt, .doc, etc.)
+  return buffer.toString('utf-8')
+}
 
 /**
  * Parse le contenu textuel d'un CV et extrait les informations structurées

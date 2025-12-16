@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
-import { parseCV } from '@/lib/cv-parser'
+import { parseCV, extractTextFromFile } from '@/lib/cv-parser'
 import { sendCandidatureWelcomeEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
 import { classifyTalent } from '@/lib/category-classifier'
@@ -75,7 +75,19 @@ export async function POST(request: NextRequest) {
       try {
         // Lit et parse le CV en premier pour extraire l'email
         const cvBuffer = Buffer.from(await file.arrayBuffer())
-        const cvText = cvBuffer.toString('utf-8')
+
+        // Extrait le texte du fichier (supporte PDF et texte)
+        const cvText = await extractTextFromFile(cvBuffer, file.name)
+
+        if (!cvText || cvText.trim().length < 50) {
+          results.push({
+            filename: file.name,
+            success: false,
+            error: 'Impossible de lire le contenu du fichier. Verifiez que le PDF n\'est pas protege ou corrompu.'
+          })
+          continue
+        }
+
         const parsedData = await parseCV(cvText)
 
         // Récupère l'email extrait du CV
