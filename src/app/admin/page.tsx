@@ -178,6 +178,9 @@ export default function AdminDashboardPage() {
               <Link href="/admin/facturation" className="text-gray-400 hover:text-white">
                 Facturation
               </Link>
+              <Link href="/admin/contrats" className="text-gray-400 hover:text-white">
+                Contrats
+              </Link>
             </nav>
             <div className="flex items-center gap-2">
               <NotificationBell />
