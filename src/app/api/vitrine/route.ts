@@ -15,10 +15,14 @@ export async function GET(request: NextRequest) {
     const specialite = searchParams.get('specialite') || ''
     const competence = searchParams.get('competence') || ''
 
+    // IMPORTANT: On ne montre que les talents avec compte VRAIMENT activé
     const where: Record<string, unknown> = {
       visibleVitrine: true,
       statut: 'ACTIF',
-      user: { isActive: true },
+      user: {
+        isActive: true,
+        emailVerified: true, // Compte doit être activé
+      },
     }
 
     if (specialite) {
@@ -61,10 +65,15 @@ export async function GET(request: NextRequest) {
       localisation: talent.ville ? `Région ${talent.ville}` : 'France',
     }))
 
-    // Récupère les spécialités populaires pour les filtres
+    // Récupère les spécialités populaires pour les filtres (talents activés uniquement)
     const specialites = await prisma.talent.groupBy({
       by: ['titrePoste'],
-      where: { visibleVitrine: true, statut: 'ACTIF', titrePoste: { not: null } },
+      where: {
+        visibleVitrine: true,
+        statut: 'ACTIF',
+        titrePoste: { not: null },
+        user: { isActive: true, emailVerified: true },
+      },
       _count: true,
       orderBy: { _count: { titrePoste: 'desc' } },
       take: 10,
