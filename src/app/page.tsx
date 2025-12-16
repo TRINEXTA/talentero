@@ -19,7 +19,7 @@ export default function HomePage() {
               <Link href="/entreprises" className="text-gray-600 hover:text-primary transition">
                 Entreprises
               </Link>
-              <Link href="/a-propos" className="text-gray-600 hover:text-primary transition">
+              <Link href="/apropos" className="text-gray-600 hover:text-primary transition">
                 À propos
               </Link>
             </div>
@@ -297,7 +297,7 @@ export default function HomePage() {
             <div>
               <h4 className="text-white font-semibold mb-4">TRINEXTA</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/a-propos" className="hover:text-white transition">À propos</Link></li>
+                <li><Link href="/apropos" className="hover:text-white transition">À propos</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition">Contact</Link></li>
                 <li><Link href="/mentions-legales" className="hover:text-white transition">Mentions légales</Link></li>
               </ul>
