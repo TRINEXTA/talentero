@@ -194,6 +194,7 @@ model Talent {
   entretiens            Entretien[]
   planning              TalentPlanning[]        // Planning de disponibilité
   missions              Mission[]               // Missions en cours/passées
+  reviews               Review[]                // Avis reçus des clients
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -348,6 +349,7 @@ model Client {
   contacts              ClientContact[]
   offres                Offre[]
   conversations         ConversationParticipant[]
+  reviews               Review[]                    // Avis laissés sur les talents
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -969,6 +971,73 @@ enum NotificationType {
 
   // Système
   SYSTEME                    // Message système
+
+  // Reviews
+  REVIEW_RECUE               // Talent: nouvelle review reçue
+}
+
+// ============================================
+// REVIEWS & REPUTATION
+// ============================================
+
+model Review {
+  id              Int       @id @default(autoincrement())
+  uid             String    @unique @default(uuid())
+
+  // Talent évalué
+  talent          Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId        Int
+
+  // Client qui évalue
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId        Int
+
+  // Mission concernée (optionnel)
+  missionId       Int?
+
+  // Candidature concernée (optionnel)
+  candidatureId   Int?
+
+  // Notes (1-5)
+  noteGlobale         Int       // Note globale
+  noteCompetences     Int?      // Note compétences techniques
+  noteCommunication   Int?      // Note communication
+  notePonctualite     Int?      // Note ponctualité/respect des délais
+  noteQualite         Int?      // Note qualité du travail
+
+  // Commentaire
+  titre           String?
+  commentaire     String
+
+  // Recommandation
+  recommande      Boolean   @default(true)
+
+  // Validation
+  statut          ReviewStatus @default(EN_ATTENTE)
+  valideParAdmin  Boolean   @default(false)
+  valideLe        DateTime?
+  validePar       Int?      // Admin ID
+
+  // Réponse du talent
+  reponse         String?
+  reponduLe       DateTime?
+
+  // Visibilité
+  public          Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([talentId])
+  @@index([clientId])
+  @@index([statut])
+}
+
+enum ReviewStatus {
+  EN_ATTENTE      // En attente de validation
+  PUBLIEE         // Publiée et visible
+  REJETEE         // Rejetée par l'admin
+  MASQUEE         // Masquée temporairement
 }
 
 // ============================================

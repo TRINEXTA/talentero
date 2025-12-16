@@ -173,6 +173,9 @@ export default function ClientEntretiensPage() {
                 <Link href="/c/entretiens" className="text-primary font-medium">
                   Entretiens
                 </Link>
+                <Link href="/c/reviews" className="text-gray-600 hover:text-primary">
+                  Évaluations
+                </Link>
                 <Link href="/c/profil" className="text-gray-600 hover:text-primary">
                   Mon profil
                 </Link>

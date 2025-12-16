@@ -458,6 +458,7 @@ export function getNotificationIcon(type: NotificationType): string {
     VALIDATION_COMPTE: '✅',
     BIENVENUE: '👋',
     SYSTEME: '🔔',
+    REVIEW_RECUE: '⭐',
   }
   return icons[type] || '🔔'
 }
