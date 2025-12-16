@@ -1,13 +1,13 @@
 /**
  * API Admin - Import en Masse de CVs
- * Upload multiple CVs, parse, create accounts, assign to offer
+ * Étape 1: Upload des CVs, parse, création des profils SANS envoi d'email
+ * Les emails d'activation sont envoyés séparément via /api/admin/talents/send-activation
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
 import { parseCV, extractTextFromFile } from '@/lib/cv-parser'
-import { sendCandidatureWelcomeEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
 import { classifyTalent } from '@/lib/category-classifier'
 import crypto from 'crypto'
@@ -16,48 +16,51 @@ interface ImportResult {
   filename: string
   success: boolean
   talent?: {
+    id: number
     uid: string
     prenom: string
     nom: string
     email: string
+    telephone: string | null
+    titrePoste: string | null
     categorie: string
     competences: string[]
+    anneesExperience: number | null
+    langues: string[]
+    certifications: string[]
+    experiencesCount: number
+    formationsCount: number
   }
   error?: string
 }
 
-// POST - Import en masse de CVs
+// POST - Import en masse de CVs (sans envoi d'email)
 export async function POST(request: NextRequest) {
   try {
     await requireRole(['ADMIN'])
 
     const formData = await request.formData()
 
-    // Récupère l'offre cible (obligatoire)
+    // Offre cible (optionnelle maintenant)
     const offreId = formData.get('offreId')
-    if (!offreId) {
-      return NextResponse.json(
-        { error: 'Veuillez sélectionner une offre' },
-        { status: 400 }
-      )
-    }
+    let offre = null
 
-    // Vérifie que l'offre existe
-    const offre = await prisma.offre.findUnique({
-      where: { id: parseInt(offreId as string) },
-      include: { client: true }
-    })
+    if (offreId) {
+      offre = await prisma.offre.findUnique({
+        where: { id: parseInt(offreId as string) },
+        include: { client: true }
+      })
 
-    if (!offre) {
-      return NextResponse.json(
-        { error: 'Offre non trouvée' },
-        { status: 404 }
-      )
+      if (!offre) {
+        return NextResponse.json(
+          { error: 'Offre non trouvée' },
+          { status: 404 }
+        )
+      }
     }
 
     // Récupère les fichiers CV
     const files = formData.getAll('files') as File[]
-    const sendEmails = formData.get('sendEmails') !== 'false'
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -109,50 +112,75 @@ export async function POST(request: NextRequest) {
         })
 
         if (existingUser) {
-          // Si le talent existe déjà, on peut juste créer une candidature
+          // Si le talent existe déjà, on peut juste créer une candidature si une offre est sélectionnée
           const existingTalent = await prisma.talent.findUnique({
-            where: { userId: existingUser.id }
+            where: { userId: existingUser.id },
+            include: {
+              _count: { select: { experiences: true, formations: true } }
+            }
           })
 
           if (existingTalent) {
-            // Vérifie si une candidature existe déjà pour cette offre
-            const existingCandidature = await prisma.candidature.findUnique({
-              where: {
-                offreId_talentId: {
-                  offreId: offre.id,
-                  talentId: existingTalent.id
+            if (offre) {
+              // Vérifie si une candidature existe déjà pour cette offre
+              const existingCandidature = await prisma.candidature.findUnique({
+                where: {
+                  offreId_talentId: {
+                    offreId: offre.id,
+                    talentId: existingTalent.id
+                  }
                 }
-              }
-            })
+              })
 
-            if (existingCandidature) {
+              if (existingCandidature) {
+                results.push({
+                  filename: file.name,
+                  success: false,
+                  error: 'Candidature déjà existante pour cette offre'
+                })
+              } else {
+                // Crée juste la candidature pour l'offre
+                await prisma.candidature.create({
+                  data: {
+                    offreId: offre.id,
+                    talentId: existingTalent.id,
+                    statut: 'NOUVELLE',
+                    notesTrinexta: 'Import en masse - talent existant'
+                  }
+                })
+
+                await prisma.offre.update({
+                  where: { id: offre.id },
+                  data: { nbCandidatures: { increment: 1 } }
+                })
+
+                results.push({
+                  filename: file.name,
+                  success: true,
+                  talent: {
+                    id: existingTalent.id,
+                    uid: existingTalent.uid,
+                    prenom: existingTalent.prenom,
+                    nom: existingTalent.nom,
+                    email,
+                    telephone: existingTalent.telephone,
+                    titrePoste: existingTalent.titrePoste,
+                    categorie: existingTalent.categorieProfessionnelle || 'AUTRE',
+                    competences: existingTalent.competences,
+                    anneesExperience: existingTalent.anneesExperience,
+                    langues: existingTalent.langues,
+                    certifications: existingTalent.certifications,
+                    experiencesCount: existingTalent._count.experiences,
+                    formationsCount: existingTalent._count.formations,
+                  }
+                })
+              }
+            } else {
+              // Pas d'offre sélectionnée, talent existe déjà
               results.push({
                 filename: file.name,
                 success: false,
-                error: 'Candidature déjà existante pour cette offre'
-              })
-            } else {
-              // Crée juste la candidature pour l'offre
-              await prisma.candidature.create({
-                data: {
-                  offreId: offre.id,
-                  talentId: existingTalent.id,
-                  statut: 'NOUVELLE',
-                  notesTrinexta: 'Import en masse - talent existant'
-                }
-              })
-
-              results.push({
-                filename: file.name,
-                success: true,
-                talent: {
-                  uid: existingTalent.uid,
-                  prenom: existingTalent.prenom,
-                  nom: existingTalent.nom,
-                  email,
-                  categorie: existingTalent.categorieProfessionnelle || 'AUTRE',
-                  competences: existingTalent.competences
-                }
+                error: `Talent déjà existant: ${existingTalent.prenom} ${existingTalent.nom}`
               })
             }
             continue
@@ -166,23 +194,24 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Classifie automatiquement la catégorie (parsedData est déjà disponible)
+        // Classifie automatiquement la catégorie
         const categorie = classifyTalent(parsedData.titrePoste, parsedData.competences)
 
         // Génère le token d'activation
         const activationToken = crypto.randomBytes(32).toString('hex')
         const activationTokenExpiry = new Date()
-        activationTokenExpiry.setDate(activationTokenExpiry.getDate() + 7)
+        activationTokenExpiry.setDate(activationTokenExpiry.getDate() + 30) // 30 jours au lieu de 7
 
         // Crée l'utilisateur et le talent en transaction
         const result = await prisma.$transaction(async (tx) => {
-          // Crée l'utilisateur
+          // Crée l'utilisateur (compte non activé, email non envoyé)
           const user = await tx.user.create({
             data: {
               email,
               passwordHash: null,
               role: 'TALENT',
               emailVerified: false,
+              isActive: false, // Compte inactif jusqu'à activation
               activationToken,
               activationTokenExpiry,
               createdByAdmin: true,
@@ -216,6 +245,8 @@ export async function POST(request: NextRequest) {
               importeParAdmin: true,
               compteLimite: true,
               compteComplet: false,
+              // Nouveau champ pour indiquer que l'email n'a pas été envoyé
+              activationEmailEnvoye: false,
             }
           })
 
@@ -248,21 +279,22 @@ export async function POST(request: NextRequest) {
             })
           }
 
-          // Crée la candidature pour l'offre
-          const candidature = await tx.candidature.create({
-            data: {
-              offreId: offre.id,
-              talentId: talent.id,
-              statut: 'NOUVELLE',
-              notesTrinexta: `Import en masse - CV: ${file.name}`
-            }
-          })
+          // Si une offre est sélectionnée, crée la candidature
+          if (offre) {
+            await tx.candidature.create({
+              data: {
+                offreId: offre.id,
+                talentId: talent.id,
+                statut: 'NOUVELLE',
+                notesTrinexta: `Import en masse - CV: ${file.name}`
+              }
+            })
 
-          // Incrémente le compteur de candidatures
-          await tx.offre.update({
-            where: { id: offre.id },
-            data: { nbCandidatures: { increment: 1 } }
-          })
+            await tx.offre.update({
+              where: { id: offre.id },
+              data: { nbCandidatures: { increment: 1 } }
+            })
+          }
 
           // Log l'action
           await tx.auditLog.create({
@@ -273,43 +305,36 @@ export async function POST(request: NextRequest) {
               details: {
                 email,
                 cvFile: file.name,
-                offreId: offre.id,
-                offreTitre: offre.titre,
+                offreId: offre?.id || null,
+                offreTitre: offre?.titre || null,
                 categorie,
                 competencesParsees: parsedData.competences.length,
+                emailEnvoye: false,
               }
             }
           })
 
-          return { user, talent, candidature }
+          return { user, talent }
         })
-
-        // Envoie l'email de bienvenue personnalisé
-        if (sendEmails) {
-          try {
-            await sendCandidatureWelcomeEmail(
-              email,
-              parsedData.prenom || 'Futur talent',
-              offre.titre,
-              offre.slug,
-              activationToken
-            )
-          } catch (emailError) {
-            console.error('Erreur envoi email:', emailError)
-            // On ne fait pas échouer l'import si l'email échoue
-          }
-        }
 
         results.push({
           filename: file.name,
           success: true,
           talent: {
+            id: result.talent.id,
             uid: result.talent.uid,
             prenom: result.talent.prenom,
             nom: result.talent.nom,
             email,
+            telephone: result.talent.telephone,
+            titrePoste: result.talent.titrePoste,
             categorie,
-            competences: result.talent.competences
+            competences: result.talent.competences,
+            anneesExperience: result.talent.anneesExperience,
+            langues: result.talent.langues,
+            certifications: result.talent.certifications,
+            experiencesCount: parsedData.experiences.length,
+            formationsCount: parsedData.formations.length,
           }
         })
 
@@ -329,11 +354,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      offre: {
+      offre: offre ? {
         id: offre.id,
         titre: offre.titre,
         codeUnique: offre.codeUnique
-      },
+      } : null,
       summary: {
         total: files.length,
         imported,

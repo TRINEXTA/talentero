@@ -1220,3 +1220,238 @@ export async function sendNewOffreToAdmin(
     importance: 'high',
   })
 }
+
+/**
+ * Email d'activation professionnel avec toutes les informations du candidat
+ * Version améliorée pour l'import en masse
+ */
+export async function sendProfessionalActivationEmail(
+  email: string,
+  prenom: string,
+  nom: string,
+  activationToken: string,
+  profileInfo: {
+    titrePoste: string | null
+    competences: string[]
+    anneesExperience: number | null
+    langues: string[]
+    certifications: string[]
+    experiences: { poste: string; entreprise: string; periode: string }[]
+    formations: { diplome: string; etablissement: string | null; annee: number | null }[]
+    experiencesCount: number
+    formationsCount: number
+  },
+  offre?: {
+    titre: string
+    slug: string
+  }
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const activationUrl = `${appUrl}/activation?token=${activationToken}`
+  const offreUrl = offre ? `${appUrl}/offres/${offre.slug}` : null
+
+  // Génère les sections HTML pour les compétences, expériences, etc.
+  const competencesHtml = profileInfo.competences.length > 0
+    ? profileInfo.competences.map(c => `<span style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 50px; font-size: 13px; margin: 3px;">${c}</span>`).join('')
+    : '<span style="color: #94a3b8;">Non renseigné</span>'
+
+  const experiencesHtml = profileInfo.experiences.length > 0
+    ? profileInfo.experiences.map(exp => `
+      <div style="margin-bottom: 12px; padding-left: 12px; border-left: 2px solid #e2e8f0;">
+        <strong style="color: #1e293b;">${exp.poste}</strong>
+        <div style="color: #64748b; font-size: 13px;">${exp.entreprise} &bull; ${exp.periode}</div>
+      </div>
+    `).join('')
+    : '<p style="color: #94a3b8; font-style: italic;">Aucune expérience renseignée</p>'
+
+  const formationsHtml = profileInfo.formations.length > 0
+    ? profileInfo.formations.map(form => `
+      <div style="margin-bottom: 8px;">
+        <strong style="color: #1e293b;">${form.diplome}</strong>
+        ${form.etablissement ? `<div style="color: #64748b; font-size: 13px;">${form.etablissement}${form.annee ? ` (${form.annee})` : ''}</div>` : ''}
+      </div>
+    `).join('')
+    : '<p style="color: #94a3b8; font-style: italic;">Aucune formation renseignée</p>'
+
+  const languesHtml = profileInfo.langues.length > 0
+    ? profileInfo.langues.map(l => `<span style="display: inline-block; background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 50px; font-size: 12px; margin: 2px;">${l}</span>`).join('')
+    : '<span style="color: #94a3b8;">Non renseigné</span>'
+
+  const certificationsHtml = profileInfo.certifications.length > 0
+    ? profileInfo.certifications.map(c => `<span style="display: inline-block; background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 50px; font-size: 12px; margin: 2px;">${c}</span>`).join('')
+    : ''
+
+  return sendEmailViaGraph({
+    to: email,
+    subject: `${prenom}, votre espace TRINEXTA est prêt - Activez votre compte`,
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f1f5f9; line-height: 1.6;">
+          <div style="max-width: 640px; margin: 0 auto; padding: 24px;">
+            <!-- Header TRINEXTA -->
+            <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); border-radius: 16px 16px 0 0; padding: 32px 24px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Bienvenue chez TRINEXTA</h1>
+              <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Votre partenaire pour les missions IT</p>
+            </div>
+
+            <!-- Corps principal -->
+            <div style="background: #ffffff; padding: 32px 24px;">
+              <p style="font-size: 17px; color: #1e293b; margin: 0 0 20px;">
+                Bonjour <strong>${prenom}</strong>,
+              </p>
+
+              <p style="color: #475569; margin-bottom: 24px;">
+                Suite à l'analyse de votre CV, nous avons le plaisir de vous confirmer que votre profil a été <strong style="color: #059669;">sélectionné</strong> pour rejoindre notre vivier de consultants IT indépendants.
+              </p>
+
+              ${offre ? `
+                <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #2563eb;">
+                  <p style="margin: 0 0 8px; color: #1e40af; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Mission proposée</p>
+                  <p style="margin: 0; color: #1e3a8a; font-size: 18px; font-weight: 600;">${offre.titre}</p>
+                  <a href="${offreUrl}" style="display: inline-block; margin-top: 12px; color: #2563eb; font-size: 14px; text-decoration: none;">Voir les détails de la mission &rarr;</a>
+                </div>
+              ` : ''}
+
+              <!-- Récapitulatif du profil -->
+              <div style="background: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px;">
+                  Récapitulatif de votre profil
+                </h2>
+
+                <!-- Identité -->
+                <div style="margin-bottom: 20px;">
+                  <table cellpadding="0" cellspacing="0" border="0" style="width: 100%;">
+                    <tr>
+                      <td style="vertical-align: top; width: 40px; padding-right: 12px;">
+                        <span style="font-size: 24px;">👤</span>
+                      </td>
+                      <td>
+                        <strong style="color: #1e293b; font-size: 20px;">${prenom} ${nom}</strong>
+                        ${profileInfo.titrePoste ? `<div style="color: #6366f1; font-size: 14px; font-weight: 500;">${profileInfo.titrePoste}</div>` : ''}
+                      </td>
+                    </tr>
+                  </table>
+                  ${profileInfo.anneesExperience ? `<p style="margin: 8px 0 0; color: #64748b; font-size: 14px;"><strong>${profileInfo.anneesExperience}</strong> ans d'expérience</p>` : ''}
+                </div>
+
+                <!-- Compétences -->
+                <div style="margin-bottom: 20px;">
+                  <p style="margin: 0 0 10px; color: #475569; font-weight: 600; font-size: 14px;">
+                    💼 Compétences techniques
+                  </p>
+                  <div>
+                    ${competencesHtml}
+                  </div>
+                </div>
+
+                <!-- Expériences -->
+                <div style="margin-bottom: 20px;">
+                  <p style="margin: 0 0 12px; color: #475569; font-weight: 600; font-size: 14px;">
+                    📋 Expériences récentes${profileInfo.experiencesCount > 3 ? ` <span style="color: #94a3b8; font-weight: normal;">(${profileInfo.experiencesCount} au total)</span>` : ''}
+                  </p>
+                  ${experiencesHtml}
+                </div>
+
+                <!-- Formations -->
+                <div style="margin-bottom: 20px;">
+                  <p style="margin: 0 0 12px; color: #475569; font-weight: 600; font-size: 14px;">
+                    🎓 Formation${profileInfo.formationsCount > 2 ? ` <span style="color: #94a3b8; font-weight: normal;">(${profileInfo.formationsCount} au total)</span>` : ''}
+                  </p>
+                  ${formationsHtml}
+                </div>
+
+                <!-- Langues -->
+                <div style="margin-bottom: ${profileInfo.certifications.length > 0 ? '20px' : '0'};">
+                  <p style="margin: 0 0 10px; color: #475569; font-weight: 600; font-size: 14px;">
+                    🌍 Langues
+                  </p>
+                  <div>
+                    ${languesHtml}
+                  </div>
+                </div>
+
+                ${profileInfo.certifications.length > 0 ? `
+                  <!-- Certifications -->
+                  <div>
+                    <p style="margin: 0 0 10px; color: #475569; font-weight: 600; font-size: 14px;">
+                      🏆 Certifications
+                    </p>
+                    <div>
+                      ${certificationsHtml}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Call to action -->
+              <div style="text-align: center; margin: 32px 0;">
+                <p style="color: #475569; margin-bottom: 20px;">
+                  Pour accéder à votre espace et découvrir toutes nos opportunités :
+                </p>
+                <a href="${activationUrl}" style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);">
+                  Activer mon compte
+                </a>
+                <p style="margin-top: 16px; color: #94a3b8; font-size: 13px;">
+                  Ce lien est valable 30 jours
+                </p>
+              </div>
+
+              <!-- Étapes -->
+              <div style="background: #fefce8; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <p style="margin: 0 0 16px; color: #854d0e; font-weight: 600; font-size: 14px;">Prochaines étapes :</p>
+                <table cellpadding="0" cellspacing="0" border="0" style="width: 100%;">
+                  <tr>
+                    <td style="vertical-align: top; width: 36px; padding-bottom: 12px;">
+                      <span style="background: #facc15; color: #854d0e; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-weight: 600; font-size: 13px;">1</span>
+                    </td>
+                    <td style="color: #713f12; padding-bottom: 12px;">Créez votre mot de passe sécurisé</td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top; width: 36px; padding-bottom: 12px;">
+                      <span style="background: #facc15; color: #854d0e; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-weight: 600; font-size: 13px;">2</span>
+                    </td>
+                    <td style="color: #713f12; padding-bottom: 12px;">Complétez vos informations (TJM, disponibilité, SIRET...)</td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top; width: 36px;">
+                      <span style="background: #facc15; color: #854d0e; width: 24px; height: 24px; border-radius: 50%; display: inline-block; text-align: center; line-height: 24px; font-weight: 600; font-size: 13px;">3</span>
+                    </td>
+                    <td style="color: #713f12;">Postulez aux missions qui correspondent à votre profil</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Info TRINEXTA -->
+              <p style="color: #64748b; font-size: 14px; margin-bottom: 0;">
+                <strong>TRINEXTA</strong> est une ESN spécialisée dans le placement de consultants IT indépendants.
+                Nous travaillons avec les plus grands comptes et PME innovantes pour proposer des missions de qualité.
+              </p>
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #1e293b; border-radius: 0 0 16px 16px; padding: 24px; text-align: center;">
+              <p style="margin: 0 0 8px; color: #ffffff; font-weight: 600;">TRINEXTA</p>
+              <p style="margin: 0 0 4px; color: #94a3b8; font-size: 13px;">by TrusTech IT Support</p>
+              <p style="margin: 0; color: #64748b; font-size: 12px;">
+                74B Boulevard Henri Dunant, 91100 Corbeil-Essonnes<br>
+                09 78 25 07 46 | contact@trinexta.fr
+              </p>
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #334155;">
+                <p style="margin: 0; color: #64748b; font-size: 11px;">
+                  Cet email a été envoyé à ${email}<br>
+                  Plateforme Talentero - Where IT talent meets opportunity
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    importance: 'high',
+  })
+}

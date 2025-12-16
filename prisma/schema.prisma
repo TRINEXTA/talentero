@@ -180,6 +180,10 @@ model Talent {
   visiblePublic         Boolean   @default(true)
   visibleVitrine        Boolean   @default(false)  // Affiché sur la page vitrine
 
+  // Email d'activation
+  activationEmailEnvoye Boolean   @default(false)  // Email d'activation envoyé ?
+  activationEmailEnvoyeLe DateTime?                // Date d'envoi de l'email
+
   // Relations
   experiences           Experience[]
   formations            Formation[]
