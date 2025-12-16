@@ -181,7 +181,7 @@ export async function sendMatchingNotification(
   score: number,
   competencesMatchees: string[]
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: talentEmail,
@@ -246,7 +246,7 @@ export async function sendShortlistNotification(
   shortlistUrl: string,
   nbCandidats: number
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: clientEmail,
@@ -305,7 +305,8 @@ export async function sendAccountActivationEmail(
   prenom: string,
   activationToken: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  // APP_URL for server-side (without NEXT_PUBLIC_ prefix) takes priority
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
   const activationUrl = `${appUrl}/activation?token=${activationToken}`
 
   return sendEmailViaGraph({
@@ -370,7 +371,7 @@ export async function sendCandidatureWelcomeEmail(
   offreSlug: string,
   activationToken: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
   const activationUrl = `${appUrl}/activation?token=${activationToken}`
   const offreUrl = `${appUrl}/offres/${offreSlug}`
 
@@ -547,7 +548,7 @@ export async function sendEntretienRequestNotification(
   heureProposee: string,
   confirmationUrl: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: talentEmail,
@@ -686,7 +687,7 @@ export async function sendInfoRequestNotification(
   question: string,
   responseUrl: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: talentEmail,
@@ -859,7 +860,7 @@ export async function sendMatchingWithFeedback(
     experienceManquante?: string[]
   }
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   let feedbackHtml = ''
   if (feedback.tjmTropHaut && feedback.tjmFourchette) {
@@ -951,7 +952,7 @@ export async function sendClientWelcomeEmail(
   contactName: string,
   raisonSociale: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: clientEmail,
@@ -1028,7 +1029,7 @@ export async function sendWelcomeTalentEmail(
   email: string,
   prenom: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: email,
@@ -1178,7 +1179,7 @@ export async function sendNewOffreToAdmin(
   clientName: string,
   adminUrl: string
 ): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 
   return sendEmailViaGraph({
     to: adminEmail,
