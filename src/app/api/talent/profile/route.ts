@@ -64,6 +64,8 @@ export async function GET() {
         siret: talent.siret,
         raisonSociale: talent.raisonSociale,
         siretVerifie: talent.siretVerifie,
+        cvUrl: talent.cvUrl,
+        cvOriginalName: talent.cvOriginalName,
       },
       experiences: talent.experiences,
       formations: talent.formations,

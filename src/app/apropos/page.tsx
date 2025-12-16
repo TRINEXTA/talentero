@@ -300,14 +300,14 @@ export default function AproposPage() {
             <div className="bg-gray-800 rounded-xl p-8">
               <h3 className="text-xl font-semibold mb-6">Rejoignez Talentero</h3>
               <div className="space-y-4">
-                <Link href="/register?type=talent">
+                <Link href="/t/inscription">
                   <Button className="w-full justify-between" size="lg">
                     Je suis Freelance
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
-                <Link href="/register?type=client">
-                  <Button variant="outline" className="w-full justify-between border-gray-600 text-white hover:bg-gray-700" size="lg">
+                <Link href="/c/inscription">
+                  <Button className="w-full justify-between bg-white text-gray-900 hover:bg-gray-100" size="lg">
                     Je suis une Entreprise
                     <ArrowRight className="w-5 h-5" />
                   </Button>

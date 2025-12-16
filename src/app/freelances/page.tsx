@@ -152,10 +152,10 @@ function FreelancesVitrineContent() {
               </Button>
             </Link>
             <Link href="/t/inscription">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+              <button className="inline-flex items-center justify-center px-6 py-3 text-lg font-medium text-white border-2 border-white rounded-lg hover:bg-white/10 transition-colors">
                 <User className="w-5 h-5 mr-2" />
                 Rejoindre le vivier
-              </Button>
+              </button>
             </Link>
           </div>
         </div>

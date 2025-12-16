@@ -14,7 +14,8 @@ import { useToast } from '@/components/ui/use-toast'
 import {
   Shield, ArrowLeft, Save, User, Briefcase, MapPin, Euro, Clock,
   Mail, Phone, Globe, Github, Linkedin, FileText, Calendar,
-  CheckCircle, XCircle, Loader2, Send, Eye, Building2
+  CheckCircle, XCircle, Loader2, Send, Eye, Building2, Trash2,
+  Ban, Download, FileDown
 } from 'lucide-react'
 
 interface Talent {
@@ -117,6 +118,8 @@ export default function AdminTalentDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [sendingActivation, setSendingActivation] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [downloadingCV, setDownloadingCV] = useState(false)
   const [activeTab, setActiveTab] = useState<'profil' | 'experiences' | 'candidatures'>('profil')
 
   useEffect(() => {
@@ -226,6 +229,93 @@ export default function AdminTalentDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!talent) return
+    if (!confirm(`Etes-vous sur de vouloir supprimer ${talent.prenom} ${talent.nom} ? Cette action est irreversible.`)) {
+      return
+    }
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/talents/${uid}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Erreur')
+      toast({
+        title: "Talent supprime",
+        description: "Le profil a ete supprime",
+      })
+      router.push('/admin/talents')
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleSuspend = async () => {
+    if (!talent) return
+    const newStatut = talent.statut === 'SUSPENDU' ? 'ACTIF' : 'SUSPENDU'
+    const action = newStatut === 'SUSPENDU' ? 'suspendre' : 'reactiver'
+    if (!confirm(`Voulez-vous ${action} ce talent ?`)) {
+      return
+    }
+    try {
+      const res = await fetch(`/api/admin/talents/${uid}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: newStatut }),
+      })
+      if (!res.ok) throw new Error('Erreur')
+      setTalent({ ...talent, statut: newStatut })
+      toast({
+        title: "Succes",
+        description: newStatut === 'SUSPENDU' ? "Talent suspendu" : "Talent reactive",
+      })
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le statut",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const downloadCV = async (anonymous: boolean, format: 'pdf' | 'docx') => {
+    if (!talent) return
+    setDownloadingCV(true)
+    try {
+      const res = await fetch(`/api/admin/talents/${uid}/cv-anonyme?anonymous=${anonymous}&format=${format}`)
+      if (!res.ok) throw new Error('Erreur')
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CV_${anonymous ? talent.codeUnique : `${talent.prenom}_${talent.nom}`}.${format}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "CV telecharge",
+        description: `CV ${anonymous ? 'anonyme' : 'complet'} telecharge en ${format.toUpperCase()}`,
+      })
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de telecharger le CV",
+        variant: "destructive",
+      })
+    } finally {
+      setDownloadingCV(false)
+    }
+  }
+
   const getStatutBadge = (statut: string) => {
     const configs: Record<string, { label: string; className: string }> = {
       ACTIF: { label: 'Actif', className: 'bg-green-600' },
@@ -293,6 +383,25 @@ export default function AdminTalentDetailPage() {
                   Renvoyer activation
                 </Button>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSuspend}
+                className={talent.statut === 'SUSPENDU' ? 'border-green-600 text-green-400' : 'border-orange-600 text-orange-400'}
+              >
+                <Ban className="w-4 h-4 mr-1" />
+                {talent.statut === 'SUSPENDU' ? 'Reactiver' : 'Suspendre'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="border-red-600 text-red-400 hover:bg-red-600/20"
+              >
+                {deleting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+                Supprimer
+              </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
                 Enregistrer
@@ -503,20 +612,63 @@ export default function AdminTalentDetailPage() {
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                   </div>
-                  {talent.cvUrl && (
-                    <div>
-                      <Label className="text-gray-300">CV</Label>
+                  {/* CV Download Section */}
+                  <div>
+                    <Label className="text-gray-300 mb-2 block">Telecharger le CV</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadCV(false, 'pdf')}
+                        disabled={downloadingCV}
+                        className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                      >
+                        <FileDown className="w-4 h-4 mr-1" />
+                        CV Complet (PDF)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadCV(false, 'docx')}
+                        disabled={downloadingCV}
+                        className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                      >
+                        <FileDown className="w-4 h-4 mr-1" />
+                        CV Complet (DOCX)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadCV(true, 'pdf')}
+                        disabled={downloadingCV}
+                        className="border-primary text-primary hover:bg-primary/20"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        CV Anonyme (PDF)
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadCV(true, 'docx')}
+                        disabled={downloadingCV}
+                        className="border-primary text-primary hover:bg-primary/20"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        CV Anonyme (DOCX)
+                      </Button>
+                    </div>
+                    {talent.cvUrl && (
                       <a
                         href={talent.cvUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition"
+                        className="block p-3 mt-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition text-center text-gray-300"
                       >
                         <FileText className="w-4 h-4 inline mr-2" />
-                        Voir le CV
+                        Voir le CV original
                       </a>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>

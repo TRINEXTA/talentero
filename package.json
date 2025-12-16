@@ -30,6 +30,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
+    "docx": "^9.5.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.344.0",
     "mammoth": "^1.6.0",

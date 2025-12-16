@@ -12,7 +12,8 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import {
-  User, ArrowLeft, Save, Plus, X, MapPin, Euro, Clock, Globe, Github, Linkedin, Briefcase
+  User, ArrowLeft, Save, Plus, X, MapPin, Euro, Clock, Globe, Github, Linkedin, Briefcase,
+  FileText, Upload, Loader2, Trash2
 } from 'lucide-react'
 
 interface TalentProfile {
@@ -38,6 +39,8 @@ interface TalentProfile {
   adresse: string | null
   codePostal: string | null
   ville: string | null
+  cvUrl: string | null
+  cvOriginalName: string | null
 }
 
 const MOBILITE_OPTIONS = [
@@ -61,6 +64,7 @@ export default function TalentProfilPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingCV, setUploadingCV] = useState(false)
   const [profile, setProfile] = useState<TalentProfile | null>(null)
   const [newCompetence, setNewCompetence] = useState('')
   const [newLangue, setNewLangue] = useState('')
@@ -178,6 +182,94 @@ export default function TalentProfilPage() {
       setProfile({
         ...profile,
         zonesGeographiques: profile.zonesGeographiques.filter(z => z !== zone)
+      })
+    }
+  }
+
+  const handleCVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validation
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Format non supporte",
+        description: "Veuillez uploader un fichier PDF ou Word (.doc, .docx)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "La taille maximum est de 5 Mo",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setUploadingCV(true)
+    try {
+      const formData = new FormData()
+      formData.append('cv', file)
+
+      const response = await fetch('/api/talent/cv', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) throw new Error('Erreur upload')
+
+      const data = await response.json()
+      setProfile({
+        ...profile!,
+        cvUrl: data.cvUrl,
+        cvOriginalName: data.cvOriginalName,
+      })
+
+      toast({
+        title: "CV uploade",
+        description: "Votre CV a ete mis a jour",
+      })
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'uploader le CV",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingCV(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleCVDelete = async () => {
+    if (!confirm("Voulez-vous vraiment supprimer votre CV ?")) return
+
+    try {
+      const response = await fetch('/api/talent/cv', {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Erreur suppression')
+
+      setProfile({
+        ...profile!,
+        cvUrl: null,
+        cvOriginalName: null,
+      })
+
+      toast({
+        title: "CV supprime",
+        description: "Votre CV a ete supprime",
+      })
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le CV",
+        variant: "destructive",
       })
     }
   }
@@ -534,6 +626,90 @@ export default function TalentProfilPage() {
                   placeholder="https://votre-site.com"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* CV */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Mon CV
+              </CardTitle>
+              <CardDescription>
+                Uploadez votre CV pour faciliter vos candidatures (PDF ou Word, max 5 Mo)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {profile.cvUrl ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-8 h-8 text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-800">
+                          {profile.cvOriginalName || 'CV uploade'}
+                        </p>
+                        <p className="text-sm text-green-600">CV actuel</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={profile.cvUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Voir
+                      </a>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCVDelete}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="cv-update" className="text-sm text-gray-500">
+                      Remplacer par un nouveau CV
+                    </Label>
+                    <Input
+                      id="cv-update"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleCVUpload}
+                      disabled={uploadingCV}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  {uploadingCV ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                      <p className="text-gray-600">Upload en cours...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-4">
+                        Glissez votre CV ici ou cliquez pour parcourir
+                      </p>
+                      <Input
+                        id="cv-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleCVUpload}
+                        className="max-w-xs mx-auto"
+                      />
+                    </>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
