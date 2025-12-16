@@ -439,17 +439,31 @@ export default function OffreDetailPage() {
                   </div>
                 ) : (
                   <>
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      onClick={() => setShowApplyForm(true)}
-                    >
-                      <Briefcase className="w-4 h-4 mr-2" />
-                      Postuler maintenant
-                    </Button>
-                    <p className="text-xs text-gray-500 text-center mt-3">
-                      Votre profil sera envoyé de manière anonymisée
-                    </p>
+                    {matchScore !== null && matchScore < 40 ? (
+                      <div className="text-center">
+                        <AlertCircle className="w-10 h-10 text-orange-500 mx-auto mb-3" />
+                        <h3 className="font-medium text-gray-900 mb-2">Profil peu compatible</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                          Votre score de matching est faible. Nous vous recommandons de compléter votre profil ou de rechercher des offres plus adaptées.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setShowApplyForm(true)}
+                        >
+                          Postuler quand même
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={() => setShowApplyForm(true)}
+                      >
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        Postuler maintenant
+                      </Button>
+                    )}
                   </>
                 )}
               </CardContent>

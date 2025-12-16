@@ -5,6 +5,22 @@
 
 import { z } from 'zod'
 
+// Helper pour les URLs optionnelles (accepte avec ou sans https://)
+const optionalUrl = z.string()
+  .transform(val => {
+    if (!val || val.trim() === '') return null
+    // Ajoute https:// si pas de protocole
+    if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
+      return `https://${val}`
+    }
+    return val
+  })
+  .pipe(z.string().url().nullable())
+  .optional()
+  .nullable()
+  .or(z.literal(''))
+  .or(z.null())
+
 // ============================================
 // AUTH
 // ============================================
@@ -64,7 +80,7 @@ export const newPasswordSchema = z.object({
 export const updateTalentProfileSchema = z.object({
   // Informations personnelles
   telephone: z.string().optional(),
-  photoUrl: z.string().url().optional().nullable().or(z.literal('')),
+  photoUrl: optionalUrl,
   nationalite: z.string().optional(),
 
   // Société
@@ -138,9 +154,9 @@ export const updateTalentProfileSchema = z.object({
   langues: z.array(z.string()).optional(),
   loisirs: z.array(z.string()).optional(),
   certifications: z.array(z.string()).optional(),
-  linkedinUrl: z.string().url().optional().nullable().or(z.literal('')),
-  githubUrl: z.string().url().optional().nullable().or(z.literal('')),
-  portfolioUrl: z.string().url().optional().nullable().or(z.literal('')),
+  linkedinUrl: optionalUrl,
+  githubUrl: optionalUrl,
+  portfolioUrl: optionalUrl,
 
   // Visibilité
   visiblePublic: z.boolean().optional(),
