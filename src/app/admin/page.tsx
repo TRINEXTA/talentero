@@ -8,13 +8,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import {
   Shield, Users, Briefcase, Building2, FileText, Bell, Settings, LogOut,
-  Plus, ChevronRight, TrendingUp, Clock, CheckCircle, AlertCircle, Eye, Activity
+  Plus, ChevronRight, TrendingUp, Clock, CheckCircle, AlertCircle, Eye, Activity,
+  UserCheck, UserX, Pause, Upload
 } from 'lucide-react'
+
+interface RecentCandidature {
+  uid: string
+  talentNom: string
+  talentUid: string
+  offreTitre: string
+  offreUid: string
+  statut: string
+  createdAt: string
+}
+
+interface RecentTalent {
+  uid: string
+  nom: string
+  titrePoste: string | null
+  statut: string
+  importeParAdmin: boolean
+  createdAt: string
+}
+
+interface Stats {
+  totalTalents: number
+  totalClients: number
+  totalOffres: number
+  totalCandidatures: number
+  clientsEnAttente: number
+  offresEnAttente: number
+  candidaturesNouvelles: number
+  talentsByStatus?: {
+    actifs: number
+    enMission: number
+    inactifs: number
+    enAttente: number
+  }
+  offresByStatus?: {
+    publiees: number
+    pourvues: number
+    enAttente: number
+  }
+  recentCandidatures?: RecentCandidature[]
+  recentTalents?: RecentTalent[]
+}
 
 export default function AdminDashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     totalTalents: 0,
     totalClients: 0,
     totalOffres: 0,
@@ -59,6 +102,34 @@ export default function AdminDashboardPage() {
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/')
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 60) return `il y a ${minutes} min`
+    if (hours < 24) return `il y a ${hours}h`
+    if (days < 7) return `il y a ${days}j`
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  }
+
+  const getStatutBadge = (statut: string) => {
+    const configs: Record<string, { label: string; className: string }> = {
+      NOUVELLE: { label: 'Nouvelle', className: 'bg-blue-600' },
+      VUE: { label: 'Vue', className: 'bg-gray-600' },
+      PRESELECTION: { label: 'Présélection', className: 'bg-purple-600' },
+      SHORTLIST: { label: 'Shortlist', className: 'bg-green-600' },
+      ENTRETIEN: { label: 'Entretien', className: 'bg-orange-600' },
+      ACCEPTEE: { label: 'Retenue', className: 'bg-green-600' },
+      REFUSEE: { label: 'Refusée', className: 'bg-red-600' },
+    }
+    const config = configs[statut] || { label: statut, className: 'bg-gray-600' }
+    return <Badge className={config.className}>{config.label}</Badge>
   }
 
   if (loading) {
@@ -138,7 +209,7 @@ export default function AdminDashboardPage() {
                     {stats.offresEnAttente > 0 && `${stats.offresEnAttente} offre(s) à valider`}
                   </p>
                 </div>
-                <Link href="/admin/clients?statut=EN_ATTENTE">
+                <Link href="/admin/offres?statut=EN_ATTENTE_VALIDATION">
                   <Button variant="outline" className="border-yellow-600 text-yellow-100 hover:bg-yellow-900/50">
                     Voir
                   </Button>
@@ -148,7 +219,7 @@ export default function AdminDashboardPage() {
           </Card>
         )}
 
-        {/* Stats */}
+        {/* Main Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="p-6">
@@ -207,6 +278,61 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
+        {/* Talents Status Breakdown */}
+        {stats.talentsByStatus && (
+          <Card className="bg-gray-800 border-gray-700 mb-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Statut des freelances
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link href="/admin/talents?statut=ACTIF">
+                  <div className="p-4 bg-green-900/30 border border-green-700/50 rounded-lg hover:bg-green-900/50 transition cursor-pointer">
+                    <div className="flex items-center gap-3 mb-2">
+                      <UserCheck className="w-5 h-5 text-green-400" />
+                      <span className="text-green-300">Disponibles</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">{stats.talentsByStatus.actifs}</p>
+                  </div>
+                </Link>
+
+                <Link href="/admin/talents?statut=EN_MISSION">
+                  <div className="p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg hover:bg-blue-900/50 transition cursor-pointer">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Briefcase className="w-5 h-5 text-blue-400" />
+                      <span className="text-blue-300">En mission</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">{stats.talentsByStatus.enMission}</p>
+                  </div>
+                </Link>
+
+                <Link href="/admin/talents?statut=INACTIF">
+                  <div className="p-4 bg-gray-700/30 border border-gray-600/50 rounded-lg hover:bg-gray-700/50 transition cursor-pointer">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Pause className="w-5 h-5 text-gray-400" />
+                      <span className="text-gray-300">Inactifs</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">{stats.talentsByStatus.inactifs}</p>
+                  </div>
+                </Link>
+
+                <Link href="/admin/talents?statut=EN_ATTENTE">
+                  <div className="p-4 bg-amber-900/30 border border-amber-700/50 rounded-lg hover:bg-amber-900/50 transition cursor-pointer">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Clock className="w-5 h-5 text-amber-400" />
+                      <span className="text-amber-300">En attente</span>
+                    </div>
+                    <p className="text-3xl font-bold text-white">{stats.talentsByStatus.enAttente}</p>
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Quick Actions */}
           <Card className="bg-gray-800 border-gray-700">
@@ -215,20 +341,27 @@ export default function AdminDashboardPage() {
               <CardDescription className="text-gray-400">Gestion de la plateforme</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Link href="/admin/clients?statut=EN_ATTENTE" className="block">
-                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition">
+              <Link href="/admin/talents/import-cv-masse" className="block">
+                <div className="flex items-center justify-between p-4 bg-primary/20 rounded-lg hover:bg-primary/30 transition border border-primary/40">
                   <div className="flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-blue-400" />
-                    <span className="text-white">Valider les clients</span>
-                    {stats.clientsEnAttente > 0 && (
-                      <Badge className="bg-yellow-600">{stats.clientsEnAttente}</Badge>
-                    )}
+                    <Upload className="w-5 h-5 text-primary" />
+                    <span className="text-primary font-medium">Importer des CV en masse</span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-500" />
+                  <ChevronRight className="w-5 h-5 text-primary" />
                 </div>
               </Link>
 
-              <Link href="/admin/offres?statut=EN_ATTENTE" className="block">
+              <Link href="/admin/offres/nouvelle" className="block">
+                <div className="flex items-center justify-between p-4 bg-purple-600/20 rounded-lg hover:bg-purple-600/30 transition border border-purple-600/40">
+                  <div className="flex items-center gap-3">
+                    <Plus className="w-5 h-5 text-purple-400" />
+                    <span className="text-purple-300 font-medium">Créer une offre TRINEXTA</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-purple-400" />
+                </div>
+              </Link>
+
+              <Link href="/admin/offres?statut=EN_ATTENTE_VALIDATION" className="block">
                 <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition">
                   <div className="flex items-center gap-3">
                     <Briefcase className="w-5 h-5 text-purple-400" />
@@ -254,13 +387,16 @@ export default function AdminDashboardPage() {
                 </div>
               </Link>
 
-              <Link href="/admin/offres/nouvelle" className="block">
-                <div className="flex items-center justify-between p-4 bg-primary/20 rounded-lg hover:bg-primary/30 transition border border-primary/40">
+              <Link href="/admin/clients?statut=EN_ATTENTE" className="block">
+                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition">
                   <div className="flex items-center gap-3">
-                    <Plus className="w-5 h-5 text-primary" />
-                    <span className="text-primary font-medium">Créer une offre TRINEXTA</span>
+                    <Building2 className="w-5 h-5 text-blue-400" />
+                    <span className="text-white">Valider les clients</span>
+                    {stats.clientsEnAttente > 0 && (
+                      <Badge className="bg-yellow-600">{stats.clientsEnAttente}</Badge>
+                    )}
                   </div>
-                  <ChevronRight className="w-5 h-5 text-primary" />
+                  <ChevronRight className="w-5 h-5 text-gray-500" />
                 </div>
               </Link>
             </CardContent>
@@ -270,19 +406,111 @@ export default function AdminDashboardPage() {
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Activité récente</CardTitle>
-              <CardDescription className="text-gray-400">Dernières actions sur la plateforme</CardDescription>
+              <CardDescription className="text-gray-400">Dernières candidatures et inscriptions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-500">L'activité sera affichée ici</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Inscriptions, candidatures, validations...
-                </p>
-              </div>
+              {(!stats.recentCandidatures || stats.recentCandidatures.length === 0) &&
+               (!stats.recentTalents || stats.recentTalents.length === 0) ? (
+                <div className="text-center py-8">
+                  <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500">Aucune activité récente</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Recent Candidatures */}
+                  {stats.recentCandidatures && stats.recentCandidatures.slice(0, 3).map((c) => (
+                    <div key={c.uid} className="flex items-start gap-3 p-3 bg-gray-700/30 rounded-lg">
+                      <div className="w-8 h-8 bg-green-600/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 h-4 text-green-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white">
+                          <Link href={`/admin/talents/${c.talentUid}`} className="font-medium hover:text-primary">
+                            {c.talentNom}
+                          </Link>
+                          {' '}a postulé sur{' '}
+                          <Link href={`/admin/offres/${c.offreUid}`} className="font-medium hover:text-primary">
+                            {c.offreTitre}
+                          </Link>
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {getStatutBadge(c.statut)}
+                          <span className="text-xs text-gray-500">{formatDate(c.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Recent Talents */}
+                  {stats.recentTalents && stats.recentTalents.slice(0, 2).map((t) => (
+                    <div key={t.uid} className="flex items-start gap-3 p-3 bg-gray-700/30 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-600/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Users className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white">
+                          <Link href={`/admin/talents/${t.uid}`} className="font-medium hover:text-primary">
+                            {t.nom}
+                          </Link>
+                          {t.importeParAdmin ? ' a été importé' : ' s\'est inscrit'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {t.titrePoste && (
+                            <span className="text-xs text-gray-400">{t.titrePoste}</span>
+                          )}
+                          <span className="text-xs text-gray-500">{formatDate(t.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <Link href="/admin/candidatures">
+                    <Button variant="outline" className="w-full border-gray-600 text-gray-300 hover:bg-gray-700">
+                      Voir toute l'activité
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
+
+        {/* Offres Status */}
+        {stats.offresByStatus && (
+          <Card className="bg-gray-800 border-gray-700 mt-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Briefcase className="w-5 h-5" />
+                Statut des offres
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4">
+                <Link href="/admin/offres?statut=PUBLIEE">
+                  <div className="p-4 bg-green-900/30 border border-green-700/50 rounded-lg hover:bg-green-900/50 transition cursor-pointer text-center">
+                    <p className="text-3xl font-bold text-white">{stats.offresByStatus.publiees}</p>
+                    <p className="text-green-300 text-sm mt-1">Publiées</p>
+                  </div>
+                </Link>
+
+                <Link href="/admin/offres?statut=EN_ATTENTE_VALIDATION">
+                  <div className="p-4 bg-amber-900/30 border border-amber-700/50 rounded-lg hover:bg-amber-900/50 transition cursor-pointer text-center">
+                    <p className="text-3xl font-bold text-white">{stats.offresByStatus.enAttente}</p>
+                    <p className="text-amber-300 text-sm mt-1">En attente</p>
+                  </div>
+                </Link>
+
+                <Link href="/admin/offres?statut=POURVUE">
+                  <div className="p-4 bg-purple-900/30 border border-purple-700/50 rounded-lg hover:bg-purple-900/50 transition cursor-pointer text-center">
+                    <p className="text-3xl font-bold text-white">{stats.offresByStatus.pourvues}</p>
+                    <p className="text-purple-300 text-sm mt-1">Pourvues</p>
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   )

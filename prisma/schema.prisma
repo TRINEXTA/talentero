@@ -192,6 +192,8 @@ model Talent {
   alertes               Alerte[]
   conversations         ConversationParticipant[]
   entretiens            Entretien[]
+  planning              TalentPlanning[]        // Planning de disponibilité
+  missions              Mission[]               // Missions en cours/passées
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -1108,4 +1110,99 @@ model AcceptationCGU {
   accepteLe   DateTime  @default(now())
 
   @@index([userId])
+}
+
+// ============================================
+// PLANNING FREELANCE (Disponibilités)
+// ============================================
+
+model TalentPlanning {
+  id          Int       @id @default(autoincrement())
+
+  talent      Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId    Int
+
+  // Date concernée
+  date        DateTime  @db.Date
+
+  // Type de jour
+  type        PlanningType @default(DISPONIBLE)
+
+  // Si en mission, référence à la mission
+  mission     Mission?  @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  missionId   Int?
+
+  // Notes
+  notes       String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([talentId, date])
+  @@index([talentId])
+  @@index([date])
+  @@index([type])
+}
+
+enum PlanningType {
+  DISPONIBLE        // Disponible pour missions
+  INDISPONIBLE      // Indisponible (raison personnelle)
+  EN_MISSION        // En mission chez un client
+  CONGE             // Congés payés/vacances
+  ARRET_MALADIE     // Arrêt maladie
+  FORMATION         // En formation
+  INTERCONTRAT      // Entre deux missions (disponible mais pas actif)
+}
+
+// ============================================
+// MISSIONS (Missions effectuées par les talents)
+// ============================================
+
+model Mission {
+  id              Int       @id @default(autoincrement())
+  uid             String    @unique @default(uuid())
+
+  talent          Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId        Int
+
+  // Offre d'origine (si applicable)
+  offreId         Int?
+
+  // Client
+  clientNom       String
+  clientContact   String?
+
+  // Détails mission
+  titre           String
+  description     String?
+  lieu            String?
+
+  // Période
+  dateDebut       DateTime
+  dateFin         DateTime?
+  enCours         Boolean   @default(true)
+
+  // TJM négocié
+  tjm             Int?
+
+  // Statut
+  statut          MissionStatus @default(EN_COURS)
+
+  // Planning associé
+  planning        TalentPlanning[]
+
+  // Notes
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([talentId])
+  @@index([statut])
+}
+
+enum MissionStatus {
+  EN_COURS
+  TERMINEE
+  ANNULEE
 }

@@ -134,6 +134,9 @@ export default function TalentOffresPage() {
                 <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
                   Candidatures
                 </Link>
+                <Link href="/t/planning" className="text-gray-600 hover:text-primary">
+                  Planning
+                </Link>
                 <Link href="/t/profil" className="text-gray-600 hover:text-primary">
                   Mon profil
                 </Link>
@@ -229,7 +232,7 @@ export default function TalentOffresPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <Link href={`/offres/${offre.slug}`}>
+                        <Link href={`/t/offres/${offre.slug}`}>
                           <h3 className="text-lg font-semibold text-gray-900 hover:text-primary">
                             {offre.titre}
                           </h3>
@@ -320,7 +323,7 @@ export default function TalentOffresPage() {
                       <span className="text-xs text-gray-400">
                         Publiée le {formatDate(offre.publieLe)}
                       </span>
-                      <Link href={`/offres/${offre.slug}`}>
+                      <Link href={`/t/offres/${offre.slug}`}>
                         <Button>
                           Voir l'offre
                           <ChevronRight className="w-4 h-4 ml-1" />
