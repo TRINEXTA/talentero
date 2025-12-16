@@ -193,8 +193,8 @@ export default function TalentDashboardPage() {
                 <Link href="/t/entretiens" className="text-gray-600 hover:text-primary">
                   Entretiens
                 </Link>
-                <Link href="/t/planning" className="text-gray-600 hover:text-primary">
-                  Planning
+                <Link href="/t/alertes" className="text-gray-600 hover:text-primary">
+                  Alertes
                 </Link>
                 <Link href="/t/profil" className="text-gray-600 hover:text-primary">
                   Mon profil

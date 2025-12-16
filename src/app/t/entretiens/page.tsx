@@ -179,6 +179,9 @@ export default function TalentEntretiensPage() {
                 <Link href="/t/entretiens" className="text-primary font-medium">
                   Entretiens
                 </Link>
+                <Link href="/t/alertes" className="text-gray-600 hover:text-primary">
+                  Alertes
+                </Link>
                 <Link href="/t/profil" className="text-gray-600 hover:text-primary">
                   Mon profil
                 </Link>

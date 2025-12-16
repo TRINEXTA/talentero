@@ -6,7 +6,7 @@
  */
 
 import { prisma } from '@/lib/db'
-import { NotificationType } from '@prisma/client'
+import { NotificationType, Prisma } from '@prisma/client'
 
 // ============================================
 // TYPES
@@ -18,7 +18,7 @@ export interface CreateNotificationParams {
   titre: string
   message: string
   lien?: string
-  data?: Record<string, unknown>
+  data?: Prisma.InputJsonValue
 }
 
 export interface NotificationWithMeta {
@@ -51,7 +51,7 @@ export async function createNotification(params: CreateNotificationParams) {
       titre,
       message,
       lien,
-      data: data || null,
+      data: data || undefined,
     },
   })
 
@@ -74,7 +74,7 @@ export async function createBulkNotifications(
       titre,
       message,
       lien,
-      data: data || null,
+      data: data || undefined,
     })),
   })
 

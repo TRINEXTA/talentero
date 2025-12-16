@@ -11,7 +11,7 @@ import { NotificationBell } from '@/components/ui/notification-bell'
 import {
   Building2, Briefcase, Users, FileText, Settings, LogOut,
   Plus, ChevronRight, TrendingUp, Clock, CheckCircle, Eye,
-  User, Calendar
+  User, Calendar, AlertCircle, Star
 } from 'lucide-react'
 
 interface DashboardData {
