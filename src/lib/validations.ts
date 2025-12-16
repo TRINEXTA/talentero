@@ -62,10 +62,14 @@ export const newPasswordSchema = z.object({
 // ============================================
 
 export const updateTalentProfileSchema = z.object({
-  // Non modifiable: prenom, nom, siret (seulement par admin)
+  // Informations personnelles
   telephone: z.string().optional(),
   photoUrl: z.string().url().optional().nullable().or(z.literal('')),
   nationalite: z.string().optional(),
+
+  // Société
+  siret: z.string().regex(/^\d{14}$/, 'SIRET invalide').optional().nullable().or(z.literal('')),
+  raisonSociale: z.string().optional().nullable(),
 
   // Adresse
   adresse: z.string().optional(),

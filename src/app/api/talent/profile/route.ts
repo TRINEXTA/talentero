@@ -36,6 +36,7 @@ export async function GET() {
     return NextResponse.json({
       profile: {
         uid: talent.uid,
+        email: user.email,
         prenom: talent.prenom,
         nom: talent.nom,
         telephone: talent.telephone,
@@ -110,6 +111,8 @@ export async function PUT(request: NextRequest) {
         telephone: data.telephone,
         photoUrl: data.photoUrl,
         nationalite: data.nationalite,
+        siret: data.siret || null,
+        raisonSociale: data.raisonSociale || null,
         titrePoste: data.titrePoste,
         categorieProfessionnelle: data.categorieProfessionnelle as any,
         bio: data.bio,
