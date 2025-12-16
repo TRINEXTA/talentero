@@ -185,6 +185,9 @@ export default function ClientDashboardPage() {
                 <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
                   Shortlists
                 </Link>
+                <Link href="/c/entretiens" className="text-gray-600 hover:text-primary">
+                  Entretiens
+                </Link>
                 <Link href="/c/profil" className="text-gray-600 hover:text-primary">
                   Mon profil
                 </Link>
