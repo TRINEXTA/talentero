@@ -217,7 +217,7 @@ export default function TalentPlanningPage() {
               </CardHeader>
               <CardContent>
                 <Calendar
-                  planning={planning}
+                  planning={planning.map(p => ({ ...p, notes: p.notes ?? undefined }))}
                   onDateRangeSelect={handleDateRangeSelect}
                   selectedDates={selectedDates}
                 />
