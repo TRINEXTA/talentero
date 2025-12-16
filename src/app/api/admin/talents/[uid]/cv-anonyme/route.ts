@@ -74,7 +74,7 @@ export async function GET(
       const docx = generateDOCX(cvData, anonymous)
       const buffer = await Packer.toBuffer(docx)
 
-      return new NextResponse(buffer, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'Content-Disposition': `attachment; filename="CV_${cvData.reference.replace(/\s/g, '_')}.docx"`,
