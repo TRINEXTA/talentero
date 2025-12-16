@@ -289,8 +289,16 @@ export default function ImportCVMassePage() {
     setStep('upload')
   }
 
+  // Reset les fichiers en erreur pour réessayer
+  const resetErrorFiles = () => {
+    setCvFiles(prev => prev.map(cv =>
+      cv.status === 'error' ? { ...cv, status: 'pending', error: undefined } : cv
+    ))
+  }
+
   const importedTalents = cvFiles.filter(cv => cv.status === 'success' && cv.talent)
   const pendingFilesCount = cvFiles.filter(cv => cv.status === 'pending').length
+  const errorFilesCount = cvFiles.filter(cv => cv.status === 'error').length
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -438,18 +446,44 @@ export default function ImportCVMassePage() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-gray-900">
                         {cvFiles.length} fichier{cvFiles.length > 1 ? 's' : ''} ajouté{cvFiles.length > 1 ? 's' : ''}
+                        {errorFilesCount > 0 && (
+                          <span className="text-red-500 text-sm ml-2">
+                            ({errorFilesCount} en erreur)
+                          </span>
+                        )}
                       </h3>
-                      <Button variant="ghost" size="sm" onClick={() => setCvFiles([])}>
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Tout supprimer
-                      </Button>
+                      <div className="flex gap-2">
+                        {errorFilesCount > 0 && (
+                          <Button variant="outline" size="sm" onClick={resetErrorFiles}>
+                            <AlertCircle className="w-4 h-4 mr-1" />
+                            Réessayer les erreurs
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => setCvFiles([])}>
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Tout supprimer
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="border rounded-lg divide-y max-h-64 overflow-y-auto">
                       {cvFiles.map((cv, index) => (
-                        <div key={index} className="p-3 flex items-center gap-3">
-                          <FileText className="w-6 h-6 text-gray-400 flex-shrink-0" />
-                          <span className="flex-1 truncate text-sm">{cv.file.name}</span>
+                        <div key={index} className={`p-3 flex items-center gap-3 ${cv.status === 'error' ? 'bg-red-50' : cv.status === 'success' ? 'bg-green-50' : ''}`}>
+                          {cv.status === 'success' ? (
+                            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+                          ) : cv.status === 'error' ? (
+                            <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
+                          ) : cv.status === 'uploading' ? (
+                            <Loader2 className="w-6 h-6 text-primary animate-spin flex-shrink-0" />
+                          ) : (
+                            <FileText className="w-6 h-6 text-gray-400 flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <span className="truncate text-sm block">{cv.file.name}</span>
+                            {cv.error && (
+                              <span className="text-xs text-red-500">{cv.error}</span>
+                            )}
+                          </div>
                           <button
                             onClick={() => removeFile(index)}
                             className="p-1 text-gray-400 hover:text-red-500"
