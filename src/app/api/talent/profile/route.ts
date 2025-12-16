@@ -128,7 +128,7 @@ export async function PUT(request: NextRequest) {
         tjm: toNumber(data.tjm),
         tjmMin: toNumber(data.tjmMin),
         tjmMax: toNumber(data.tjmMax),
-        mobilite: data.mobilite || null,
+        mobilite: data.mobilite || undefined,
         zonesGeographiques: data.zonesGeographiques || [],
         zonesIntervention: data.zonesIntervention || [],
         permisConduire: data.permisConduire ?? null,
