@@ -160,6 +160,9 @@ export default function AdminDashboardPage() {
               <Link href="/admin" className="text-white font-medium">
                 Dashboard
               </Link>
+              <Link href="/admin/analytics" className="text-gray-400 hover:text-white">
+                Analytics
+              </Link>
               <Link href="/admin/clients" className="text-gray-400 hover:text-white">
                 Clients
               </Link>
