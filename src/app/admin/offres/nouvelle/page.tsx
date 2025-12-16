@@ -178,7 +178,7 @@ export default function AdminNouvelleOffrePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          clientUid: formData.clientUid || null,
+          clientUid: formData.clientUid === 'none' ? null : formData.clientUid || null,
           tjmClientReel: formData.tjmClientReel ? parseInt(formData.tjmClientReel) : null,
           tjmMin: formData.tjmMin ? parseInt(formData.tjmMin) : null,
           tjmMax: formData.tjmMax ? parseInt(formData.tjmMax) : null,
@@ -303,7 +303,7 @@ export default function AdminNouvelleOffrePage() {
                       <SelectValue placeholder="Selectionner un client" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun client (TRINEXTA)</SelectItem>
+                      <SelectItem value="none">Aucun client (TRINEXTA)</SelectItem>
                       {clients.map((client) => (
                         <SelectItem key={client.uid} value={client.uid}>
                           {client.raisonSociale} ({client.codeUnique})
