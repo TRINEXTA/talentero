@@ -178,6 +178,14 @@ export default function ImportCVMassePage() {
         credentials: 'include',
       })
 
+      // Vérifier le type de contenu retourné
+      const contentType = res.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text()
+        console.error('Réponse non-JSON:', res.status, text.substring(0, 500))
+        throw new Error(`Erreur serveur (${res.status}): L'API n'a pas retourné de JSON. Vérifiez les logs serveur.`)
+      }
+
       const data = await res.json()
 
       if (res.ok && data.success) {

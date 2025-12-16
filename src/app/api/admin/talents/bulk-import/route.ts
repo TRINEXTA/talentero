@@ -37,6 +37,14 @@ interface ImportResult {
 // POST - Import en masse de CVs (sans envoi d'email)
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier que l'API Anthropic est configurée
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'ANTHROPIC_API_KEY non configurée sur le serveur' },
+        { status: 500 }
+      )
+    }
+
     await requireRole(['ADMIN'])
 
     const formData = await request.formData()
