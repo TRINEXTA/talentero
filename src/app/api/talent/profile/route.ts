@@ -104,53 +104,54 @@ export async function PUT(request: NextRequest) {
 
     const data = validation.data
 
-    // Helper pour convertir string en number ou undefined
-    const toNumber = (val: string | number | null | undefined): number | undefined => {
-      if (val === null || val === undefined || val === '') return undefined
+    // Helper pour convertir string en number, retourne null si explicitement null, undefined si non défini
+    const toNumber = (val: string | number | null | undefined): number | null | undefined => {
+      if (val === null) return null  // Explicitement null = on veut effacer la valeur
+      if (val === undefined || val === '') return undefined  // Non défini = ne pas modifier
       const num = typeof val === 'string' ? parseFloat(val) : val
-      return isNaN(num) ? undefined : num
+      return isNaN(num) ? null : num
     }
 
     // Mise à jour du profil (prenom/nom non modifiables par le talent)
     const updatedTalent = await prisma.talent.update({
       where: { userId: user.id },
       data: {
-        telephone: data.telephone || null,
-        photoUrl: data.photoUrl || null,
-        nationalite: data.nationalite || null,
-        siret: data.siret || null,
-        raisonSociale: data.raisonSociale || null,
-        titrePoste: data.titrePoste || null,
-        categorieProfessionnelle: data.categorieProfessionnelle || null,
-        bio: data.bio || null,
-        competences: data.competences || [],
+        telephone: data.telephone ?? null,
+        photoUrl: data.photoUrl ?? null,
+        nationalite: data.nationalite ?? null,
+        siret: data.siret ?? null,
+        raisonSociale: data.raisonSociale ?? null,
+        titrePoste: data.titrePoste ?? null,
+        categorieProfessionnelle: data.categorieProfessionnelle ?? null,
+        bio: data.bio ?? null,
+        competences: data.competences ?? [],
         anneesExperience: toNumber(data.anneesExperience),
         tjm: toNumber(data.tjm),
         tjmMin: toNumber(data.tjmMin),
         tjmMax: toNumber(data.tjmMax),
-        mobilite: data.mobilite || undefined,
-        zonesGeographiques: data.zonesGeographiques || [],
-        zonesIntervention: data.zonesIntervention || [],
+        mobilite: data.mobilite !== undefined ? data.mobilite : undefined,
+        zonesGeographiques: data.zonesGeographiques ?? [],
+        zonesIntervention: data.zonesIntervention ?? [],
         permisConduire: data.permisConduire ?? undefined,
         vehicule: data.vehicule ?? undefined,
         accepteDeplacementEtranger: data.accepteDeplacementEtranger ?? undefined,
-        disponibilite: data.disponibilite || undefined,
+        disponibilite: data.disponibilite !== undefined ? data.disponibilite : undefined,
         disponibleLe: data.disponibleLe ? new Date(data.disponibleLe) : null,
-        logiciels: data.logiciels || [],
-        frameworks: data.frameworks || [],
-        baseDonnees: data.baseDonnees || [],
-        methodologies: data.methodologies || [],
-        outils: data.outils || [],
-        softSkills: data.softSkills || [],
-        langues: data.langues || [],
-        loisirs: data.loisirs || [],
-        certifications: data.certifications || [],
-        linkedinUrl: data.linkedinUrl || null,
-        githubUrl: data.githubUrl || null,
-        portfolioUrl: data.portfolioUrl || null,
-        adresse: data.adresse || null,
-        codePostal: data.codePostal || null,
-        ville: data.ville || null,
+        logiciels: data.logiciels ?? [],
+        frameworks: data.frameworks ?? [],
+        baseDonnees: data.baseDonnees ?? [],
+        methodologies: data.methodologies ?? [],
+        outils: data.outils ?? [],
+        softSkills: data.softSkills ?? [],
+        langues: data.langues ?? [],
+        loisirs: data.loisirs ?? [],
+        certifications: data.certifications ?? [],
+        linkedinUrl: data.linkedinUrl ?? null,
+        githubUrl: data.githubUrl ?? null,
+        portfolioUrl: data.portfolioUrl ?? null,
+        adresse: data.adresse ?? null,
+        codePostal: data.codePostal ?? null,
+        ville: data.ville ?? null,
         visiblePublic: data.visiblePublic ?? undefined,
         visibleVitrine: data.visibleVitrine ?? undefined,
       },

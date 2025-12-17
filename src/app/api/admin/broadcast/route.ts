@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole, getCurrentUser } from '@/lib/auth'
+import { sendNewMessageNotification } from '@/lib/microsoft-graph'
 
 // GET - Liste des messages broadcast envoyés
 export async function GET(request: NextRequest) {
@@ -149,10 +150,14 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Créer des notifications pour chaque talent
+    // Créer des notifications pour chaque talent et récupérer infos pour email
     const talentUsers = await prisma.talent.findMany({
       where: { id: { in: targetTalentIds } },
-      select: { userId: true }
+      select: {
+        userId: true,
+        prenom: true,
+        user: { select: { email: true } }
+      }
     })
 
     await prisma.notification.createMany({
@@ -163,6 +168,28 @@ export async function POST(request: NextRequest) {
         message: contenu.substring(0, 200) + (contenu.length > 200 ? '...' : ''),
         lien: `/t/messages`,
       }))
+    })
+
+    // Envoyer les emails en arrière-plan (ne pas bloquer la réponse)
+    // Utiliser Promise.allSettled pour ne pas bloquer si certains emails échouent
+    setImmediate(async () => {
+      try {
+        const emailPromises = talentUsers.map(t =>
+          sendNewMessageNotification(
+            t.user.email,
+            t.prenom,
+            sujet,
+            contenu
+          ).catch(err => {
+            console.error(`Erreur envoi email à ${t.user.email}:`, err)
+            return false
+          })
+        )
+        await Promise.allSettled(emailPromises)
+        console.log(`Emails broadcast envoyés à ${talentUsers.length} destinataires`)
+      } catch (error) {
+        console.error('Erreur envoi emails broadcast:', error)
+      }
     })
 
     return NextResponse.json({

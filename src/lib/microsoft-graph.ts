@@ -1438,6 +1438,72 @@ export async function sendActivationReminder(
 /**
  * Envoie un avertissement de suppression de compte
  */
+/**
+ * Notification nouveau message direct pour un talent
+ */
+export async function sendNewMessageNotification(
+  talentEmail: string,
+  talentPrenom: string,
+  sujet: string,
+  messagePreview: string
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
+
+  return sendEmailViaGraph({
+    to: talentEmail,
+    subject: `Nouveau message TRINEXTA : ${sujet}`,
+    bodyHtml: `
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f4f4f5; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+            .header { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+            .content { padding: 32px 24px; color: #1e293b; line-height: 1.6; }
+            .message-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+            .message-preview { color: #1e293b; font-style: italic; }
+            .button { display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff !important; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+            .footer { padding: 24px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="header">
+                <h1>Nouveau message de TRINEXTA</h1>
+              </div>
+              <div class="content">
+                <p>Bonjour ${talentPrenom},</p>
+                <p>Vous avez reçu un nouveau message de l'équipe TRINEXTA :</p>
+                <p style="font-weight: 600; color: #dc2626;">${sujet}</p>
+                <div class="message-box">
+                  <p class="message-preview">"${messagePreview.length > 200 ? messagePreview.substring(0, 200) + '...' : messagePreview}"</p>
+                </div>
+                <p style="text-align: center;">
+                  <a href="${appUrl}/t/messages" class="button">Voir le message complet</a>
+                </p>
+                <p style="font-size: 14px; color: #64748b;">
+                  Connectez-vous à votre espace Talentero pour répondre à ce message.
+                </p>
+              </div>
+              <div class="footer">
+                <p><strong>Talentero</strong> - Opéré par TRINEXTA</p>
+                <p>Cet email a été envoyé à ${talentEmail}</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    importance: 'high',
+  })
+}
+
 export async function sendAccountDeletionWarning(
   email: string,
   prenom: string,
