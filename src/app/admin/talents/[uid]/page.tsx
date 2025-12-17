@@ -15,7 +15,7 @@ import {
   Shield, ArrowLeft, Save, User, Briefcase, MapPin, Euro, Clock,
   Mail, Phone, Globe, Github, Linkedin, FileText, Calendar,
   CheckCircle, XCircle, Loader2, Send, Eye, Building2, Trash2,
-  Ban, Download, FileDown, MessageSquare
+  Ban, Download, FileDown, MessageSquare, Award, Languages, Heart, Plus, GraduationCap
 } from 'lucide-react'
 import {
   Dialog,
@@ -86,6 +86,22 @@ interface Talent {
     etablissement: string | null
     annee: number | null
   }>
+  certificationsDetail: Array<{
+    id: number
+    nom: string
+    organisme: string | null
+    dateObtention: string | null
+    dateExpiration: string | null
+    numeroCertification: string | null
+    urlVerification: string | null
+  }>
+  languesDetail: Array<{
+    id: number
+    langue: string
+    niveau: string
+    scoreCertification: string | null
+  }>
+  loisirs: string[]
   _count: {
     candidatures: number
     matchs: number
@@ -115,6 +131,16 @@ const DISPONIBILITE_OPTIONS = [
   { value: 'SOUS_3_MOIS', label: 'Sous 3 mois' },
   { value: 'DATE_PRECISE', label: 'Date precise' },
   { value: 'NON_DISPONIBLE', label: 'Non disponible' },
+]
+
+const NIVEAU_LANGUE_OPTIONS = [
+  { value: 'A1', label: 'A1 - Débutant' },
+  { value: 'A2', label: 'A2 - Élémentaire' },
+  { value: 'B1', label: 'B1 - Intermédiaire' },
+  { value: 'B2', label: 'B2 - Intermédiaire avancé' },
+  { value: 'C1', label: 'C1 - Avancé' },
+  { value: 'C2', label: 'C2 - Maîtrise' },
+  { value: 'NATIF', label: 'Natif' },
 ]
 
 export default function AdminTalentDetailPage() {
@@ -1180,9 +1206,13 @@ export default function AdminTalentDetailPage() {
               ))
             )}
 
+            {/* Formations */}
             {talent.formations.length > 0 && (
               <>
-                <h3 className="text-lg font-semibold text-white mt-8 mb-4">Formations</h3>
+                <h3 className="text-lg font-semibold text-white mt-8 mb-4 flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5" />
+                  Formations
+                </h3>
                 {talent.formations.map((form) => (
                   <Card key={form.id} className="bg-gray-800 border-gray-700">
                     <CardContent className="p-6">
@@ -1193,6 +1223,123 @@ export default function AdminTalentDetailPage() {
                   </Card>
                 ))}
               </>
+            )}
+
+            {/* Certifications */}
+            <h3 className="text-lg font-semibold text-white mt-8 mb-4 flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Certifications
+            </h3>
+            {talent.certificationsDetail && talent.certificationsDetail.length > 0 ? (
+              <div className="space-y-3">
+                {talent.certificationsDetail.map((cert) => (
+                  <Card key={cert.id} className="bg-gray-800 border-gray-700">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold text-white">{cert.nom}</h4>
+                          {cert.organisme && <p className="text-gray-400 text-sm">{cert.organisme}</p>}
+                          <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                            {cert.dateObtention && (
+                              <span>Obtenue: {new Date(cert.dateObtention).toLocaleDateString('fr-FR')}</span>
+                            )}
+                            {cert.dateExpiration && (
+                              <span className={new Date(cert.dateExpiration) < new Date() ? 'text-red-400' : 'text-green-400'}>
+                                Expire: {new Date(cert.dateExpiration).toLocaleDateString('fr-FR')}
+                              </span>
+                            )}
+                          </div>
+                          {cert.numeroCertification && (
+                            <p className="text-xs text-gray-500 mt-1">ID: {cert.numeroCertification}</p>
+                          )}
+                        </div>
+                        {cert.urlVerification && (
+                          <a
+                            href={cert.urlVerification}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm"
+                          >
+                            Vérifier
+                          </a>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="py-8 text-center">
+                  <Award className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Aucune certification</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Langues */}
+            <h3 className="text-lg font-semibold text-white mt-8 mb-4 flex items-center gap-2">
+              <Languages className="w-5 h-5" />
+              Langues
+            </h3>
+            {talent.languesDetail && talent.languesDetail.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-3">
+                {talent.languesDetail.map((lang) => (
+                  <Card key={lang.id} className="bg-gray-800 border-gray-700">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-semibold text-white">{lang.langue}</h4>
+                          {lang.scoreCertification && (
+                            <p className="text-xs text-gray-500">{lang.scoreCertification}</p>
+                          )}
+                        </div>
+                        <Badge className={
+                          lang.niveau === 'NATIF' ? 'bg-green-600' :
+                          lang.niveau === 'C2' || lang.niveau === 'C1' ? 'bg-blue-600' :
+                          lang.niveau === 'B2' || lang.niveau === 'B1' ? 'bg-yellow-600' :
+                          'bg-gray-600'
+                        }>
+                          {NIVEAU_LANGUE_OPTIONS.find(n => n.value === lang.niveau)?.label || lang.niveau}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="py-8 text-center">
+                  <Languages className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Aucune langue renseignée</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Loisirs */}
+            <h3 className="text-lg font-semibold text-white mt-8 mb-4 flex items-center gap-2">
+              <Heart className="w-5 h-5" />
+              Loisirs & Centres d'intérêt
+            </h3>
+            {talent.loisirs && talent.loisirs.length > 0 ? (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-2">
+                    {talent.loisirs.map((loisir, idx) => (
+                      <Badge key={idx} variant="outline" className="border-gray-600 text-gray-300">
+                        {loisir}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="py-8 text-center">
+                  <Heart className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Aucun loisir renseigné</p>
+                </CardContent>
+              </Card>
             )}
           </div>
         )}

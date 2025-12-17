@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast'
 import {
   User, ArrowLeft, Save, Plus, X, MapPin, Euro, Clock, Globe, Github, Linkedin, Briefcase,
-  FileText, Upload, Loader2, Trash2, GraduationCap, Building2, Mail, Phone, Eye, RefreshCw
+  FileText, Upload, Loader2, Trash2, GraduationCap, Building2, Mail, Phone, Eye, RefreshCw,
+  Award, Languages, Heart
 } from 'lucide-react'
 
 interface Experience {
@@ -33,6 +34,23 @@ interface Formation {
   etablissement: string | null
   annee: number | null
   description: string | null
+}
+
+interface Certification {
+  id: number
+  nom: string
+  organisme: string | null
+  dateObtention: string | null
+  dateExpiration: string | null
+  numeroCertification: string | null
+  urlVerification: string | null
+}
+
+interface Langue {
+  id: number
+  langue: string
+  niveau: string
+  scoreCertification: string | null
 }
 
 interface TalentProfile {
@@ -83,6 +101,16 @@ const DISPONIBILITE_OPTIONS = [
   { value: 'NON_DISPONIBLE', label: 'Non disponible' },
 ]
 
+const NIVEAU_LANGUE_OPTIONS = [
+  { value: 'A1', label: 'A1 - Débutant' },
+  { value: 'A2', label: 'A2 - Élémentaire' },
+  { value: 'B1', label: 'B1 - Intermédiaire' },
+  { value: 'B2', label: 'B2 - Intermédiaire avancé' },
+  { value: 'C1', label: 'C1 - Avancé' },
+  { value: 'C2', label: 'C2 - Maîtrise' },
+  { value: 'NATIF', label: 'Natif' },
+]
+
 export default function TalentProfilPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -93,12 +121,14 @@ export default function TalentProfilPage() {
   const [profile, setProfile] = useState<TalentProfile | null>(null)
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [formations, setFormations] = useState<Formation[]>([])
+  const [certifications, setCertifications] = useState<Certification[]>([])
+  const [langues, setLangues] = useState<Langue[]>([])
+  const [loisirs, setLoisirs] = useState<string[]>([])
 
   // New item forms
   const [newCompetence, setNewCompetence] = useState('')
-  const [newLangue, setNewLangue] = useState('')
   const [newZone, setNewZone] = useState('')
-  const [newCertification, setNewCertification] = useState('')
+  const [newLoisir, setNewLoisir] = useState('')
 
   // Experience form
   const [showExpForm, setShowExpForm] = useState(false)
@@ -107,6 +137,14 @@ export default function TalentProfilPage() {
   // Formation form
   const [showFormationForm, setShowFormationForm] = useState(false)
   const [newFormation, setNewFormation] = useState({ diplome: '', etablissement: '', annee: '', description: '' })
+
+  // Certification form
+  const [showCertForm, setShowCertForm] = useState(false)
+  const [newCert, setNewCert] = useState({ nom: '', organisme: '', dateObtention: '', dateExpiration: '', numeroCertification: '', urlVerification: '' })
+
+  // Langue form
+  const [showLangueForm, setShowLangueForm] = useState(false)
+  const [newLangueData, setNewLangueData] = useState({ langue: '', niveau: '', scoreCertification: '' })
 
   useEffect(() => {
     fetchProfile()
@@ -126,6 +164,9 @@ export default function TalentProfilPage() {
       setProfile(data.profile)
       setExperiences(data.experiences || [])
       setFormations(data.formations || [])
+      setCertifications(data.certificationsDetail || [])
+      setLangues(data.languesDetail || [])
+      setLoisirs(data.loisirs || [])
     } catch (error) {
       console.error('Erreur:', error)
       toast({
@@ -253,6 +294,107 @@ export default function TalentProfilPage() {
       toast({ title: "Formation supprimée" })
     } catch {
       toast({ title: "Erreur", description: "Impossible de supprimer", variant: "destructive" })
+    }
+  }
+
+  // Certification management
+  const addCertification = async () => {
+    if (!newCert.nom) {
+      toast({ title: "Erreur", description: "Nom de la certification requis", variant: "destructive" })
+      return
+    }
+
+    try {
+      const res = await fetch('/api/talent/certifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCert),
+      })
+      if (!res.ok) throw new Error('Erreur')
+      const data = await res.json()
+      setCertifications([data.certification, ...certifications])
+      setNewCert({ nom: '', organisme: '', dateObtention: '', dateExpiration: '', numeroCertification: '', urlVerification: '' })
+      setShowCertForm(false)
+      toast({ title: "Certification ajoutée" })
+    } catch {
+      toast({ title: "Erreur", description: "Impossible d'ajouter la certification", variant: "destructive" })
+    }
+  }
+
+  const deleteCertification = async (id: number) => {
+    if (!confirm("Supprimer cette certification ?")) return
+    try {
+      const res = await fetch(`/api/talent/certifications?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Erreur')
+      setCertifications(certifications.filter(c => c.id !== id))
+      toast({ title: "Certification supprimée" })
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer", variant: "destructive" })
+    }
+  }
+
+  // Langue management
+  const addLangue = async () => {
+    if (!newLangueData.langue || !newLangueData.niveau) {
+      toast({ title: "Erreur", description: "Langue et niveau requis", variant: "destructive" })
+      return
+    }
+
+    try {
+      const res = await fetch('/api/talent/langues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLangueData),
+      })
+      if (!res.ok) throw new Error('Erreur')
+      const data = await res.json()
+      setLangues([data.langue, ...langues])
+      setNewLangueData({ langue: '', niveau: '', scoreCertification: '' })
+      setShowLangueForm(false)
+      toast({ title: "Langue ajoutée" })
+    } catch {
+      toast({ title: "Erreur", description: "Impossible d'ajouter la langue", variant: "destructive" })
+    }
+  }
+
+  const deleteLangue = async (id: number) => {
+    if (!confirm("Supprimer cette langue ?")) return
+    try {
+      const res = await fetch(`/api/talent/langues?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Erreur')
+      setLangues(langues.filter(l => l.id !== id))
+      toast({ title: "Langue supprimée" })
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer", variant: "destructive" })
+    }
+  }
+
+  // Loisirs management
+  const addLoisir = () => {
+    if (newLoisir.trim() && !loisirs.includes(newLoisir.trim())) {
+      const updatedLoisirs = [...loisirs, newLoisir.trim()]
+      setLoisirs(updatedLoisirs)
+      setNewLoisir('')
+      // Save immediately
+      saveLoisirs(updatedLoisirs)
+    }
+  }
+
+  const removeLoisir = (loisir: string) => {
+    const updatedLoisirs = loisirs.filter(l => l !== loisir)
+    setLoisirs(updatedLoisirs)
+    saveLoisirs(updatedLoisirs)
+  }
+
+  const saveLoisirs = async (loisirsToSave: string[]) => {
+    try {
+      await fetch('/api/talent/loisirs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loisirs: loisirsToSave }),
+      })
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de sauvegarder les loisirs", variant: "destructive" })
     }
   }
 
@@ -705,30 +847,84 @@ export default function TalentProfilPage() {
           {/* Certifications */}
           <Card>
             <CardHeader>
-              <CardTitle>Certifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {profile.certifications.map((cert) => (
-                  <Badge key={cert} variant="outline" className="px-3 py-1">
-                    {cert}
-                    <button onClick={() => removeTag('certifications', cert)} className="ml-2 hover:text-red-500">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  value={newCertification}
-                  onChange={(e) => setNewCertification(e.target.value)}
-                  placeholder="AWS Certified, Scrum Master..."
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('certifications', newCertification, setNewCertification))}
-                />
-                <Button variant="outline" onClick={() => addTag('certifications', newCertification, setNewCertification)}>
-                  <Plus className="w-4 h-4" />
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="w-5 h-5" />
+                  Certifications
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={() => setShowCertForm(!showCertForm)}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Ajouter
                 </Button>
               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {showCertForm && (
+                <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <Input placeholder="Nom de la certification *" value={newCert.nom} onChange={(e) => setNewCert({ ...newCert, nom: e.target.value })} />
+                    <Input placeholder="Organisme (AWS, Microsoft...)" value={newCert.organisme} onChange={(e) => setNewCert({ ...newCert, organisme: e.target.value })} />
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Date d'obtention</Label>
+                      <Input type="date" value={newCert.dateObtention} onChange={(e) => setNewCert({ ...newCert, dateObtention: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Date d'expiration (optionnel)</Label>
+                      <Input type="date" value={newCert.dateExpiration} onChange={(e) => setNewCert({ ...newCert, dateExpiration: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <Input placeholder="Numéro de certification" value={newCert.numeroCertification} onChange={(e) => setNewCert({ ...newCert, numeroCertification: e.target.value })} />
+                    <Input placeholder="URL de vérification" value={newCert.urlVerification} onChange={(e) => setNewCert({ ...newCert, urlVerification: e.target.value })} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={addCertification}>Ajouter</Button>
+                    <Button size="sm" variant="outline" onClick={() => setShowCertForm(false)}>Annuler</Button>
+                  </div>
+                </div>
+              )}
+
+              {certifications.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">Aucune certification ajoutée</p>
+              ) : (
+                <div className="space-y-3">
+                  {certifications.map((cert) => (
+                    <div key={cert.id} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold">{cert.nom}</h4>
+                          {cert.organisme && <p className="text-sm text-gray-600">{cert.organisme}</p>}
+                          <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                            {cert.dateObtention && (
+                              <span>Obtenue: {new Date(cert.dateObtention).toLocaleDateString('fr-FR')}</span>
+                            )}
+                            {cert.dateExpiration && (
+                              <span className={new Date(cert.dateExpiration) < new Date() ? 'text-red-500' : 'text-green-600'}>
+                                Expire: {new Date(cert.dateExpiration).toLocaleDateString('fr-FR')}
+                              </span>
+                            )}
+                          </div>
+                          {cert.numeroCertification && (
+                            <p className="text-xs text-gray-500 mt-1">ID: {cert.numeroCertification}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {cert.urlVerification && (
+                            <a href={cert.urlVerification} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline">
+                              Vérifier
+                            </a>
+                          )}
+                          <Button variant="ghost" size="sm" onClick={() => deleteCertification(cert.id)} className="text-red-600 hover:text-red-700">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -837,17 +1033,87 @@ export default function TalentProfilPage() {
           {/* Langues */}
           <Card>
             <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="w-5 h-5" />
+                  Langues
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={() => setShowLangueForm(!showLangueForm)}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Ajouter
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {showLangueForm && (
+                <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+                  <div className="grid md:grid-cols-3 gap-3">
+                    <Input placeholder="Langue *" value={newLangueData.langue} onChange={(e) => setNewLangueData({ ...newLangueData, langue: e.target.value })} />
+                    <Select value={newLangueData.niveau} onValueChange={(value) => setNewLangueData({ ...newLangueData, niveau: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Niveau *" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NIVEAU_LANGUE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input placeholder="Score certif. (TOEIC 920...)" value={newLangueData.scoreCertification} onChange={(e) => setNewLangueData({ ...newLangueData, scoreCertification: e.target.value })} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={addLangue}>Ajouter</Button>
+                    <Button size="sm" variant="outline" onClick={() => setShowLangueForm(false)}>Annuler</Button>
+                  </div>
+                </div>
+              )}
+
+              {langues.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">Aucune langue ajoutée</p>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-3">
+                  {langues.map((lang) => (
+                    <div key={lang.id} className="p-3 border rounded-lg flex justify-between items-center">
+                      <div>
+                        <span className="font-medium">{lang.langue}</span>
+                        {lang.scoreCertification && (
+                          <span className="text-xs text-gray-500 ml-2">({lang.scoreCertification})</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={
+                          lang.niveau === 'NATIF' ? 'bg-green-600' :
+                          lang.niveau === 'C2' || lang.niveau === 'C1' ? 'bg-blue-600' :
+                          lang.niveau === 'B2' || lang.niveau === 'B1' ? 'bg-yellow-600' :
+                          'bg-gray-600'
+                        }>
+                          {NIVEAU_LANGUE_OPTIONS.find(n => n.value === lang.niveau)?.label || lang.niveau}
+                        </Badge>
+                        <Button variant="ghost" size="sm" onClick={() => deleteLangue(lang.id)} className="text-red-600 hover:text-red-700 h-8 w-8 p-0">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Loisirs */}
+          <Card>
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                Langues
+                <Heart className="w-5 h-5" />
+                Loisirs & Centres d'intérêt
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-4">
-                {profile.langues.map((langue) => (
-                  <Badge key={langue} variant="outline" className="px-3 py-1">
-                    {langue}
-                    <button onClick={() => removeTag('langues', langue)} className="ml-2 hover:text-red-500">
+                {loisirs.map((loisir) => (
+                  <Badge key={loisir} variant="outline" className="px-3 py-1">
+                    {loisir}
+                    <button onClick={() => removeLoisir(loisir)} className="ml-2 hover:text-red-500">
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
@@ -855,12 +1121,12 @@ export default function TalentProfilPage() {
               </div>
               <div className="flex gap-2">
                 <Input
-                  value={newLangue}
-                  onChange={(e) => setNewLangue(e.target.value)}
-                  placeholder="Français:Natif, Anglais:Courant..."
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('langues', newLangue, setNewLangue))}
+                  value={newLoisir}
+                  onChange={(e) => setNewLoisir(e.target.value)}
+                  placeholder="Lecture, Sport, Musique..."
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addLoisir())}
                 />
-                <Button variant="outline" onClick={() => addTag('langues', newLangue, setNewLangue)}>
+                <Button variant="outline" onClick={addLoisir}>
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>

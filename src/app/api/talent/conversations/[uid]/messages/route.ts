@@ -55,7 +55,17 @@ export async function GET(
         offre: {
           select: {
             uid: true,
+            codeUnique: true,
             titre: true,
+            statut: true,
+            client: {
+              select: {
+                uid: true,
+                codeUnique: true,
+                raisonSociale: true,
+                logoUrl: true,
+              }
+            }
           }
         }
       }
