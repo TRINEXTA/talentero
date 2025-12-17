@@ -9,6 +9,9 @@ import { requireRole } from '@/lib/auth'
 import { parseCVSmart } from '@/lib/cv-parser'
 import { sendAccountActivationEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
+import { writeFile, mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
+import path from 'path'
 import crypto from 'crypto'
 
 // GET - Liste des talents avec filtres
@@ -136,6 +139,12 @@ export async function POST(request: NextRequest) {
     const cvBuffer = Buffer.from(await cvFile.arrayBuffer())
     const parsedData = await parseCVSmart(cvBuffer, cvFile.name)
 
+    // IMPORTANT: Sauvegarder le fichier CV sur le disque
+    const uploadsDir = path.join(process.cwd(), 'data', 'cv')
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true })
+    }
+
     // Génère un token d'activation
     const activationToken = crypto.randomBytes(32).toString('hex')
     const activationTokenExpiry = new Date()
@@ -155,6 +164,12 @@ export async function POST(request: NextRequest) {
           createdByAdmin: true,
         },
       })
+
+      // IMPORTANT: Sauvegarder le fichier CV maintenant qu'on a le user.uid
+      const ext = path.extname(cvFile.name)
+      const cvFilename = `${user.uid}_${Date.now()}${ext}`
+      const cvFilepath = path.join(uploadsDir, cvFilename)
+      await writeFile(cvFilepath, cvBuffer)
 
       // Génère le code unique talent
       const codeUnique = await generateTalentCode()
@@ -176,7 +191,7 @@ export async function POST(request: NextRequest) {
           softSkills: parsedData.softSkills,
           linkedinUrl: parsedData.linkedinUrl,
           githubUrl: parsedData.githubUrl,
-          cvUrl: `/uploads/cv/${user.uid}_${cvFile.name}`,
+          cvUrl: `/api/cv/${cvFilename}`,
           cvOriginalName: cvFile.name,
           cvParsedData: parsedData as object,
           importeParAdmin: true,
