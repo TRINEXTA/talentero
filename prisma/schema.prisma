@@ -190,6 +190,8 @@ model Talent {
   // Relations
   experiences           Experience[]
   formations            Formation[]
+  certificationsDetail  Certification[]    // Certifications structurees avec dates
+  languesDetail         Langue[]           // Langues avec niveaux structures
   candidatures          Candidature[]
   matchs                Match[]
   alertes               Alerte[]
@@ -305,6 +307,47 @@ model Formation {
 
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+// Certifications avec dates et details
+model Certification {
+  id                  Int        @id @default(autoincrement())
+  talent              Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId            Int
+
+  nom                 String                    // Ex: "AWS Solutions Architect Professional"
+  organisme           String?                   // Ex: "Amazon Web Services"
+  dateObtention       DateTime?                 // Date d'obtention
+  dateExpiration      DateTime?                 // Date d'expiration (certaines expirent)
+  numeroCertification String?                   // Numero/ID de la certification
+  urlVerification     String?                   // URL pour verifier la certification
+
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+// Langues avec niveaux structures
+model Langue {
+  id                  Int        @id @default(autoincrement())
+  talent              Talent     @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId            Int
+
+  langue              String                    // Ex: "Anglais"
+  niveau              NiveauLangue              // A1, A2, B1, B2, C1, C2, NATIF
+  scoreCertification  String?                   // Ex: "TOEIC 920", "TOEFL 105"
+
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+enum NiveauLangue {
+  A1          // Debutant
+  A2          // Elementaire
+  B1          // Intermediaire
+  B2          // Intermediaire avance
+  C1          // Avance
+  C2          // Maitrise
+  NATIF       // Langue maternelle
 }
 
 // ============================================

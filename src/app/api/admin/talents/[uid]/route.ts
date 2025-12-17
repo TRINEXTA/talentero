@@ -38,6 +38,12 @@ export async function GET(
         formations: {
           orderBy: { annee: 'desc' },
         },
+        certificationsDetail: {
+          orderBy: { dateObtention: 'desc' },
+        },
+        languesDetail: {
+          orderBy: { niveau: 'desc' },
+        },
         candidatures: {
           include: {
             offre: {

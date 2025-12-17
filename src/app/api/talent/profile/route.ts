@@ -23,6 +23,12 @@ export async function GET() {
         formations: {
           orderBy: { annee: 'desc' }
         },
+        certificationsDetail: {
+          orderBy: { dateObtention: 'desc' }
+        },
+        languesDetail: {
+          orderBy: { niveau: 'desc' }
+        },
       },
     })
 
@@ -70,6 +76,9 @@ export async function GET() {
       },
       experiences: talent.experiences,
       formations: talent.formations,
+      certificationsDetail: talent.certificationsDetail,
+      languesDetail: talent.languesDetail,
+      loisirs: talent.loisirs,
     })
   } catch (error) {
     console.error('Erreur GET /api/talent/profile:', error)
