@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
-import { parseCV, extractTextFromFile } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 import { generateTalentCode } from '@/lib/utils'
 import { classifyTalent } from '@/lib/category-classifier'
 import crypto from 'crypto'
@@ -87,13 +87,13 @@ export async function POST(request: NextRequest) {
       const file = files[i]
 
       try {
-        // Lit et parse le CV en premier pour extraire l'email
+        // Lit et parse le CV (supporte les CVs visuels/scannes via Vision)
         const cvBuffer = Buffer.from(await file.arrayBuffer())
 
-        // Extrait le texte du fichier (supporte PDF et texte)
-        const cvText = await extractTextFromFile(cvBuffer, file.name)
-
-        if (!cvText || cvText.trim().length < 50) {
+        let parsedData
+        try {
+          parsedData = await parseCVSmart(cvBuffer, file.name)
+        } catch (parseError) {
           results.push({
             filename: file.name,
             success: false,
@@ -101,8 +101,6 @@ export async function POST(request: NextRequest) {
           })
           continue
         }
-
-        const parsedData = await parseCV(cvText)
 
         // Récupère l'email extrait du CV
         const email = parsedData.email?.toLowerCase()

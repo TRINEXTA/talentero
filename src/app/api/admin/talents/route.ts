@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
-import { parseCV } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 import { sendAccountActivationEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
 import crypto from 'crypto'
@@ -132,12 +132,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Lit le contenu du CV
+    // Lit et parse le CV (supporte les CVs visuels/scannes via Vision)
     const cvBuffer = Buffer.from(await cvFile.arrayBuffer())
-    const cvText = cvBuffer.toString('utf-8')
-
-    // Parse le CV avec Claude
-    const parsedData = await parseCV(cvText)
+    const parsedData = await parseCVSmart(cvBuffer, cvFile.name)
 
     // Génère un token d'activation
     const activationToken = crypto.randomBytes(32).toString('hex')
