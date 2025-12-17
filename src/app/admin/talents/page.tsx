@@ -300,7 +300,7 @@ function AdminTalentsContent() {
                                 <Badge className="bg-yellow-100 text-yellow-800 text-xs">Limité</Badge>
                               )}
                               {!talent.user.activationToken && talent.user.emailVerified && (
-                                <CheckCircle className="w-4 h-4 text-green-500" title="Email vérifié" />
+                                <span title="Email vérifié"><CheckCircle className="w-4 h-4 text-green-500" /></span>
                               )}
                             </div>
                             <div className="text-sm text-gray-500">{talent.user.email}</div>
