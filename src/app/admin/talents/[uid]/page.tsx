@@ -120,6 +120,9 @@ export default function AdminTalentDetailPage() {
   const [sendingActivation, setSendingActivation] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [downloadingCV, setDownloadingCV] = useState(false)
+  const [resyncingCV, setResyncingCV] = useState(false)
+  const [deletingCV, setDeletingCV] = useState(false)
+  const [uploadingCV, setUploadingCV] = useState(false)
   const [activeTab, setActiveTab] = useState<'profil' | 'experiences' | 'candidatures'>('profil')
 
   useEffect(() => {
@@ -313,6 +316,106 @@ export default function AdminTalentDetailPage() {
       })
     } finally {
       setDownloadingCV(false)
+    }
+  }
+
+  const resyncCV = async () => {
+    if (!talent) return
+    if (!confirm('Voulez-vous re-synchroniser le CV ? Cela va re-analyser le CV et mettre a jour les experiences et competences.')) {
+      return
+    }
+    setResyncingCV(true)
+    try {
+      const res = await fetch(`/api/admin/talents/${uid}/cv-resync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          replaceExperiences: true,
+          replaceFormations: true,
+          updateProfile: true,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur')
+
+      toast({
+        title: "CV re-synchronise",
+        description: `${data.stats?.experiencesCreated || 0} experiences et ${data.stats?.formationsCreated || 0} formations extraites`,
+      })
+      fetchTalent() // Refresh data
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de re-synchroniser le CV",
+        variant: "destructive",
+      })
+    } finally {
+      setResyncingCV(false)
+    }
+  }
+
+  const deleteCV = async () => {
+    if (!talent) return
+    if (!confirm('Voulez-vous supprimer le CV de ce talent ? Cette action est irreversible.')) {
+      return
+    }
+    setDeletingCV(true)
+    try {
+      const res = await fetch(`/api/admin/talents/${uid}/cv`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Erreur')
+
+      toast({
+        title: "CV supprime",
+        description: "Le CV a ete supprime avec succes",
+      })
+      setTalent({ ...talent, cvUrl: null })
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le CV",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingCV(false)
+    }
+  }
+
+  const uploadCV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!talent || !e.target.files?.[0]) return
+    const file = e.target.files[0]
+
+    setUploadingCV(true)
+    try {
+      const formData = new FormData()
+      formData.append('cv', file)
+      formData.append('parseAndUpdate', 'true')
+
+      const res = await fetch(`/api/admin/talents/${uid}/cv`, {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur')
+
+      toast({
+        title: "CV uploade",
+        description: data.parsed
+          ? `CV uploade et analyse: ${data.stats?.experiencesCreated || 0} experiences extraites`
+          : "CV uploade avec succes",
+      })
+      fetchTalent() // Refresh data
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible d'uploader le CV",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingCV(false)
+      // Reset input
+      e.target.value = ''
     }
   }
 
@@ -612,62 +715,127 @@ export default function AdminTalentDetailPage() {
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                   </div>
-                  {/* CV Download Section */}
-                  <div>
-                    <Label className="text-gray-300 mb-2 block">Telecharger le CV</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadCV(false, 'pdf')}
-                        disabled={downloadingCV}
-                        className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <FileDown className="w-4 h-4 mr-1" />
-                        CV Complet (PDF)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadCV(false, 'docx')}
-                        disabled={downloadingCV}
-                        className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <FileDown className="w-4 h-4 mr-1" />
-                        CV Complet (DOCX)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadCV(true, 'pdf')}
-                        disabled={downloadingCV}
-                        className="border-primary text-primary hover:bg-primary/20"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        CV Anonyme (PDF)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadCV(true, 'docx')}
-                        disabled={downloadingCV}
-                        className="border-primary text-primary hover:bg-primary/20"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        CV Anonyme (DOCX)
-                      </Button>
+                  {/* CV Management Section */}
+                  <div className="space-y-4">
+                    <Label className="text-gray-300 mb-2 block">Gestion du CV</Label>
+
+                    {/* CV Status */}
+                    <div className={`p-3 rounded-lg ${talent.cvUrl ? 'bg-green-600/20 border border-green-600' : 'bg-yellow-600/20 border border-yellow-600'}`}>
+                      <div className="flex items-center gap-2">
+                        <FileText className={`w-4 h-4 ${talent.cvUrl ? 'text-green-400' : 'text-yellow-400'}`} />
+                        <span className={talent.cvUrl ? 'text-green-300' : 'text-yellow-300'}>
+                          {talent.cvUrl ? 'CV disponible' : 'Aucun CV'}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* CV Actions */}
                     {talent.cvUrl && (
-                      <a
-                        href={talent.cvUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 mt-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition text-center text-gray-300"
-                      >
-                        <FileText className="w-4 h-4 inline mr-2" />
-                        Voir le CV original
-                      </a>
+                      <div className="grid grid-cols-2 gap-2">
+                        <a
+                          href={talent.cvUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1 p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition text-gray-300 text-sm"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Voir l'original
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={resyncCV}
+                          disabled={resyncingCV}
+                          className="border-blue-600 text-blue-400 hover:bg-blue-600/20"
+                        >
+                          {resyncingCV ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileText className="w-4 h-4 mr-1" />}
+                          Re-sync CV
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={deleteCV}
+                          disabled={deletingCV}
+                          className="border-red-600 text-red-400 hover:bg-red-600/20"
+                        >
+                          {deletingCV ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+                          Supprimer CV
+                        </Button>
+                        <label className="flex items-center justify-center gap-1 p-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition text-gray-300 text-sm cursor-pointer">
+                          {uploadingCV ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                          Remplacer CV
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={uploadCV}
+                            disabled={uploadingCV}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
                     )}
+
+                    {/* Upload new CV if none exists */}
+                    {!talent.cvUrl && (
+                      <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-600 rounded-lg hover:border-primary hover:bg-gray-800 transition cursor-pointer">
+                        {uploadingCV ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <FileDown className="w-5 h-5 text-gray-400" />}
+                        <span className="text-gray-400">Uploader un CV</span>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={uploadCV}
+                          disabled={uploadingCV}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+
+                    {/* Download Generated CV */}
+                    <div className="pt-2 border-t border-gray-700">
+                      <Label className="text-gray-400 text-xs mb-2 block">Generer un CV Trinexta</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadCV(false, 'pdf')}
+                          disabled={downloadingCV}
+                          className="border-gray-600 text-gray-300 hover:bg-gray-700 text-xs"
+                        >
+                          <FileDown className="w-3 h-3 mr-1" />
+                          Complet PDF
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadCV(true, 'pdf')}
+                          disabled={downloadingCV}
+                          className="border-primary text-primary hover:bg-primary/20 text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Anonyme PDF
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadCV(false, 'docx')}
+                          disabled={downloadingCV}
+                          className="border-gray-600 text-gray-300 hover:bg-gray-700 text-xs"
+                        >
+                          <FileDown className="w-3 h-3 mr-1" />
+                          Complet DOCX
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadCV(true, 'docx')}
+                          disabled={downloadingCV}
+                          className="border-primary text-primary hover:bg-primary/20 text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Anonyme DOCX
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
