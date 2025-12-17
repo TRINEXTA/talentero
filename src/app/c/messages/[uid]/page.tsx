@@ -76,13 +76,13 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
 
   const fetchConversation = async () => {
     try {
-      const authRes = await fetch('/api/auth/me')
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
       if (!authRes.ok) {
         router.push('/c/connexion')
         return
       }
 
-      const res = await fetch(`/api/messages/${uid}`)
+      const res = await fetch(`/api/messages/${uid}`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setConversation(data.conversation)
@@ -109,6 +109,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
       const res = await fetch(`/api/messages/${uid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message: newMessage.trim() }),
       })
 

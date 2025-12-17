@@ -129,6 +129,7 @@ export default function TalentMessagesPage() {
       await fetch('/api/talent/messages', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ messageUid }),
       })
       setBroadcastMessages(broadcastMessages.map(m =>

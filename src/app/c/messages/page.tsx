@@ -54,13 +54,13 @@ export default function ClientMessagesPage() {
   const fetchConversations = async () => {
     setLoading(true)
     try {
-      const authRes = await fetch('/api/auth/me')
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' })
       if (!authRes.ok) {
         router.push('/c/connexion')
         return
       }
 
-      const res = await fetch('/api/messages')
+      const res = await fetch('/api/messages', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setConversations(data.conversations || [])

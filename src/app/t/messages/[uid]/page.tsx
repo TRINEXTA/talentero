@@ -133,6 +133,7 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
       const res = await fetch(`/api/talent/conversations/${uid}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message: newMessage.trim() }),
       })
 
