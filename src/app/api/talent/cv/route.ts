@@ -44,17 +44,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Fichier trop volumineux (max 5 Mo)' }, { status: 400 })
     }
 
-    // Create uploads directory if needed
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'cv')
+    // Create uploads directory if needed (use data/cv instead of public for persistence)
+    const uploadsDir = path.join(process.cwd(), 'data', 'cv')
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
 
     // Delete old CV if exists
     if (talent.cvUrl) {
-      const oldPath = path.join(process.cwd(), 'public', talent.cvUrl)
-      if (existsSync(oldPath)) {
-        await unlink(oldPath).catch(() => {})
+      // Handle both old format (/uploads/cv/...) and new format (/api/cv/...)
+      const oldFilename = talent.cvUrl.split('/').pop()
+      if (oldFilename) {
+        const oldDataPath = path.join(process.cwd(), 'data', 'cv', oldFilename)
+        const oldPublicPath = path.join(process.cwd(), 'public', 'uploads', 'cv', oldFilename)
+        if (existsSync(oldDataPath)) {
+          await unlink(oldDataPath).catch(() => {})
+        }
+        if (existsSync(oldPublicPath)) {
+          await unlink(oldPublicPath).catch(() => {})
+        }
       }
     }
 
@@ -65,7 +73,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer())
     await writeFile(filepath, buffer)
 
-    const cvUrl = `/uploads/cv/${filename}`
+    // Use API route for CV access (better persistence and security)
+    const cvUrl = `/api/cv/${filename}`
 
     // Extract and parse CV data
     let extractedData = null

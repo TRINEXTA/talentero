@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast'
 import {
   User, ArrowLeft, Save, Plus, X, MapPin, Euro, Clock, Globe, Github, Linkedin, Briefcase,
-  FileText, Upload, Loader2, Trash2, GraduationCap, Building2, Mail, Phone, Eye
+  FileText, Upload, Loader2, Trash2, GraduationCap, Building2, Mail, Phone, Eye, RefreshCw
 } from 'lucide-react'
 
 interface Experience {
@@ -89,6 +89,7 @@ export default function TalentProfilPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingCV, setUploadingCV] = useState(false)
+  const [resyncingCV, setResyncingCV] = useState(false)
   const [profile, setProfile] = useState<TalentProfile | null>(null)
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [formations, setFormations] = useState<Formation[]>([])
@@ -309,6 +310,39 @@ export default function TalentProfilPage() {
     }
   }
 
+  const handleCVResync = async () => {
+    if (!confirm("Re-synchroniser votre CV ? Cela va ré-analyser votre CV et mettre à jour vos expériences et compétences.")) return
+    setResyncingCV(true)
+    try {
+      const response = await fetch('/api/talent/cv/resync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          replaceExperiences: true,
+          replaceFormations: true,
+          updateProfile: true,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Erreur')
+
+      toast({
+        title: "CV re-synchronisé",
+        description: `${data.stats?.experiencesCreated || 0} expériences et ${data.stats?.formationsCreated || 0} formations extraites`,
+      })
+      // Refresh profile
+      await fetchProfile()
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de re-synchroniser le CV",
+        variant: "destructive",
+      })
+    } finally {
+      setResyncingCV(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -473,6 +507,16 @@ export default function TalentProfilPage() {
                         <Eye className="w-4 h-4" />
                         Voir
                       </a>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCVResync}
+                        disabled={resyncingCV}
+                        className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                        title="Re-analyser le CV et mettre à jour le profil"
+                      >
+                        {resyncingCV ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      </Button>
                       <Button variant="outline" size="sm" onClick={handleCVDelete} className="text-red-600 border-red-300 hover:bg-red-50">
                         <Trash2 className="w-4 h-4" />
                       </Button>

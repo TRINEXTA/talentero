@@ -542,6 +542,7 @@ enum OffreStatus {
   ENVOYEE              // Client envoie pour validation
   EN_ATTENTE_VALIDATION // En attente validation TRINEXTA
   PUBLIEE              // Validée et publiée, matching lancé
+  EN_EVALUATION        // Évaluation des candidats en cours
   SHORTLIST_ENVOYEE    // Shortlist envoyée au client
   ENTRETIENS_EN_COURS  // Client sélectionne pour entretiens
   POURVUE              // Un candidat validé, offre fermée
