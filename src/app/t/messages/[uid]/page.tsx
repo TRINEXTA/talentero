@@ -10,7 +10,7 @@ import { Logo } from '@/components/ui/logo'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Users, Bell, Settings, LogOut, ArrowLeft, Send,
-  Briefcase, Building2, User, Shield
+  Briefcase, Building2, User, Shield, AlertCircle
 } from 'lucide-react'
 
 interface Message {
@@ -63,6 +63,7 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
   const [loading, setLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -109,11 +110,16 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
           })) || [],
         }
         setConversation(transformedConv)
+        setError(null)
       } else if (res.status === 404) {
         router.push('/t/messages')
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        setError(errorData.error || 'Erreur lors du chargement')
       }
     } catch (error) {
       console.error('Erreur:', error)
+      setError('Erreur de connexion')
     } finally {
       setLoading(false)
     }
@@ -128,6 +134,8 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
     if (!newMessage.trim() || sending) return
 
     setSending(true)
+    setError(null)
+
     try {
       // Utiliser la nouvelle API talent conversations
       const res = await fetch(`/api/talent/conversations/${uid}/messages`, {
@@ -140,9 +148,14 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
       if (res.ok) {
         setNewMessage('')
         await fetchConversation()
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        setError(errorData.error || `Erreur ${res.status}: Impossible d'envoyer le message`)
+        console.error('Erreur envoi message:', res.status, errorData)
       }
     } catch (error) {
       console.error('Erreur:', error)
+      setError('Erreur de connexion lors de l\'envoi')
     } finally {
       setSending(false)
     }
@@ -178,7 +191,7 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -189,48 +202,48 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-700 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Users className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
                 <Link href="/t/messages" className="text-primary font-medium">
                   Messages
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
                 <Bell className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
                 <Settings className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white" onClick={handleLogout}>
                 <LogOut className="w-5 h-5" />
               </Button>
             </div>
@@ -239,33 +252,33 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
       </header>
 
       {/* Conversation Header */}
-      <div className="bg-white border-b px-4 py-3">
+      <div className="bg-gray-600 border-b border-gray-500 px-4 py-3">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
             <Link href="/t/messages">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
             <div className="flex-1">
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-white">
                 {conversation.type === 'DIRECT' ? (conversation.sujet || 'Message de TRINEXTA') :
                  conversation.type === 'SUPPORT' ? (conversation.sujet || 'Support') :
                  conversation.offre?.titre || conversation.sujet || 'Conversation'}
               </h2>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-300">
                 {conversation.type === 'DIRECT' && (
-                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                  <Badge variant="outline" className="text-xs bg-red-900/50 text-red-300 border-red-700">
                     Message direct
                   </Badge>
                 )}
                 {conversation.type === 'SUPPORT' && (
-                  <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+                  <Badge variant="outline" className="text-xs bg-yellow-900/50 text-yellow-300 border-yellow-700">
                     Support
                   </Badge>
                 )}
                 {conversation.offre?.codeUnique && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                     {conversation.offre.codeUnique}
                   </Badge>
                 )}
@@ -278,7 +291,7 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
               {conversation.participants.map((p, i) => {
                 if (p.type === 'talent') return null
                 return (
-                  <Badge key={i} variant="outline" className={`text-xs ${p.isAdmin ? 'bg-red-50 text-red-700 border-red-200' : ''}`}>
+                  <Badge key={i} variant="outline" className={`text-xs ${p.isAdmin ? 'bg-red-900/50 text-red-300 border-red-700' : 'border-gray-400 text-gray-200'}`}>
                     {p.isAdmin ? 'TRINEXTA' : p.client?.nom}
                   </Badge>
                 )
@@ -288,12 +301,22 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
         </div>
       </div>
 
+      {/* Error message */}
+      {error && (
+        <div className="bg-red-900/50 border-b border-red-700 px-4 py-3">
+          <div className="max-w-4xl mx-auto flex items-center gap-2 text-red-300">
+            <AlertCircle className="w-5 h-5" />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <main className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {conversation.messages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Aucun message pour le moment</p>
+              <p className="text-gray-300">Aucun message pour le moment</p>
             </div>
           ) : (
             conversation.messages.map((msg) => (
@@ -306,11 +329,11 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
                   {!msg.isFromMe && (
                     <div className="flex items-center gap-2 mb-1 ml-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        msg.expediteur.type === 'admin' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
+                        msg.expediteur.type === 'admin' ? 'bg-red-900/50 text-red-300' : 'bg-gray-500 text-gray-200'
                       }`}>
                         {getExpediteurIcon(msg.expediteur.type)}
                       </div>
-                      <span className="text-xs text-gray-500 font-medium">
+                      <span className="text-xs text-gray-300 font-medium">
                         {msg.expediteur.type === 'admin' ? 'TRINEXTA' : msg.expediteur.nom}
                       </span>
                     </div>
@@ -321,8 +344,8 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
                       msg.isFromMe
                         ? 'bg-primary text-white rounded-br-md'
                         : msg.expediteur.type === 'admin'
-                        ? 'bg-red-50 text-gray-900 border border-red-200 rounded-bl-md'
-                        : 'bg-white text-gray-900 border rounded-bl-md'
+                        ? 'bg-red-900/30 text-gray-100 border border-red-700 rounded-bl-md'
+                        : 'bg-gray-600 text-gray-100 border border-gray-500 rounded-bl-md'
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{msg.contenu}</p>
@@ -339,7 +362,7 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
       </main>
 
       {/* Input */}
-      <div className="bg-white border-t px-4 py-4">
+      <div className="bg-gray-600 border-t border-gray-500 px-4 py-4">
         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
           <div className="flex items-end gap-2">
             <div className="flex-1">
@@ -353,7 +376,7 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
                     handleSendMessage(e)
                   }
                 }}
-                className="resize-none min-h-[44px] max-h-[200px]"
+                className="resize-none min-h-[44px] max-h-[200px] bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 rows={1}
               />
             </div>

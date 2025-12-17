@@ -171,7 +171,7 @@ export default function ClientShortlistDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
@@ -179,9 +179,9 @@ export default function ClientShortlistDetailPage() {
 
   if (!shortlist) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Shortlist non trouvee</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Shortlist non trouvee</h2>
           <Link href="/c/shortlists">
             <Button>Retour aux shortlists</Button>
           </Link>
@@ -191,19 +191,19 @@ export default function ClientShortlistDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
-            <Link href="/c/shortlists" className="text-gray-600 hover:text-primary mr-4">
+            <Link href="/c/shortlists" className="text-gray-300 hover:text-primary mr-4">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">
+              <h1 className="text-lg font-bold text-white">
                 Shortlist - {shortlist.offre.titre}
               </h1>
-              <p className="text-sm text-gray-500">{shortlist.offre.codeUnique}</p>
+              <p className="text-sm text-gray-300">{shortlist.offre.codeUnique}</p>
             </div>
           </div>
         </div>
@@ -211,18 +211,18 @@ export default function ClientShortlistDetailPage() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Resume offre */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-gray-600 border-gray-500">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-white">
               <Briefcase className="w-5 h-5" />
               {shortlist.offre.titre}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-300">
               {shortlist.offre.description.substring(0, 200)}...
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            <div className="flex flex-wrap gap-4 text-sm text-gray-300">
               {shortlist.offre.lieu && (
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
@@ -248,12 +248,12 @@ export default function ClientShortlistDetailPage() {
         </Card>
 
         {/* Instructions */}
-        <Card className="mb-6 bg-blue-50 border-blue-200">
+        <Card className="mb-6 bg-gray-600 border-gray-500">
           <CardContent className="py-4">
-            <p className="text-blue-800">
+            <p className="text-white">
               <strong>Comment ca marche ?</strong> Pour chaque candidat, vous pouvez :
             </p>
-            <ul className="mt-2 text-sm text-blue-700 space-y-1">
+            <ul className="mt-2 text-sm text-gray-300 space-y-1">
               <li>- <strong>Selectionner</strong> : Vous souhaitez avancer avec ce candidat</li>
               <li>- <strong>Demander un entretien</strong> : Planifier un entretien avec le candidat</li>
               <li>- <strong>Demander des infos</strong> : Poser une question au candidat</li>
@@ -264,7 +264,7 @@ export default function ClientShortlistDetailPage() {
 
         {/* Liste des candidats */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-white">
             Candidats preselectionnes ({shortlist.candidats.length})
           </h2>
 
@@ -274,11 +274,11 @@ export default function ClientShortlistDetailPage() {
             const isLoading = actionLoading === candidat.id
 
             return (
-              <Card key={candidat.id} className="overflow-hidden">
+              <Card key={candidat.id} className="overflow-hidden bg-gray-600 border-gray-500">
                 <CardContent className="p-0">
                   {/* Header du candidat */}
                   <div
-                    className="p-6 cursor-pointer hover:bg-gray-50 transition"
+                    className="p-6 cursor-pointer hover:bg-gray-500 transition"
                     onClick={() => setExpandedCandidat(isExpanded ? null : candidat.id)}
                   >
                     <div className="flex items-start justify-between">
@@ -291,13 +291,13 @@ export default function ClientShortlistDetailPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-white">
                               Candidat {talent.codeUnique}
                             </h3>
                             {getStatutBadge(candidat.statutClient, candidat.retenuParClient)}
                           </div>
-                          <p className="text-gray-600">{talent.titrePoste || 'Freelance IT'}</p>
-                          <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
+                          <p className="text-gray-300">{talent.titrePoste || 'Freelance IT'}</p>
+                          <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-300">
                             <span className="flex items-center gap-1">
                               <Briefcase className="w-4 h-4" />
                               {talent.anneesExperience} ans d'exp.
@@ -336,52 +336,52 @@ export default function ClientShortlistDetailPage() {
                         <Badge key={i} variant="secondary">{comp}</Badge>
                       ))}
                       {talent.competences.length > 8 && (
-                        <Badge variant="outline">+{talent.competences.length - 8}</Badge>
+                        <Badge variant="outline" className="border-gray-400 text-gray-200">+{talent.competences.length - 8}</Badge>
                       )}
                     </div>
                   </div>
 
                   {/* Contenu etendu */}
                   {isExpanded && (
-                    <div className="border-t bg-gray-50 p-6">
+                    <div className="border-t border-gray-500 bg-gray-500 p-6">
                       {/* Bio */}
                       {talent.bio && (
                         <div className="mb-4">
-                          <h4 className="font-medium text-gray-900 mb-2">Presentation</h4>
-                          <p className="text-gray-600">{talent.bio}</p>
+                          <h4 className="font-medium text-white mb-2">Presentation</h4>
+                          <p className="text-gray-300">{talent.bio}</p>
                         </div>
                       )}
 
                       {/* Motivation */}
                       {candidat.candidature.motivation && (
                         <div className="mb-4">
-                          <h4 className="font-medium text-gray-900 mb-2">Motivation du candidat</h4>
-                          <p className="text-gray-600">{candidat.candidature.motivation}</p>
+                          <h4 className="font-medium text-white mb-2">Motivation du candidat</h4>
+                          <p className="text-gray-300">{candidat.candidature.motivation}</p>
                         </div>
                       )}
 
                       {/* Infos supplementaires */}
                       <div className="grid md:grid-cols-3 gap-4 mb-6">
-                        <div className="p-3 bg-white rounded-lg border">
-                          <p className="text-sm text-gray-500">TJM souhaite</p>
-                          <p className="font-semibold">
+                        <div className="p-3 bg-gray-600 rounded-lg border border-gray-400">
+                          <p className="text-sm text-gray-300">TJM souhaite</p>
+                          <p className="font-semibold text-white">
                             {talent.tjm ? `${talent.tjm} EUR/j` : 'Non precise'}
                             {talent.tjmMin && talent.tjmMax && (
-                              <span className="text-sm text-gray-500 ml-1">
+                              <span className="text-sm text-gray-300 ml-1">
                                 ({talent.tjmMin}-{talent.tjmMax})
                               </span>
                             )}
                           </p>
                         </div>
-                        <div className="p-3 bg-white rounded-lg border">
-                          <p className="text-sm text-gray-500">Mobilite</p>
-                          <p className="font-semibold">
+                        <div className="p-3 bg-gray-600 rounded-lg border border-gray-400">
+                          <p className="text-sm text-gray-300">Mobilite</p>
+                          <p className="font-semibold text-white">
                             {MOBILITE_LABELS[talent.mobilite] || talent.mobilite}
                           </p>
                         </div>
-                        <div className="p-3 bg-white rounded-lg border">
-                          <p className="text-sm text-gray-500">Score de matching</p>
-                          <p className="font-semibold">
+                        <div className="p-3 bg-gray-600 rounded-lg border border-gray-400">
+                          <p className="text-sm text-gray-300">Score de matching</p>
+                          <p className="font-semibold text-white">
                             {candidat.candidature.scoreMatch ? `${candidat.candidature.scoreMatch}%` : 'N/A'}
                           </p>
                         </div>
@@ -403,9 +403,9 @@ export default function ClientShortlistDetailPage() {
 
                       {/* Commentaire client */}
                       {candidat.commentaireClient && (
-                        <div className="mb-6 p-4 bg-gray-100 rounded-lg">
-                          <h4 className="font-medium text-gray-700 mb-2">Votre commentaire</h4>
-                          <p className="text-gray-600">{candidat.commentaireClient}</p>
+                        <div className="mb-6 p-4 bg-gray-600 rounded-lg border border-gray-400">
+                          <h4 className="font-medium text-white mb-2">Votre commentaire</h4>
+                          <p className="text-gray-300">{candidat.commentaireClient}</p>
                         </div>
                       )}
 
@@ -414,14 +414,14 @@ export default function ClientShortlistDetailPage() {
                         <div className="space-y-4">
                           {/* Zone commentaire */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-white mb-1">
                               Ajouter un commentaire (optionnel)
                             </label>
                             <Textarea
                               value={commentText[candidat.id] || ''}
                               onChange={(e) => setCommentText({ ...commentText, [candidat.id]: e.target.value })}
                               placeholder="Vos remarques sur ce profil..."
-                              className="mb-2"
+                              className="mb-2 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                             />
                           </div>
 

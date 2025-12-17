@@ -144,43 +144,43 @@ export default function TalentPlanningPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Users className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
                 <Link href="/t/planning" className="text-primary font-medium">
                   Planning
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -202,8 +202,8 @@ export default function TalentPlanningPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Mon planning</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Mon planning</h1>
+          <p className="text-gray-300 mt-1">
             Gérez vos disponibilités et visualisez vos missions
           </p>
         </div>
@@ -211,9 +211,9 @@ export default function TalentPlanningPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-2">
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <CalendarIcon className="w-5 h-5" />
                   Calendrier des disponibilités
                 </CardTitle>
@@ -227,8 +227,8 @@ export default function TalentPlanningPage() {
 
                 {/* Selection actions */}
                 {selectedDates.length > 0 && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium mb-3">
+                  <div className="mt-6 p-4 bg-gray-500 rounded-lg">
+                    <p className="text-sm font-medium mb-3 text-white">
                       {selectedDates.length} jour(s) sélectionné(s)
                     </p>
 
@@ -239,7 +239,7 @@ export default function TalentPlanningPage() {
                           onClick={() => setSelectedType(type)}
                           className={`
                             flex items-center gap-1 px-3 py-1.5 rounded-full text-sm border transition-all
-                            ${selectedType === type ? typeConfig[type].color + ' ring-2 ring-offset-1 ring-primary' : 'bg-white border-gray-200 hover:border-gray-300'}
+                            ${selectedType === type ? typeConfig[type].color + ' ring-2 ring-offset-1 ring-primary' : 'bg-gray-600 border-gray-400 text-gray-200 hover:border-gray-300'}
                           `}
                         >
                           {typeConfig[type].icon}
@@ -262,7 +262,7 @@ export default function TalentPlanningPage() {
                   </div>
                 )}
 
-                <p className="text-sm text-gray-500 mt-4">
+                <p className="text-sm text-gray-300 mt-4">
                   Cliquez sur une date pour la sélectionner, ou cliquez sur deux dates pour sélectionner une période.
                 </p>
               </CardContent>
@@ -273,48 +273,48 @@ export default function TalentPlanningPage() {
           <div className="space-y-6">
             {/* Stats */}
             {stats && (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardHeader>
-                  <CardTitle className="text-base">Statistiques (90 jours)</CardTitle>
+                  <CardTitle className="text-base text-white">Statistiques (90 jours)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <div className="w-3 h-3 rounded bg-blue-500"></div>
                       <span>En mission</span>
                     </div>
-                    <span className="font-semibold">{stats.joursEnMission} jours</span>
+                    <span className="font-semibold text-white">{stats.joursEnMission} jours</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <div className="w-3 h-3 rounded bg-green-400"></div>
                       <span>Disponible</span>
                     </div>
-                    <span className="font-semibold">{stats.joursDisponibles} jours</span>
+                    <span className="font-semibold text-white">{stats.joursDisponibles} jours</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <div className="w-3 h-3 rounded bg-amber-400"></div>
                       <span>Congés</span>
                     </div>
-                    <span className="font-semibold">{stats.joursConge} jours</span>
+                    <span className="font-semibold text-white">{stats.joursConge} jours</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <div className="w-3 h-3 rounded bg-red-400"></div>
                       <span>Arrêt maladie</span>
                     </div>
-                    <span className="font-semibold">{stats.joursArret} jours</span>
+                    <span className="font-semibold text-white">{stats.joursArret} jours</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <div className="w-3 h-3 rounded bg-gray-400"></div>
                       <span>Indisponible</span>
                     </div>
-                    <span className="font-semibold">{stats.joursIndisponibles} jours</span>
+                    <span className="font-semibold text-white">{stats.joursIndisponibles} jours</span>
                   </div>
 
-                  <div className="border-t pt-4 mt-4">
+                  <div className="border-t border-gray-500 pt-4 mt-4">
                     <div className="flex items-center gap-2 text-primary">
                       <Briefcase className="w-4 h-4" />
                       <span className="font-medium">{stats.missionsEnCours} mission(s) en cours</span>
@@ -325,19 +325,19 @@ export default function TalentPlanningPage() {
             )}
 
             {/* Quick tips */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
-                <CardTitle className="text-base">Conseils</CardTitle>
+                <CardTitle className="text-base text-white">Conseils</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-gray-600">
+              <CardContent className="space-y-3 text-sm text-gray-300">
                 <p>
-                  <strong className="text-gray-900">Tenez votre planning à jour</strong> pour augmenter vos chances d'être proposé sur des missions.
+                  <strong className="text-white">Tenez votre planning à jour</strong> pour augmenter vos chances d'être proposé sur des missions.
                 </p>
                 <p>
-                  Les jours marqués <strong className="text-blue-600">En mission</strong> sont automatiquement bloqués lors du positionnement sur une nouvelle offre.
+                  Les jours marqués <strong className="text-blue-400">En mission</strong> sont automatiquement bloqués lors du positionnement sur une nouvelle offre.
                 </p>
                 <p>
-                  Indiquez vos <strong className="text-amber-600">congés</strong> à l'avance pour une meilleure visibilité.
+                  Indiquez vos <strong className="text-amber-400">congés</strong> à l'avance pour une meilleure visibilité.
                 </p>
               </CardContent>
             </Card>
@@ -345,8 +345,8 @@ export default function TalentPlanningPage() {
             {/* Link to offers */}
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="p-6">
-                <h3 className="font-semibold text-gray-900 mb-2">Prêt pour une nouvelle mission ?</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <h3 className="font-semibold text-white mb-2">Prêt pour une nouvelle mission ?</h3>
+                <p className="text-sm text-gray-300 mb-4">
                   Consultez les offres disponibles et trouvez votre prochaine opportunité.
                 </p>
                 <Link href="/t/offres">

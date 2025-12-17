@@ -140,46 +140,46 @@ export default function ClientEntretiensPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
                 <Link href="/c/entretiens" className="text-primary font-medium">
                   Entretiens
                 </Link>
-                <Link href="/c/reviews" className="text-gray-600 hover:text-primary">
+                <Link href="/c/reviews" className="text-gray-300 hover:text-primary">
                   Évaluations
                 </Link>
-                <Link href="/c/factures" className="text-gray-600 hover:text-primary">
+                <Link href="/c/factures" className="text-gray-300 hover:text-primary">
                   Factures
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -200,11 +200,11 @@ export default function ClientEntretiensPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Calendar className="w-7 h-7" />
               Entretiens
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-300 mt-1">
               Gérez vos entretiens avec les candidats
             </p>
           </div>
@@ -218,50 +218,50 @@ export default function ClientEntretiensPage() {
         <div className="grid md:grid-cols-5 gap-4 mb-8">
           <button
             onClick={() => setFilter('all')}
-            className={`p-4 rounded-lg border text-left transition ${filter === 'all' ? 'border-primary bg-primary/5' : 'bg-white'}`}
+            className={`p-4 rounded-lg border border-gray-500 text-left transition ${filter === 'all' ? 'border-primary bg-primary/5' : 'bg-gray-600'}`}
           >
-            <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-sm text-gray-500">Total</p>
+            <p className="text-2xl font-bold text-white">{stats.total}</p>
+            <p className="text-sm text-gray-300">Total</p>
           </button>
           <button
             onClick={() => setFilter('EN_ATTENTE_CONFIRMATION')}
-            className={`p-4 rounded-lg border text-left transition ${filter === 'EN_ATTENTE_CONFIRMATION' ? 'border-yellow-500 bg-yellow-50' : 'bg-white'}`}
+            className={`p-4 rounded-lg border border-gray-500 text-left transition ${filter === 'EN_ATTENTE_CONFIRMATION' ? 'border-yellow-500 bg-yellow-50' : 'bg-gray-600'}`}
           >
             <p className="text-2xl font-bold text-yellow-600">{stats.enAttente}</p>
-            <p className="text-sm text-gray-500">En attente</p>
+            <p className="text-sm text-gray-300">En attente</p>
           </button>
           <button
             onClick={() => setFilter('DATE_ALTERNATIVE_PROPOSEE')}
-            className={`p-4 rounded-lg border text-left transition ${filter === 'DATE_ALTERNATIVE_PROPOSEE' ? 'border-blue-500 bg-blue-50' : 'bg-white'}`}
+            className={`p-4 rounded-lg border border-gray-500 text-left transition ${filter === 'DATE_ALTERNATIVE_PROPOSEE' ? 'border-blue-500 bg-blue-50' : 'bg-gray-600'}`}
           >
             <p className="text-2xl font-bold text-blue-600">{stats.alternatif}</p>
-            <p className="text-sm text-gray-500">Date proposée</p>
+            <p className="text-sm text-gray-300">Date proposée</p>
           </button>
           <button
             onClick={() => setFilter('CONFIRME')}
-            className={`p-4 rounded-lg border text-left transition ${filter === 'CONFIRME' ? 'border-green-500 bg-green-50' : 'bg-white'}`}
+            className={`p-4 rounded-lg border border-gray-500 text-left transition ${filter === 'CONFIRME' ? 'border-green-500 bg-green-50' : 'bg-gray-600'}`}
           >
             <p className="text-2xl font-bold text-green-600">{stats.confirmes}</p>
-            <p className="text-sm text-gray-500">Confirmés</p>
+            <p className="text-sm text-gray-300">Confirmés</p>
           </button>
           <button
             onClick={() => setFilter('REALISE')}
-            className={`p-4 rounded-lg border text-left transition ${filter === 'REALISE' ? 'border-gray-500 bg-gray-50' : 'bg-white'}`}
+            className={`p-4 rounded-lg border border-gray-500 text-left transition ${filter === 'REALISE' ? 'border-gray-500 bg-gray-50' : 'bg-gray-600'}`}
           >
-            <p className="text-2xl font-bold text-gray-600">{stats.realises}</p>
-            <p className="text-sm text-gray-500">Réalisés</p>
+            <p className="text-2xl font-bold text-gray-400">{stats.realises}</p>
+            <p className="text-sm text-gray-300">Réalisés</p>
           </button>
         </div>
 
         {/* Liste des entretiens */}
         {filteredEntretiens.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-12 text-center">
               <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-white mb-2">
                 Aucun entretien
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-300">
                 {filter === 'all'
                   ? "Vous n'avez pas encore planifié d'entretiens."
                   : `Aucun entretien avec ce statut.`}
@@ -271,7 +271,7 @@ export default function ClientEntretiensPage() {
         ) : (
           <div className="space-y-4">
             {filteredEntretiens.map((entretien) => (
-              <Card key={entretien.uid} className={entretien.statut === 'DATE_ALTERNATIVE_PROPOSEE' ? 'border-blue-300' : ''}>
+              <Card key={entretien.uid} className={`bg-gray-600 border-gray-500 ${entretien.statut === 'DATE_ALTERNATIVE_PROPOSEE' ? 'border-blue-300' : ''}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -291,15 +291,15 @@ export default function ClientEntretiensPage() {
                       {/* Infos */}
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-white">
                             {entretien.talent.prenom} {entretien.talent.nom}
                           </h3>
                           {getStatutBadge(entretien.statut)}
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">
+                        <p className="text-sm text-gray-300 mb-2">
                           {entretien.talent.titrePoste || 'Freelance'} • {entretien.offre.titre}
                         </p>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
                             {formatDate(entretien.dateProposee)}

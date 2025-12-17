@@ -164,9 +164,9 @@ export default function TalentMatchsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
@@ -174,19 +174,19 @@ export default function TalentMatchsPage() {
                 <Logo size="sm" showText />
               </Link>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
                 <Link href="/t/matchs" className="text-primary font-medium">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
-                <Link href="/t/entretiens" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
               </nav>
@@ -216,82 +216,82 @@ export default function TalentMatchsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Zap className="h-7 w-7 text-yellow-500" />
               Mes Matchs
             </h1>
-            <p className="text-gray-600">Offres qui correspondent à votre profil</p>
+            <p className="text-gray-300">Offres qui correspondent à votre profil</p>
           </div>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-yellow-100 rounded-lg">
                     <Zap className="h-5 w-5 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.totalMatchs}</p>
-                    <p className="text-sm text-gray-500">Total matchs</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalMatchs}</p>
+                    <p className="text-sm text-gray-300">Total matchs</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className={stats.matchsNonVus > 0 ? 'border-yellow-300 bg-yellow-50' : ''}>
+            <Card className={stats.matchsNonVus > 0 ? 'bg-gray-600 border-l-4 border-l-yellow-500' : 'bg-gray-600 border-gray-500'}>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Eye className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.matchsNonVus}</p>
-                    <p className="text-sm text-gray-500">Nouveaux</p>
+                    <p className="text-2xl font-bold text-white">{stats.matchsNonVus}</p>
+                    <p className="text-sm text-gray-300">Nouveaux</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-100 rounded-lg">
                     <Star className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.matchsExcellents}</p>
-                    <p className="text-sm text-gray-500">Excellents (80%+)</p>
+                    <p className="text-2xl font-bold text-white">{stats.matchsExcellents}</p>
+                    <p className="text-sm text-gray-300">Excellents (80%+)</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-orange-100 rounded-lg">
                     <Target className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.matchsBons}</p>
-                    <p className="text-sm text-gray-500">Bons (60-79%)</p>
+                    <p className="text-2xl font-bold text-white">{stats.matchsBons}</p>
+                    <p className="text-sm text-gray-300">Bons (60-79%)</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-100 rounded-lg">
                     <CheckCircle className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.dejaPostule}</p>
-                    <p className="text-sm text-gray-500">Déjà postulé</p>
+                    <p className="text-2xl font-bold text-white">{stats.dejaPostule}</p>
+                    <p className="text-sm text-gray-300">Déjà postulé</p>
                   </div>
                 </div>
               </CardContent>
@@ -322,11 +322,11 @@ export default function TalentMatchsPage() {
         {/* Match List */}
         <div className="space-y-4">
           {filteredMatchs.length === 0 ? (
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="py-12 text-center">
                 <Zap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">Aucun match trouvé</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-white mb-2">Aucun match trouvé</p>
+                <p className="text-sm text-gray-300">
                   Complétez votre profil pour améliorer vos matchs
                 </p>
                 <Link href="/t/profil">
@@ -341,7 +341,7 @@ export default function TalentMatchsPage() {
               <Card
                 key={match.id}
                 className={`hover:shadow-md transition-shadow ${
-                  !match.vuParTalent ? 'border-l-4 border-l-yellow-500 bg-yellow-50/30' : ''
+                  !match.vuParTalent ? 'bg-gray-600 border-l-4 border-l-yellow-500' : 'bg-gray-600 border-gray-500'
                 }`}
                 onClick={() => !match.vuParTalent && markAsViewed(match.id)}
               >
@@ -368,22 +368,22 @@ export default function TalentMatchsPage() {
                       </div>
 
                       <Link href={`/t/offres/${match.offre.slug}`}>
-                        <h3 className="font-semibold text-lg text-gray-900 hover:text-primary mb-1">
+                        <h3 className="font-semibold text-lg text-white hover:text-primary mb-1">
                           {match.offre.titre}
                         </h3>
                       </Link>
 
                       {match.offre.client && (
-                        <div className="flex items-center gap-2 text-gray-600 mb-3">
+                        <div className="flex items-center gap-2 text-gray-300 mb-3">
                           <Building2 className="h-4 w-4" />
                           <span>{match.offre.client.raisonSociale}</span>
                           {match.offre.client.secteurActivite && (
-                            <span className="text-gray-400">• {match.offre.client.secteurActivite}</span>
+                            <span className="text-gray-300">• {match.offre.client.secteurActivite}</span>
                           )}
                         </div>
                       )}
 
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300 mb-4">
                         {match.offre.ville && (
                           <span className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
@@ -412,7 +412,7 @@ export default function TalentMatchsPage() {
 
                       {/* Compétences matchées */}
                       <div className="mb-3">
-                        <p className="text-xs text-gray-500 mb-1">Compétences matchées :</p>
+                        <p className="text-xs text-gray-300 mb-1">Compétences matchées :</p>
                         <div className="flex flex-wrap gap-1">
                           {match.competencesMatchees.slice(0, 6).map(comp => (
                             <Badge key={comp} variant="outline" className="text-green-700 border-green-300 bg-green-50">
@@ -420,7 +420,7 @@ export default function TalentMatchsPage() {
                             </Badge>
                           ))}
                           {match.competencesMatchees.length > 6 && (
-                            <Badge variant="outline" className="text-gray-500">
+                            <Badge variant="outline" className="border-gray-400 text-gray-200">
                               +{match.competencesMatchees.length - 6}
                             </Badge>
                           )}
@@ -429,7 +429,7 @@ export default function TalentMatchsPage() {
 
                       {match.competencesManquantes.length > 0 && (
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Compétences manquantes :</p>
+                          <p className="text-xs text-gray-300 mb-1">Compétences manquantes :</p>
                           <div className="flex flex-wrap gap-1">
                             {match.competencesManquantes.slice(0, 4).map(comp => (
                               <Badge key={comp} variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
@@ -437,7 +437,7 @@ export default function TalentMatchsPage() {
                               </Badge>
                             ))}
                             {match.competencesManquantes.length > 4 && (
-                              <Badge variant="outline" className="text-gray-500">
+                              <Badge variant="outline" className="border-gray-400 text-gray-200">
                                 +{match.competencesManquantes.length - 4}
                               </Badge>
                             )}
@@ -463,7 +463,7 @@ export default function TalentMatchsPage() {
                       )}
 
                       {match.offre.publieLe && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-300">
                           Publié {format(new Date(match.offre.publieLe), 'd MMM', { locale: fr })}
                         </p>
                       )}

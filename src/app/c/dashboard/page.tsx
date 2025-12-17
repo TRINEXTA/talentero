@@ -150,7 +150,7 @@ export default function ClientDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -162,16 +162,16 @@ export default function ClientDashboardPage() {
   const contactPrincipal = user.details?.contacts?.[0]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
@@ -179,22 +179,22 @@ export default function ClientDashboardPage() {
                 <Link href="/c/dashboard" className="text-primary font-medium">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
-                <Link href="/c/entretiens" className="text-gray-600 hover:text-primary">
+                <Link href="/c/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
-                <Link href="/c/reviews" className="text-gray-600 hover:text-primary">
+                <Link href="/c/reviews" className="text-gray-300 hover:text-primary">
                   Évaluations
                 </Link>
-                <Link href="/c/factures" className="text-gray-600 hover:text-primary">
+                <Link href="/c/factures" className="text-gray-300 hover:text-primary">
                   Factures
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -216,10 +216,10 @@ export default function ClientDashboardPage() {
         {/* Welcome Section */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-white">
               Bonjour {contactPrincipal?.prenom || 'Client'} !
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-300 mt-1">
               {user.details?.raisonSociale} - Voici un aperçu de votre activité
             </p>
           </div>
@@ -233,57 +233,57 @@ export default function ClientDashboardPage() {
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Offres actives</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.offresActives}</p>
+                  <p className="text-sm text-gray-300">Offres actives</p>
+                  <p className="text-2xl font-bold text-white">{stats.offresActives}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <Users className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Candidatures</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalCandidatures}</p>
+                  <p className="text-sm text-gray-300">Candidatures</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalCandidatures}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <AlertCircle className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Nouvelles</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.candidaturesNouvelles}</p>
+                  <p className="text-sm text-gray-300">Nouvelles</p>
+                  <p className="text-2xl font-bold text-white">{stats.candidaturesNouvelles}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                   <Star className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Shortlists</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.shortlistsEnCours}</p>
+                  <p className="text-sm text-gray-300">Shortlists</p>
+                  <p className="text-2xl font-bold text-white">{stats.shortlistsEnCours}</p>
                 </div>
               </div>
             </CardContent>
@@ -292,11 +292,11 @@ export default function ClientDashboardPage() {
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Offres récentes */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Mes offres</CardTitle>
-                <CardDescription>Vos dernières offres publiées</CardDescription>
+                <CardTitle className="text-white">Mes offres</CardTitle>
+                <CardDescription className="text-gray-300">Vos dernières offres publiées</CardDescription>
               </div>
               <Link href="/c/offres">
                 <Button variant="ghost" size="sm">
@@ -309,7 +309,7 @@ export default function ClientDashboardPage() {
               {offresRecentes.length === 0 ? (
                 <div className="text-center py-8">
                   <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucune offre publiée</p>
+                  <p className="text-gray-300">Aucune offre publiée</p>
                   <Link href="/c/offres/nouvelle">
                     <Button className="mt-4">
                       <Plus className="w-4 h-4 mr-2" />
@@ -321,13 +321,13 @@ export default function ClientDashboardPage() {
                 <div className="space-y-4">
                   {offresRecentes.map((offre) => (
                     <Link key={offre.uid} href={`/c/offres/${offre.uid}`}>
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-gray-500 hover:bg-gray-400 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-gray-900">{offre.titre}</span>
+                            <span className="font-medium text-white">{offre.titre}</span>
                             {getStatutBadge(offre.statut)}
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-4 text-sm text-gray-300">
                             <span className="flex items-center gap-1">
                               <Users className="w-4 h-4" />
                               {offre.nbCandidatures} candidature(s)
@@ -338,7 +338,7 @@ export default function ClientDashboardPage() {
                             </span>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                        <ChevronRight className="w-5 h-5 text-gray-300" />
                       </div>
                     </Link>
                   ))}
@@ -348,11 +348,11 @@ export default function ClientDashboardPage() {
           </Card>
 
           {/* Candidatures récentes */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Dernières candidatures</CardTitle>
-                <CardDescription>Candidatures récentes sur vos offres</CardDescription>
+                <CardTitle className="text-white">Dernières candidatures</CardTitle>
+                <CardDescription className="text-gray-300">Candidatures récentes sur vos offres</CardDescription>
               </div>
               <Link href="/c/candidatures">
                 <Button variant="ghost" size="sm">
@@ -365,15 +365,15 @@ export default function ClientDashboardPage() {
               {candidaturesRecentes.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucune candidature récente</p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-gray-300">Aucune candidature récente</p>
+                  <p className="text-sm text-gray-300 mt-1">
                     Publiez une offre pour recevoir des candidatures
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {candidaturesRecentes.map((candidature) => (
-                    <div key={candidature.uid} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50">
+                    <div key={candidature.uid} className="flex items-center gap-4 p-4 rounded-lg bg-gray-500">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                         {candidature.talent.photoUrl ? (
                           <img
@@ -387,15 +387,15 @@ export default function ClientDashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900 truncate">
+                          <span className="font-medium text-white truncate">
                             {candidature.talent.prenom} {candidature.talent.nom}
                           </span>
                           {getCandidatureStatutBadge(candidature.statut)}
                         </div>
-                        <p className="text-sm text-gray-500 truncate">
+                        <p className="text-sm text-gray-300 truncate">
                           {candidature.talent.titrePoste || 'Consultant'}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-300 mt-1">
                           Pour: {candidature.offre.titre}
                         </p>
                       </div>
@@ -413,9 +413,9 @@ export default function ClientDashboardPage() {
         </div>
 
         {/* Actions rapides */}
-        <Card className="mt-8">
+        <Card className="mt-8 bg-gray-600 border-gray-500">
           <CardHeader>
-            <CardTitle>Actions rapides</CardTitle>
+            <CardTitle className="text-white">Actions rapides</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-4 gap-4">
@@ -426,21 +426,21 @@ export default function ClientDashboardPage() {
                 </div>
               </Link>
               <Link href="/c/shortlists" className="block">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                  <Star className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium">Mes shortlists</span>
+                <div className="flex items-center gap-3 p-4 bg-gray-500 rounded-lg hover:bg-gray-400 transition">
+                  <Star className="w-5 h-5 text-gray-200" />
+                  <span className="font-medium text-white">Mes shortlists</span>
                 </div>
               </Link>
               <Link href="/c/profil" className="block">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                  <Building2 className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium">Profil entreprise</span>
+                <div className="flex items-center gap-3 p-4 bg-gray-500 rounded-lg hover:bg-gray-400 transition">
+                  <Building2 className="w-5 h-5 text-gray-200" />
+                  <span className="font-medium text-white">Profil entreprise</span>
                 </div>
               </Link>
               <Link href="/freelances" className="block">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                  <Users className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium">Voir les talents</span>
+                <div className="flex items-center gap-3 p-4 bg-gray-500 rounded-lg hover:bg-gray-400 transition">
+                  <Users className="w-5 h-5 text-gray-200" />
+                  <span className="font-medium text-white">Voir les talents</span>
                 </div>
               </Link>
             </div>
@@ -448,17 +448,17 @@ export default function ClientDashboardPage() {
         </Card>
 
         {/* Info Card */}
-        <Card className="mt-8 bg-blue-50 border-blue-200">
+        <Card className="mt-8 bg-blue-900/30 border-blue-700">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-6 h-6 text-blue-300" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">
+                <h3 className="font-semibold text-white mb-1">
                   Maximisez vos chances de trouver le bon talent
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-300 text-sm">
                   Rédigez des offres détaillées avec les compétences requises précises pour un meilleur matching.
                   Notre algorithme analyse automatiquement les profils et vous présente les meilleurs candidats.
                 </p>

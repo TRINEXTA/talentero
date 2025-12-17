@@ -154,7 +154,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -165,33 +165,33 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-700 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
                 <Link href="/c/messages" className="text-primary font-medium">
                   Messages
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -212,7 +212,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
       </header>
 
       {/* Conversation Header */}
-      <div className="bg-white border-b px-4 py-3">
+      <div className="bg-gray-600 border-gray-500 px-4 py-3">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
             <Link href="/c/messages">
@@ -221,9 +221,9 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
               </Button>
             </Link>
             <div className="flex-1">
-              <h2 className="font-semibold text-gray-900">{conversation.offre?.titre || conversation.sujet}</h2>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Badge variant="outline" className="text-xs">
+              <h2 className="font-semibold text-white">{conversation.offre?.titre || conversation.sujet}</h2>
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                   {conversation.offre?.codeUnique}
                 </Badge>
               </div>
@@ -232,7 +232,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
               {conversation.participants.map((p, i) => {
                 if (p.type === 'client') return null
                 return (
-                  <Badge key={i} variant="outline" className={`text-xs ${p.isAdmin ? 'bg-red-50 text-red-700 border-red-200' : ''}`}>
+                  <Badge key={i} variant="outline" className={`text-xs ${p.isAdmin ? 'bg-red-900/30 text-red-300 border-red-400' : 'border-gray-400 text-gray-200'}`}>
                     {p.isAdmin ? 'TRINEXTA' : p.talent?.nom}
                   </Badge>
                 )
@@ -247,7 +247,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
         <div className="max-w-4xl mx-auto space-y-4">
           {conversation.messages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Aucun message pour le moment</p>
+              <p className="text-gray-300">Aucun message pour le moment</p>
             </div>
           ) : (
             conversation.messages.map((msg) => (
@@ -260,11 +260,11 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
                   {!msg.isFromMe && (
                     <div className="flex items-center gap-2 mb-1 ml-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        msg.expediteur.type === 'admin' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
+                        msg.expediteur.type === 'admin' ? 'bg-red-900/30 text-red-300' : 'bg-gray-500 text-gray-200'
                       }`}>
                         {getExpediteurIcon(msg.expediteur.type)}
                       </div>
-                      <span className="text-xs text-gray-500 font-medium">
+                      <span className="text-xs text-gray-300 font-medium">
                         {msg.expediteur.type === 'admin' ? 'TRINEXTA' : msg.expediteur.nom}
                       </span>
                     </div>
@@ -275,13 +275,13 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
                       msg.isFromMe
                         ? 'bg-primary text-white rounded-br-md'
                         : msg.expediteur.type === 'admin'
-                        ? 'bg-red-50 text-gray-900 border border-red-200 rounded-bl-md'
-                        : 'bg-white text-gray-900 border rounded-bl-md'
+                        ? 'bg-red-900/30 text-gray-100 border border-red-400 rounded-bl-md'
+                        : 'bg-gray-600 text-gray-100 border border-gray-500 rounded-bl-md'
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{msg.contenu}</p>
                   </div>
-                  <p className={`text-xs text-gray-400 mt-1 ${msg.isFromMe ? 'text-right mr-2' : 'ml-2'}`}>
+                  <p className={`text-xs text-gray-300 mt-1 ${msg.isFromMe ? 'text-right mr-2' : 'ml-2'}`}>
                     {formatDate(msg.createdAt)}
                   </p>
                 </div>
@@ -293,7 +293,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
       </main>
 
       {/* Input */}
-      <div className="bg-white border-t px-4 py-4">
+      <div className="bg-gray-600 border-gray-500 px-4 py-4">
         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
           <div className="flex items-end gap-2">
             <div className="flex-1">
@@ -307,7 +307,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
                     handleSendMessage(e)
                   }
                 }}
-                className="resize-none min-h-[44px] max-h-[200px]"
+                className="resize-none min-h-[44px] max-h-[200px] bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 rows={1}
               />
             </div>
@@ -315,7 +315,7 @@ export default function ClientConversationPage({ params }: { params: Promise<{ u
               <Send className="w-4 h-4" />
             </Button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-300 mt-2">
             Appuyez sur Entree pour envoyer, Shift+Entree pour un saut de ligne
           </p>
         </form>

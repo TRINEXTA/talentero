@@ -105,12 +105,12 @@ export default function TalentCandidaturesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/t/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-primary">
+            <Link href="/t/dashboard" className="flex items-center gap-2 text-gray-300 hover:text-primary">
               <ArrowLeft className="w-4 h-4" />
               Retour au dashboard
             </Link>
@@ -124,8 +124,8 @@ export default function TalentCandidaturesPage() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes candidatures</h1>
-            <p className="text-gray-600 mt-1">Suivez l'état de vos candidatures</p>
+            <h1 className="text-2xl font-bold text-white">Mes candidatures</h1>
+            <p className="text-gray-300 mt-1">Suivez l'état de vos candidatures</p>
           </div>
           <Link href="/t/offres">
             <Button>
@@ -137,28 +137,28 @@ export default function TalentCandidaturesPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-8">
-          <Card className="cursor-pointer hover:shadow-md transition" onClick={() => setFilter(null)}>
+          <Card className="bg-gray-600 border-gray-500 cursor-pointer hover:shadow-md transition" onClick={() => setFilter(null)}>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
+              <p className="text-sm text-gray-300">Total</p>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-md transition" onClick={() => setFilter('EN_REVUE')}>
+          <Card className="bg-gray-600 border-gray-500 cursor-pointer hover:shadow-md transition" onClick={() => setFilter('EN_REVUE')}>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.enCours}</p>
-              <p className="text-sm text-gray-500">En cours</p>
+              <p className="text-2xl font-bold text-blue-400">{stats.enCours}</p>
+              <p className="text-sm text-gray-300">En cours</p>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-md transition" onClick={() => setFilter('ACCEPTEE')}>
+          <Card className="bg-gray-600 border-gray-500 cursor-pointer hover:shadow-md transition" onClick={() => setFilter('ACCEPTEE')}>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats.acceptees}</p>
-              <p className="text-sm text-gray-500">Acceptées</p>
+              <p className="text-2xl font-bold text-green-400">{stats.acceptees}</p>
+              <p className="text-sm text-gray-300">Acceptées</p>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-md transition" onClick={() => setFilter('REFUSEE')}>
+          <Card className="bg-gray-600 border-gray-500 cursor-pointer hover:shadow-md transition" onClick={() => setFilter('REFUSEE')}>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{stats.refusees}</p>
-              <p className="text-sm text-gray-500">Refusées</p>
+              <p className="text-2xl font-bold text-red-400">{stats.refusees}</p>
+              <p className="text-sm text-gray-300">Refusées</p>
             </CardContent>
           </Card>
         </div>
@@ -169,13 +169,13 @@ export default function TalentCandidaturesPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : candidatures.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="py-12 text-center">
-              <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
+              <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-medium text-white mb-2">
                 Aucune candidature
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-300 mb-4">
                 Vous n'avez pas encore postulé à des offres
               </p>
               <Link href="/t/offres">
@@ -191,12 +191,12 @@ export default function TalentCandidaturesPage() {
 
               return (
                 <Link key={candidature.uid} href={`/offres/${candidature.offre.slug}`}>
-                  <Card className="hover:shadow-md transition cursor-pointer">
+                  <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition cursor-pointer">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">
+                            <h3 className="text-lg font-semibold text-white">
                               {candidature.offre.titre}
                             </h3>
                             <Badge variant={statutConfig.variant as any}>
@@ -205,11 +205,11 @@ export default function TalentCandidaturesPage() {
                             </Badge>
                           </div>
 
-                          <p className="text-gray-500 mb-3">
+                          <p className="text-gray-300 mb-3">
                             {candidature.offre.client?.raisonSociale || 'TRINEXTA'}
                           </p>
 
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                             <span className="flex items-center gap-1">
                               <Euro className="w-4 h-4" />
                               {formatTJM(candidature.offre.tjmMin, candidature.offre.tjmMax)}
@@ -230,16 +230,16 @@ export default function TalentCandidaturesPage() {
                         <div className="text-right ml-4">
                           {candidature.scoreMatch !== null && (
                             <div className={`text-2xl font-bold ${
-                              candidature.scoreMatch >= 70 ? 'text-green-600' :
-                              candidature.scoreMatch >= 50 ? 'text-yellow-600' : 'text-gray-600'
+                              candidature.scoreMatch >= 70 ? 'text-green-400' :
+                              candidature.scoreMatch >= 50 ? 'text-yellow-400' : 'text-gray-300'
                             }`}>
                               {candidature.scoreMatch}%
                             </div>
                           )}
-                          <p className="text-xs text-gray-500">Score match</p>
+                          <p className="text-xs text-gray-300">Score match</p>
 
                           {candidature.tjmPropose && (
-                            <p className="text-sm text-gray-600 mt-2">
+                            <p className="text-sm text-gray-300 mt-2">
                               TJM proposé: {candidature.tjmPropose}€
                             </p>
                           )}
@@ -247,8 +247,8 @@ export default function TalentCandidaturesPage() {
                       </div>
 
                       {candidature.motivation && (
-                        <div className="mt-4 pt-4 border-t">
-                          <p className="text-sm text-gray-600 line-clamp-2">
+                        <div className="mt-4 pt-4 border-t border-gray-500">
+                          <p className="text-sm text-gray-300 line-clamp-2">
                             <strong>Motivation:</strong> {candidature.motivation}
                           </p>
                         </div>

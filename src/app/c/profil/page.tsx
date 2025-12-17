@@ -175,7 +175,7 @@ export default function ClientProfilPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -188,27 +188,27 @@ export default function ClientProfilPage() {
   const contactPrincipal = profile?.contacts?.find(c => c.estContactPrincipal)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
                 <Link href="/c/profil" className="text-primary font-medium">
@@ -233,8 +233,8 @@ export default function ClientProfilPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Profil entreprise</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Profil entreprise</h1>
+          <p className="text-gray-300 mt-1">
             Gerez les informations de votre entreprise
           </p>
         </div>
@@ -243,8 +243,8 @@ export default function ClientProfilPage() {
           <div
             className={`mb-6 p-4 rounded-lg ${
               message.type === 'success'
-                ? 'bg-green-50 text-green-800 border border-green-200'
-                : 'bg-red-50 text-red-800 border border-red-200'
+                ? 'bg-green-900/30 text-green-200 border border-green-700'
+                : 'bg-red-900/30 text-red-200 border border-red-700'
             }`}
           >
             {message.text}
@@ -253,20 +253,20 @@ export default function ClientProfilPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Statut */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Statut du compte</CardTitle>
-                  <CardDescription>Code client: {profile?.codeUnique}</CardDescription>
+                  <CardTitle className="text-white">Statut du compte</CardTitle>
+                  <CardDescription className="text-gray-300">Code client: {profile?.codeUnique}</CardDescription>
                 </div>
                 {profile && getStatutBadge(profile.statut, profile.valideParAdmin)}
               </div>
             </CardHeader>
             {!profile?.valideParAdmin && (
               <CardContent>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-800">
+                <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4">
+                  <p className="text-sm text-yellow-200">
                     Votre compte est en attente de validation par l'equipe TRINEXTA.
                     Vous recevrez un email une fois votre compte valide.
                   </p>
@@ -276,42 +276,44 @@ export default function ClientProfilPage() {
           </Card>
 
           {/* Informations entreprise */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle>Informations entreprise</CardTitle>
+              <CardTitle className="text-white">Informations entreprise</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="raisonSociale">Raison sociale *</Label>
+                  <Label htmlFor="raisonSociale" className="text-gray-300">Raison sociale *</Label>
                   <Input
                     id="raisonSociale"
                     value={formData.raisonSociale}
                     onChange={(e) => setFormData({ ...formData, raisonSociale: e.target.value })}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="siret">SIRET</Label>
+                  <Label htmlFor="siret" className="text-gray-300">SIRET</Label>
                   <Input
                     id="siret"
                     value={formData.siret}
                     onChange={(e) => setFormData({ ...formData, siret: e.target.value })}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     maxLength={14}
                     disabled
                   />
-                  <p className="text-xs text-gray-500">Le SIRET ne peut etre modifie</p>
+                  <p className="text-xs text-gray-300">Le SIRET ne peut etre modifie</p>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="formeJuridique">Forme juridique</Label>
+                  <Label htmlFor="formeJuridique" className="text-gray-300">Forme juridique</Label>
                   <select
                     id="formeJuridique"
                     value={formData.formeJuridique}
                     onChange={(e) => setFormData({ ...formData, formeJuridique: e.target.value })}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    className="w-full h-10 px-3 rounded-md border border-gray-400 bg-gray-500 text-white"
                   >
                     <option value="">Selectionnez</option>
                     <option value="SAS">SAS</option>
@@ -323,23 +325,24 @@ export default function ClientProfilPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="secteurActivite">Secteur d'activite</Label>
+                  <Label htmlFor="secteurActivite" className="text-gray-300">Secteur d'activite</Label>
                   <Input
                     id="secteurActivite"
                     value={formData.secteurActivite}
                     onChange={(e) => setFormData({ ...formData, secteurActivite: e.target.value })}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     placeholder="ex: Services informatiques"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tailleEntreprise">Taille de l'entreprise</Label>
+                <Label htmlFor="tailleEntreprise" className="text-gray-300">Taille de l'entreprise</Label>
                 <select
                   id="tailleEntreprise"
                   value={formData.tailleEntreprise}
                   onChange={(e) => setFormData({ ...formData, tailleEntreprise: e.target.value })}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  className="w-full h-10 px-3 rounded-md border border-gray-400 bg-gray-500 text-white"
                 >
                   <option value="">Selectionnez</option>
                   <option value="1-10">1-10 employes</option>
@@ -351,13 +354,13 @@ export default function ClientProfilPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description de l'entreprise</Label>
+                <Label htmlFor="description" className="text-gray-300">Description de l'entreprise</Label>
                 <textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
-                  className="w-full px-3 py-2 rounded-md border border-input bg-background resize-none"
+                  className="w-full px-3 py-2 rounded-md border border-gray-400 bg-gray-500 text-white placeholder:text-gray-300 resize-none"
                   placeholder="Presentez votre entreprise en quelques lignes..."
                 />
               </div>
@@ -365,47 +368,51 @@ export default function ClientProfilPage() {
           </Card>
 
           {/* Coordonnees */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle>Coordonnees</CardTitle>
+              <CardTitle className="text-white">Coordonnees</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="adresse">Adresse</Label>
+                <Label htmlFor="adresse" className="text-gray-300">Adresse</Label>
                 <Input
                   id="adresse"
                   value={formData.adresse}
                   onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="codePostal">Code postal</Label>
+                  <Label htmlFor="codePostal" className="text-gray-300">Code postal</Label>
                   <Input
                     id="codePostal"
                     value={formData.codePostal}
                     onChange={(e) => setFormData({ ...formData, codePostal: e.target.value })}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     maxLength={5}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ville">Ville</Label>
+                  <Label htmlFor="ville" className="text-gray-300">Ville</Label>
                   <Input
                     id="ville"
                     value={formData.ville}
                     onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="siteWeb">Site web</Label>
+                <Label htmlFor="siteWeb" className="text-gray-300">Site web</Label>
                 <Input
                   id="siteWeb"
                   type="url"
                   value={formData.siteWeb}
                   onChange={(e) => setFormData({ ...formData, siteWeb: e.target.value })}
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   placeholder="https://"
                 />
               </div>
@@ -413,25 +420,25 @@ export default function ClientProfilPage() {
           </Card>
 
           {/* Contact principal */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle>Contact principal</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Contact principal</CardTitle>
+              <CardDescription className="text-gray-300">
                 Responsable du compte entreprise
               </CardDescription>
             </CardHeader>
             <CardContent>
               {contactPrincipal ? (
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-4 p-4 bg-gray-700 rounded-lg">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                     <Users className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-white">
                       {contactPrincipal.prenom} {contactPrincipal.nom}
                     </p>
-                    <p className="text-sm text-gray-500">{contactPrincipal.fonction || 'Contact principal'}</p>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                    <p className="text-sm text-gray-300">{contactPrincipal.fonction || 'Contact principal'}</p>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-300">
                       <span className="flex items-center gap-1">
                         <Mail className="w-3 h-3" />
                         {contactPrincipal.email}
@@ -446,7 +453,7 @@ export default function ClientProfilPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500">Aucun contact principal defini</p>
+                <p className="text-gray-300">Aucun contact principal defini</p>
               )}
             </CardContent>
           </Card>

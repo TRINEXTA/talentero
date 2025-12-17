@@ -203,7 +203,7 @@ export default function ClientOffreDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -211,9 +211,9 @@ export default function ClientOffreDetailPage() {
 
   if (!offre) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Offre non trouvee</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">Offre non trouvee</h2>
           <Link href="/c/offres">
             <Button>Retour aux offres</Button>
           </Link>
@@ -223,30 +223,30 @@ export default function ClientOffreDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
                 <Link href="/c/offres" className="text-primary font-medium">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -269,21 +269,21 @@ export default function ClientOffreDetailPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-6">
-          <Link href="/c/offres" className="flex items-center text-gray-500 hover:text-gray-700">
+          <Link href="/c/offres" className="flex items-center text-gray-300 hover:text-primary">
             <ChevronLeft className="w-4 h-4 mr-1" />
             Retour aux offres
           </Link>
         </div>
 
         {/* En-tete offre */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="bg-gray-600 border-gray-500 border rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">{offre.titre}</h1>
+                <h1 className="text-2xl font-bold text-white">{offre.titre}</h1>
                 {getStatutBadge(offre.statut)}
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-300">
                 Code: {offre.codeUnique} | Creee le {formatDate(offre.createdAt)}
                 {offre.publieLe && ` | Publiee le ${formatDate(offre.publieLe)}`}
               </p>
@@ -309,21 +309,21 @@ export default function ClientOffreDetailPage() {
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-8 mt-6 pt-6 border-t">
+          <div className="flex items-center gap-8 mt-6 pt-6 border-t border-gray-500">
             <div className="flex items-center gap-2">
               <Eye className="w-5 h-5 text-gray-400" />
-              <span className="font-semibold">{offre.nbVues}</span>
-              <span className="text-gray-500">vues</span>
+              <span className="font-semibold text-white">{offre.nbVues}</span>
+              <span className="text-gray-300">vues</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              <span className="font-semibold">{offre._count.candidatures}</span>
-              <span className="text-gray-500">candidature(s)</span>
+              <span className="font-semibold text-white">{offre._count.candidatures}</span>
+              <span className="text-gray-300">candidature(s)</span>
             </div>
             <div className="flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-500" />
-              <span className="font-semibold">{offre._count.matchs}</span>
-              <span className="text-gray-500">match(s)</span>
+              <span className="font-semibold text-white">{offre._count.matchs}</span>
+              <span className="text-gray-300">match(s)</span>
             </div>
             {offre.shortlist && (
               <Link href={`/c/shortlists/${offre.shortlist.uid}`}>
@@ -339,48 +339,48 @@ export default function ClientOffreDetailPage() {
           {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-6">
             {/* Description */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
                 <CardTitle>Description du poste</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-wrap">{offre.description}</p>
+                  <p className="whitespace-pre-wrap text-gray-300">{offre.description}</p>
                 </div>
               </CardContent>
             </Card>
 
             {offre.responsabilites && (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardHeader>
                   <CardTitle>Responsabilites</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap text-gray-700">{offre.responsabilites}</p>
+                  <p className="whitespace-pre-wrap text-gray-300">{offre.responsabilites}</p>
                 </CardContent>
               </Card>
             )}
 
             {offre.profilRecherche && (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardHeader>
                   <CardTitle>Profil recherche</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap text-gray-700">{offre.profilRecherche}</p>
+                  <p className="whitespace-pre-wrap text-gray-300">{offre.profilRecherche}</p>
                 </CardContent>
               </Card>
             )}
 
             {/* Competences */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
                 <CardTitle>Competences</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {offre.competencesRequises.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Requises :</p>
+                    <p className="text-sm font-medium text-gray-300 mb-2">Requises :</p>
                     <div className="flex flex-wrap gap-2">
                       {offre.competencesRequises.map((comp, i) => (
                         <Badge key={i} className="bg-primary/10 text-primary">
@@ -392,7 +392,7 @@ export default function ClientOffreDetailPage() {
                 )}
                 {offre.competencesSouhaitees.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Souhaitees :</p>
+                    <p className="text-sm font-medium text-gray-300 mb-2">Souhaitees :</p>
                     <div className="flex flex-wrap gap-2">
                       {offre.competencesSouhaitees.map((comp, i) => (
                         <Badge key={i} variant="outline">
@@ -406,7 +406,7 @@ export default function ClientOffreDetailPage() {
             </Card>
 
             {/* Candidatures */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
                 <CardTitle>Candidatures ({offre.candidatures.length})</CardTitle>
                 <CardDescription>
@@ -417,14 +417,14 @@ export default function ClientOffreDetailPage() {
                 {offre.candidatures.length === 0 ? (
                   <div className="text-center py-8">
                     <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Aucune candidature pour le moment</p>
+                    <p className="text-gray-300">Aucune candidature pour le moment</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {offre.candidatures.map((candidature) => (
                       <div
                         key={candidature.uid}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
+                        className="flex items-center gap-4 p-4 rounded-lg bg-gray-500 hover:bg-gray-400 transition"
                       >
                         <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                           {candidature.talent.photoUrl ? (
@@ -439,15 +439,15 @@ export default function ClientOffreDetailPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-white">
                               {candidature.talent.prenom} {candidature.talent.nom}
                             </span>
                             {getCandidatureStatutBadge(candidature.statut)}
                           </div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-300">
                             {candidature.talent.titrePoste || 'Consultant IT'}
                           </p>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-300">
                             {candidature.talent.ville && (
                               <span className="flex items-center gap-1">
                                 <MapPin className="w-3 h-3" />
@@ -480,7 +480,7 @@ export default function ClientOffreDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Infos mission */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
                 <CardTitle>Informations</CardTitle>
               </CardHeader>
@@ -489,8 +489,8 @@ export default function ClientOffreDetailPage() {
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">Localisation</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-white">Localisation</p>
+                      <p className="text-sm text-gray-300">
                         {offre.lieu}
                         {offre.codePostal && ` (${offre.codePostal})`}
                       </p>
@@ -501,8 +501,8 @@ export default function ClientOffreDetailPage() {
                 <div className="flex items-start gap-3">
                   <Briefcase className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="font-medium">Modalite</p>
-                    <p className="text-sm text-gray-600">{getMobiliteLabel(offre.mobilite)}</p>
+                    <p className="font-medium text-white">Modalite</p>
+                    <p className="text-sm text-gray-300">{getMobiliteLabel(offre.mobilite)}</p>
                   </div>
                 </div>
 
@@ -510,8 +510,8 @@ export default function ClientOffreDetailPage() {
                   <div className="flex items-start gap-3">
                     <Euro className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">TJM</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-white">TJM</p>
+                      <p className="text-sm text-gray-300">
                         {offre.tjmAffiche || (
                           offre.tjmMin && offre.tjmMax
                             ? `${offre.tjmMin} - ${offre.tjmMax} EUR/j`
@@ -528,8 +528,8 @@ export default function ClientOffreDetailPage() {
                   <div className="flex items-start gap-3">
                     <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">Duree</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-white">Duree</p>
+                      <p className="text-sm text-gray-300">
                         {getDureeLabel(offre.dureeNombre, offre.dureeUnite)}
                         {offre.renouvelable && ' (renouvelable)'}
                       </p>
@@ -541,8 +541,8 @@ export default function ClientOffreDetailPage() {
                   <div className="flex items-start gap-3">
                     <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">Date de debut</p>
-                      <p className="text-sm text-gray-600">{formatDate(offre.dateDebut)}</p>
+                      <p className="font-medium text-white">Date de debut</p>
+                      <p className="text-sm text-gray-300">{formatDate(offre.dateDebut)}</p>
                     </div>
                   </div>
                 )}
@@ -551,8 +551,8 @@ export default function ClientOffreDetailPage() {
                   <div className="flex items-start gap-3">
                     <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">Experience requise</p>
-                      <p className="text-sm text-gray-600">{offre.experienceMin}+ ans</p>
+                      <p className="font-medium text-white">Experience requise</p>
+                      <p className="text-sm text-gray-300">{offre.experienceMin}+ ans</p>
                     </div>
                   </div>
                 )}
@@ -560,7 +560,7 @@ export default function ClientOffreDetailPage() {
             </Card>
 
             {/* Actions */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
@@ -586,15 +586,15 @@ export default function ClientOffreDetailPage() {
 
             {/* Shortlist */}
             {offre.shortlist && (
-              <Card className="bg-green-50 border-green-200">
+              <Card className="bg-green-900/30 border-green-700">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-green-600" />
+                    <Star className="w-5 h-5 text-green-400" />
                     Shortlist
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-gray-300 mb-4">
                     {offre.shortlist._count.candidats} candidat(s) selectionne(s)
                   </p>
                   <Link href={`/c/shortlists/${offre.shortlist.uid}`}>

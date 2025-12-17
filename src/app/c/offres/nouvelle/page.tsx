@@ -174,16 +174,16 @@ export default function NouvelleOffrePage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 border-b sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <Link href="/c/offres" className="text-gray-500 hover:text-gray-700">
+              <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                 <ChevronLeft className="w-5 h-5" />
               </Link>
-              <h1 className="text-lg font-semibold text-gray-900">Nouvelle offre</h1>
+              <h1 className="text-lg font-semibold text-white">Nouvelle offre</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -220,14 +220,14 @@ export default function NouvelleOffrePage() {
 
         <div className="space-y-6">
           {/* Informations principales */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <CardTitle>Informations principales</CardTitle>
               <CardDescription>Décrivez le poste et la mission</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Titre de l'offre *
                 </label>
                 <Input
@@ -235,11 +235,12 @@ export default function NouvelleOffrePage() {
                   value={formData.titre}
                   onChange={handleChange}
                   placeholder="Ex: Développeur React Senior"
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Description de la mission *
                 </label>
                 <textarea
@@ -247,13 +248,13 @@ export default function NouvelleOffrePage() {
                   value={formData.description}
                   onChange={handleChange}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 bg-gray-500 border border-gray-400 text-white placeholder:text-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Décrivez la mission, les responsabilités, les objectifs..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Contexte (optionnel)
                 </label>
                 <textarea
@@ -261,7 +262,7 @@ export default function NouvelleOffrePage() {
                   value={formData.contexte}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 bg-gray-500 border border-gray-400 text-white placeholder:text-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Contexte du projet, équipe, environnement technique..."
                 />
               </div>
@@ -269,14 +270,14 @@ export default function NouvelleOffrePage() {
           </Card>
 
           {/* Compétences */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <CardTitle>Compétences</CardTitle>
               <CardDescription>Définissez les compétences recherchées</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Compétences requises
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -302,6 +303,7 @@ export default function NouvelleOffrePage() {
                     }}
                     onFocus={() => setShowSuggestions(true)}
                     placeholder="Tapez pour ajouter une compétence..."
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && competenceInput.trim()) {
                         e.preventDefault()
@@ -310,13 +312,13 @@ export default function NouvelleOffrePage() {
                     }}
                   />
                   {showSuggestions && competenceInput && filteredSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                       {filteredSuggestions.slice(0, 10).map((comp) => (
                         <button
                           key={comp}
                           type="button"
                           onClick={() => addCompetence(comp, 'requises')}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
+                          className="w-full px-4 py-2 text-left text-white hover:bg-gray-500 text-sm"
                         >
                           {comp}
                         </button>
@@ -327,7 +329,7 @@ export default function NouvelleOffrePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Compétences souhaitées (optionnel)
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -353,6 +355,7 @@ export default function NouvelleOffrePage() {
                     }}
                     onFocus={() => setShowSuggestionsSouhait(true)}
                     placeholder="Compétences bonus..."
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && competenceSouhaiteInput.trim()) {
                         e.preventDefault()
@@ -361,13 +364,13 @@ export default function NouvelleOffrePage() {
                     }}
                   />
                   {showSuggestionsSouhait && competenceSouhaiteInput && filteredSuggestionsSouhait.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-gray-600 border border-gray-500 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                       {filteredSuggestionsSouhait.slice(0, 10).map((comp) => (
                         <button
                           key={comp}
                           type="button"
                           onClick={() => addCompetence(comp, 'souhaitees')}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 text-sm"
+                          className="w-full px-4 py-2 text-left text-white hover:bg-gray-500 text-sm"
                         >
                           {comp}
                         </button>
@@ -378,7 +381,7 @@ export default function NouvelleOffrePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Expérience minimum (années)
                 </label>
                 <Input
@@ -388,14 +391,14 @@ export default function NouvelleOffrePage() {
                   onChange={handleChange}
                   min="0"
                   max="30"
-                  className="w-32"
+                  className="w-32 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Conditions */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <CardTitle>Conditions</CardTitle>
               <CardDescription>Budget, lieu et modalités</CardDescription>
@@ -403,7 +406,7 @@ export default function NouvelleOffrePage() {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     TJM minimum (€)
                   </label>
                   <Input
@@ -413,10 +416,11 @@ export default function NouvelleOffrePage() {
                     onChange={handleChange}
                     min="0"
                     placeholder="400"
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     TJM maximum (€)
                   </label>
                   <Input
@@ -426,12 +430,13 @@ export default function NouvelleOffrePage() {
                     onChange={handleChange}
                     min="0"
                     placeholder="600"
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Lieu de mission
                 </label>
                 <Input
@@ -439,11 +444,12 @@ export default function NouvelleOffrePage() {
                   value={formData.lieu}
                   onChange={handleChange}
                   placeholder="Paris, Lyon, Remote..."
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Mode de travail
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -455,7 +461,7 @@ export default function NouvelleOffrePage() {
                       className={`px-4 py-2 rounded-lg border text-sm transition-colors ${
                         formData.modesTravail.includes(mode.value)
                           ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-primary'
+                          : 'bg-gray-600 text-gray-200 border-gray-400 hover:border-primary'
                       }`}
                     >
                       {mode.label}
@@ -466,7 +472,7 @@ export default function NouvelleOffrePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Durée de la mission
                   </label>
                   <Input
@@ -474,10 +480,11 @@ export default function NouvelleOffrePage() {
                     value={formData.dureeMission}
                     onChange={handleChange}
                     placeholder="6 mois, 1 an, longue durée..."
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Date de début souhaitée
                   </label>
                   <Input
@@ -485,19 +492,20 @@ export default function NouvelleOffrePage() {
                     name="dateDebut"
                     value={formData.dateDebut}
                     onChange={handleChange}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Urgence
                 </label>
                 <select
                   name="urgence"
                   value={formData.urgence}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 bg-gray-500 border border-gray-400 text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {URGENCES.map((u) => (
                     <option key={u.value} value={u.value}>

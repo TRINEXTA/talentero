@@ -145,9 +145,9 @@ export default function TalentContratsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
@@ -155,19 +155,19 @@ export default function TalentContratsPage() {
                 <Logo size="sm" showText />
               </Link>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
-                <Link href="/t/entretiens" className="text-gray-600 hover:text-gray-900">
+                <Link href="/t/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
                 <Link href="/t/contrats" className="text-primary font-medium">
@@ -200,65 +200,65 @@ export default function TalentContratsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes contrats</h1>
-            <p className="text-gray-600">Consultez et signez vos contrats de mission</p>
+            <h1 className="text-2xl font-bold text-white">Mes contrats</h1>
+            <p className="text-gray-300">Consultez et signez vos contrats de mission</p>
           </div>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <FileSignature className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.total}</p>
-                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="text-2xl font-bold text-white">{stats.total}</p>
+                    <p className="text-sm text-gray-300">Total</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-yellow-100 rounded-lg">
                     <Clock className="h-5 w-5 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.enAttenteSignature}</p>
-                    <p className="text-sm text-gray-500">À signer</p>
+                    <p className="text-2xl font-bold text-white">{stats.enAttenteSignature}</p>
+                    <p className="text-sm text-gray-300">À signer</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-100 rounded-lg">
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.actifs}</p>
-                    <p className="text-sm text-gray-500">Actifs</p>
+                    <p className="text-2xl font-bold text-white">{stats.actifs}</p>
+                    <p className="text-sm text-gray-300">Actifs</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gray-100 rounded-lg">
                     <FileText className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.termines}</p>
-                    <p className="text-sm text-gray-500">Terminés</p>
+                    <p className="text-2xl font-bold text-white">{stats.termines}</p>
+                    <p className="text-sm text-gray-300">Terminés</p>
                   </div>
                 </div>
               </CardContent>
@@ -289,10 +289,10 @@ export default function TalentContratsPage() {
           {/* Contracts List */}
           <div className="lg:col-span-2 space-y-4">
             {filteredContrats.length === 0 ? (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardContent className="py-12 text-center">
                   <FileSignature className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucun contrat trouvé</p>
+                  <p className="text-gray-300">Aucun contrat trouvé</p>
                 </CardContent>
               </Card>
             ) : (
@@ -304,7 +304,7 @@ export default function TalentContratsPage() {
                 return (
                   <Card
                     key={contrat.uid}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
+                    className={`bg-gray-600 border-gray-500 cursor-pointer transition-all hover:shadow-md ${
                       selectedContrat?.uid === contrat.uid ? 'ring-2 ring-primary' : ''
                     } ${canSign ? 'border-yellow-300' : ''}`}
                     onClick={() => setSelectedContrat(contrat)}
@@ -313,7 +313,7 @@ export default function TalentContratsPage() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-lg">{contrat.numero}</h3>
+                            <h3 className="font-semibold text-lg text-white">{contrat.numero}</h3>
                             <Badge className={config.color}>
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {config.label}
@@ -325,8 +325,8 @@ export default function TalentContratsPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-gray-900 mb-2">{contrat.titre}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <p className="text-white mb-2">{contrat.titre}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-300">
                             <span className="flex items-center gap-1">
                               <Building2 className="h-4 w-4" />
                               {contrat.client.raisonSociale}
@@ -352,13 +352,13 @@ export default function TalentContratsPage() {
           {/* Contract Detail */}
           <div className="lg:col-span-1">
             {selectedContrat ? (
-              <Card className="sticky top-24">
+              <Card className="bg-gray-600 border-gray-500 sticky top-24">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-white">
                     <FileSignature className="h-5 w-5" />
                     {selectedContrat.numero}
                   </CardTitle>
-                  <CardDescription>{selectedContrat.titre}</CardDescription>
+                  <CardDescription className="text-gray-300">{selectedContrat.titre}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Status */}
@@ -375,7 +375,7 @@ export default function TalentContratsPage() {
 
                   {/* Client Info */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-gray-700">Client</h4>
+                    <h4 className="font-medium text-sm text-white">Client</h4>
                     <div className="flex items-center gap-3">
                       {selectedContrat.client.logoUrl ? (
                         <img
@@ -384,67 +384,67 @@ export default function TalentContratsPage() {
                           className="w-10 h-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <Building2 className="w-5 h-5 text-gray-500" />
+                        <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-gray-300" />
                         </div>
                       )}
                       <div>
-                        <p className="font-medium">{selectedContrat.client.raisonSociale}</p>
+                        <p className="font-medium text-white">{selectedContrat.client.raisonSociale}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Details */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-gray-700">Détails</h4>
+                    <h4 className="font-medium text-sm text-white">Détails</h4>
                     <div className="text-sm space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Type</span>
-                        <span>{typeContratLabels[selectedContrat.typeContrat]}</span>
+                        <span className="text-gray-300">Type</span>
+                        <span className="text-white">{typeContratLabels[selectedContrat.typeContrat]}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Date de début</span>
-                        <span>{format(new Date(selectedContrat.dateDebut), 'd MMMM yyyy', { locale: fr })}</span>
+                        <span className="text-gray-300">Date de début</span>
+                        <span className="text-white">{format(new Date(selectedContrat.dateDebut), 'd MMMM yyyy', { locale: fr })}</span>
                       </div>
                       {selectedContrat.dateFin && (
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Date de fin</span>
-                          <span>{format(new Date(selectedContrat.dateFin), 'd MMMM yyyy', { locale: fr })}</span>
+                          <span className="text-gray-300">Date de fin</span>
+                          <span className="text-white">{format(new Date(selectedContrat.dateFin), 'd MMMM yyyy', { locale: fr })}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span className="text-gray-500">TJM</span>
-                        <span className="font-medium">{selectedContrat.tjm} €</span>
+                        <span className="text-gray-300">TJM</span>
+                        <span className="font-medium text-white">{selectedContrat.tjm} €</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Signatures */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-gray-700">Signatures</h4>
+                    <h4 className="font-medium text-sm text-white">Signatures</h4>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Votre signature</span>
+                        <span className="text-gray-300">Votre signature</span>
                         {selectedContrat.signeParTalent ? (
                           <Badge className="bg-green-100 text-green-800">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Signé
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-gray-500">
+                          <Badge variant="outline" className="border-gray-400 text-gray-200">
                             En attente
                           </Badge>
                         )}
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Client</span>
+                        <span className="text-gray-300">Client</span>
                         {selectedContrat.signeParClient ? (
                           <Badge className="bg-green-100 text-green-800">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Signé
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-gray-500">
+                          <Badge variant="outline" className="border-gray-400 text-gray-200">
                             En attente
                           </Badge>
                         )}
@@ -454,7 +454,7 @@ export default function TalentContratsPage() {
 
                   {/* Sign Button */}
                   {needsSignature(selectedContrat) && (
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t border-gray-500">
                       <Button
                         className="w-full"
                         onClick={() => handleSign(selectedContrat.uid)}
@@ -463,7 +463,7 @@ export default function TalentContratsPage() {
                         <PenTool className="h-4 w-4 mr-2" />
                         {signLoading ? 'Signature...' : 'Signer le contrat'}
                       </Button>
-                      <p className="text-xs text-gray-500 text-center mt-2">
+                      <p className="text-xs text-gray-300 text-center mt-2">
                         En signant, vous acceptez les termes du contrat
                       </p>
                     </div>
@@ -471,10 +471,10 @@ export default function TalentContratsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardContent className="py-12 text-center">
                   <Eye className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Sélectionnez un contrat pour voir les détails</p>
+                  <p className="text-gray-300">Sélectionnez un contrat pour voir les détails</p>
                 </CardContent>
               </Card>
             )}

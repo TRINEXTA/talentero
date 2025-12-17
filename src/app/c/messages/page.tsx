@@ -105,33 +105,33 @@ export default function ClientMessagesPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
                 <Link href="/c/messages" className="text-primary font-medium">
                   Messages
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -153,20 +153,20 @@ export default function ClientMessagesPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Messages</h1>
+          <p className="text-gray-300 mt-1">
             Echangez avec TRINEXTA concernant vos offres
           </p>
         </div>
 
         {/* Recherche */}
         <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
           <Input
             placeholder="Rechercher dans les conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
           />
         </div>
 
@@ -176,13 +176,13 @@ export default function ClientMessagesPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="py-16 text-center">
-              <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">
                 {search ? 'Aucun resultat' : 'Aucune conversation'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-300">
                 {search
                   ? 'Essayez une autre recherche'
                   : 'Vos echanges avec TRINEXTA apparaitront ici'}
@@ -193,7 +193,7 @@ export default function ClientMessagesPage() {
           <div className="space-y-2">
             {filteredConversations.map((conv) => (
               <Link key={conv.uid} href={`/c/messages/${conv.uid}`}>
-                <Card className={`hover:shadow-md transition-shadow cursor-pointer ${conv.unreadCount > 0 ? 'bg-blue-50/50 border-blue-200' : ''}`}>
+                <Card className={`hover:shadow-md transition-shadow cursor-pointer ${conv.unreadCount > 0 ? 'bg-blue-900/30 border-blue-400' : 'bg-gray-600 border-gray-500'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
                       {/* Avatar / Icon */}
@@ -204,7 +204,7 @@ export default function ClientMessagesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <h3 className={`font-semibold text-gray-900 truncate ${conv.unreadCount > 0 ? 'font-bold' : ''}`}>
+                            <h3 className={`font-semibold text-white truncate ${conv.unreadCount > 0 ? 'font-bold' : ''}`}>
                               {conv.offre?.titre || conv.sujet || 'Conversation'}
                             </h3>
                           </div>
@@ -214,32 +214,32 @@ export default function ClientMessagesPage() {
                                 {conv.unreadCount}
                               </Badge>
                             )}
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-300">
                               {conv.lastMessage ? formatDate(conv.lastMessage.createdAt) : ''}
                             </span>
                           </div>
                         </div>
 
                         {conv.lastMessage && (
-                          <p className={`text-sm mt-1 truncate ${conv.unreadCount > 0 ? 'text-gray-900' : 'text-gray-500'}`}>
+                          <p className={`text-sm mt-1 truncate ${conv.unreadCount > 0 ? 'text-white' : 'text-gray-300'}`}>
                             {conv.lastMessage.isFromMe && <span className="text-gray-400">Vous: </span>}
                             {conv.lastMessage.contenu}
                           </p>
                         )}
 
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                             {conv.offre?.codeUnique}
                           </Badge>
                           {conv.participants.some(p => p.isAdmin) && (
-                            <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                            <Badge variant="outline" className="text-xs bg-red-900/30 text-red-300 border-red-400">
                               TRINEXTA
                             </Badge>
                           )}
                         </div>
                       </div>
 
-                      <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>

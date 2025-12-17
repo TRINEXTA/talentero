@@ -137,30 +137,30 @@ export default function ClientOffresPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
                 <Link href="/c/offres" className="text-primary font-medium">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -184,8 +184,8 @@ export default function ClientOffresPage() {
         {/* En-tête */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes offres</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-white">Mes offres</h1>
+            <p className="text-gray-300 mt-1">
               Gérez vos offres de mission et suivez les candidatures
             </p>
           </div>
@@ -242,13 +242,13 @@ export default function ClientOffresPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : offres.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="py-16 text-center">
               <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 {filter ? 'Aucune offre trouvée' : 'Aucune offre créée'}
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-300 mb-6">
                 {filter
                   ? 'Essayez un autre filtre'
                   : 'Créez votre première offre pour recevoir des candidatures'}
@@ -264,20 +264,20 @@ export default function ClientOffresPage() {
         ) : (
           <div className="space-y-4">
             {offres.map((offre) => (
-              <Card key={offre.uid} className="hover:shadow-md transition-shadow">
+              <Card key={offre.uid} className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <Link href={`/c/offres/${offre.uid}`}>
-                          <h3 className="text-lg font-semibold text-gray-900 hover:text-primary">
+                          <h3 className="text-lg font-semibold text-white hover:text-primary">
                             {offre.titre}
                           </h3>
                         </Link>
                         {getStatutBadge(offre.statut)}
                       </div>
 
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">
                         {offre.lieu && (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" />
@@ -310,18 +310,18 @@ export default function ClientOffresPage() {
                         <div className="flex items-center gap-2">
                           <Users className="w-5 h-5 text-primary" />
                           <span className="font-medium">{offre._count.candidatures}</span>
-                          <span className="text-gray-500">candidature(s)</span>
+                          <span className="text-gray-300">candidature(s)</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Eye className="w-5 h-5 text-gray-400" />
                           <span className="font-medium">{offre.nbVues}</span>
-                          <span className="text-gray-500">vues</span>
+                          <span className="text-gray-300">vues</span>
                         </div>
                         {offre._count.shortlists > 0 && (
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-5 h-5 text-green-500" />
                             <span className="font-medium">{offre._count.shortlists}</span>
-                            <span className="text-gray-500">shortlist(s)</span>
+                            <span className="text-gray-300">shortlist(s)</span>
                           </div>
                         )}
                       </div>
@@ -345,16 +345,16 @@ export default function ClientOffresPage() {
                         </Button>
 
                         {actionMenuOpen === offre.uid && (
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-gray-600 border-gray-500 rounded-lg shadow-lg border py-1 z-10">
                             <Link href={`/c/offres/${offre.uid}/modifier`}>
-                              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2">
+                              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-500 flex items-center gap-2">
                                 <Edit className="w-4 h-4" />
                                 Modifier
                               </button>
                             </Link>
                             <button
                               onClick={() => handleAction(offre.uid, 'dupliquer')}
-                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-500 flex items-center gap-2"
                             >
                               <Copy className="w-4 h-4" />
                               Dupliquer
@@ -362,7 +362,7 @@ export default function ClientOffresPage() {
                             {offre.statut === 'BROUILLON' && (
                               <button
                                 onClick={() => handleAction(offre.uid, 'publier')}
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-green-600"
+                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-500 flex items-center gap-2 text-green-600"
                               >
                                 <CheckCircle className="w-4 h-4" />
                                 Publier
@@ -371,7 +371,7 @@ export default function ClientOffresPage() {
                             {offre.statut === 'PUBLIEE' && (
                               <button
                                 onClick={() => handleAction(offre.uid, 'cloturer')}
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-orange-600"
+                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-500 flex items-center gap-2 text-orange-600"
                               >
                                 <Archive className="w-4 h-4" />
                                 Clôturer
@@ -380,7 +380,7 @@ export default function ClientOffresPage() {
                             {offre.statut !== 'ARCHIVEE' && (
                               <button
                                 onClick={() => handleAction(offre.uid, 'archiver')}
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-500 flex items-center gap-2"
                               >
                                 <Archive className="w-4 h-4" />
                                 Archiver
@@ -389,7 +389,7 @@ export default function ClientOffresPage() {
                             {offre.statut === 'BROUILLON' && (
                               <button
                                 onClick={() => handleAction(offre.uid, 'supprimer')}
-                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-500 flex items-center gap-2 text-red-600"
                               >
                                 <Trash2 className="w-4 h-4" />
                                 Supprimer

@@ -115,36 +115,36 @@ export default function TalentOffresPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Users className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
                 <Link href="/t/offres" className="text-primary font-medium">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
-                <Link href="/t/planning" className="text-gray-600 hover:text-primary">
+                <Link href="/t/planning" className="text-gray-300 hover:text-primary">
                   Planning
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -166,14 +166,14 @@ export default function TalentOffresPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Offres de missions</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Offres de missions</h1>
+          <p className="text-gray-300 mt-1">
             Trouvez votre prochaine mission freelance
           </p>
         </div>
 
         {/* Recherche */}
-        <Card className="mb-8">
+        <Card className="mb-8 bg-gray-600 border-gray-500">
           <CardContent className="p-6">
             <div className="flex flex-wrap gap-4">
               <div className="relative flex-1 min-w-[200px]">
@@ -183,7 +183,7 @@ export default function TalentOffresPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10"
+                  className="pl-10 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
               <div className="relative flex-1 min-w-[200px]">
@@ -193,7 +193,7 @@ export default function TalentOffresPage() {
                   value={competence}
                   onChange={(e) => setCompetence(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10"
+                  className="pl-10 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
               <div className="relative flex-1 min-w-[200px]">
@@ -203,7 +203,7 @@ export default function TalentOffresPage() {
                   value={lieu}
                   onChange={(e) => setLieu(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10"
+                  className="pl-10 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
               <Button onClick={handleSearch}>
@@ -220,13 +220,13 @@ export default function TalentOffresPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : offres.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="py-16 text-center">
               <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 Aucune offre trouvee
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-300">
                 Essayez de modifier vos criteres de recherche
               </p>
             </CardContent>
@@ -234,13 +234,13 @@ export default function TalentOffresPage() {
         ) : (
           <div className="space-y-4">
             {offres.map((offre) => (
-              <Card key={offre.uid} className="hover:shadow-md transition-shadow">
+              <Card key={offre.uid} className="hover:shadow-md transition-shadow bg-gray-600 border-gray-500">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <Link href={`/t/offres/${offre.slug}`}>
-                          <h3 className="text-lg font-semibold text-gray-900 hover:text-primary">
+                          <h3 className="text-lg font-semibold text-white hover:text-primary">
                             {offre.titre}
                           </h3>
                         </Link>
@@ -257,13 +257,13 @@ export default function TalentOffresPage() {
                       </div>
 
                       {offre.client && (
-                        <p className="text-gray-600 mb-3 flex items-center gap-1">
+                        <p className="text-gray-300 mb-3 flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
                           {offre.client.raisonSociale}
                         </p>
                       )}
 
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">
                         {offre.lieu && (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" />
@@ -310,7 +310,7 @@ export default function TalentOffresPage() {
                               <Badge
                                 key={i}
                                 variant="outline"
-                                className={`text-xs ${isMatched ? 'bg-green-50 border-green-300 text-green-700' : ''}`}
+                                className={`text-xs ${isMatched ? 'bg-green-50 border-green-300 text-green-700' : 'border-gray-400 text-gray-200'}`}
                               >
                                 {isMatched && <Star className="w-3 h-3 mr-1 fill-current" />}
                                 {comp}
@@ -318,7 +318,7 @@ export default function TalentOffresPage() {
                             )
                           })}
                           {offre.competencesRequises.length > 6 && (
-                            <Badge variant="outline" className="text-xs text-gray-400">
+                            <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                               +{offre.competencesRequises.length - 6}
                             </Badge>
                           )}
@@ -327,7 +327,7 @@ export default function TalentOffresPage() {
                     </div>
 
                     <div className="flex flex-col items-end gap-3 ml-4">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-300">
                         Publiée le {formatDate(offre.publieLe)}
                       </span>
                       <Link href={`/t/offres/${offre.slug}`}>

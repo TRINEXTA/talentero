@@ -123,30 +123,30 @@ export default function ClientShortlistsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
                 <Link href="/c/shortlists" className="text-primary font-medium">
                   Shortlists
                 </Link>
-                <Link href="/c/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/c/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -168,8 +168,8 @@ export default function ClientShortlistsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Shortlists</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Shortlists</h1>
+          <p className="text-gray-300 mt-1">
             Consultez les sélections de candidats préparées par TRINEXTA
           </p>
         </div>
@@ -179,13 +179,13 @@ export default function ClientShortlistsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : shortlists.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="py-16 text-center">
               <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 Aucune shortlist reçue
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-300 mb-6">
                 Les shortlists apparaîtront ici lorsque TRINEXTA vous enverra des sélections de candidats.
               </p>
               <Link href="/c/offres/nouvelle">
@@ -202,7 +202,7 @@ export default function ClientShortlistsPage() {
               {shortlists.map((shortlist) => (
                 <Card
                   key={shortlist.uid}
-                  className={`cursor-pointer transition-all ${
+                  className={`bg-gray-600 border-gray-500 cursor-pointer transition-all ${
                     selectedShortlist?.uid === shortlist.uid
                       ? 'ring-2 ring-primary shadow-md'
                       : 'hover:shadow-md'
@@ -211,14 +211,14 @@ export default function ClientShortlistsPage() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{shortlist.nom}</h3>
+                      <h3 className="font-semibold text-white">{shortlist.nom}</h3>
                       {getStatutBadge(shortlist.statut)}
                     </div>
-                    <p className="text-sm text-gray-500 mb-2">
+                    <p className="text-sm text-gray-300 mb-2">
                       Pour: {shortlist.offre.titre}
                     </p>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1 text-gray-600">
+                      <span className="flex items-center gap-1 text-gray-300">
                         <Users className="w-4 h-4" />
                         {shortlist.nbCandidats} candidat(s)
                       </span>
@@ -236,12 +236,12 @@ export default function ClientShortlistsPage() {
             {/* Détail de la shortlist sélectionnée */}
             <div className="lg:col-span-2">
               {selectedShortlist ? (
-                <Card>
+                <Card className="bg-gray-600 border-gray-500">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle>{selectedShortlist.nom}</CardTitle>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <CardTitle className="text-white">{selectedShortlist.nom}</CardTitle>
+                        <p className="text-sm text-gray-300 mt-1">
                           Offre: {selectedShortlist.offre.titre}
                         </p>
                       </div>
@@ -260,7 +260,7 @@ export default function ClientShortlistsPage() {
                       {selectedShortlist.candidats.map((candidat, index) => (
                         <div
                           key={candidat.uid}
-                          className="p-4 border rounded-lg hover:bg-gray-50"
+                          className="p-4 border border-gray-500 rounded-lg hover:bg-gray-500"
                         >
                           <div className="flex items-start gap-4">
                             <div className="flex-shrink-0">
@@ -279,7 +279,7 @@ export default function ClientShortlistsPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-xs text-gray-400">#{index + 1}</span>
-                                <h4 className="font-semibold text-gray-900">
+                                <h4 className="font-semibold text-white">
                                   {candidat.talent.prenom} {candidat.talent.nom}
                                 </h4>
                                 {candidat.scoreMatch && (
@@ -288,7 +288,7 @@ export default function ClientShortlistsPage() {
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">
+                              <p className="text-sm text-gray-300 mb-2">
                                 {candidat.talent.titrePoste || 'Consultant IT'}
                               </p>
 
@@ -299,13 +299,13 @@ export default function ClientShortlistsPage() {
                                   </Badge>
                                 ))}
                                 {candidat.talent.competences.length > 6 && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                                     +{candidat.talent.competences.length - 6}
                                   </Badge>
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                              <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                                 {candidat.talent.anneesExperience && (
                                   <span className="flex items-center gap-1">
                                     <Briefcase className="w-4 h-4" />
@@ -332,8 +332,8 @@ export default function ClientShortlistsPage() {
                               </div>
 
                               {candidat.commentaireAdmin && (
-                                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                                  <p className="text-sm text-gray-600">
+                                <div className="mt-3 p-3 bg-gray-500 rounded-lg">
+                                  <p className="text-sm text-gray-300">
                                     <MessageSquare className="w-4 h-4 inline mr-1" />
                                     {candidat.commentaireAdmin}
                                   </p>
@@ -374,10 +374,10 @@ export default function ClientShortlistsPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
+                <Card className="bg-gray-600 border-gray-500">
                   <CardContent className="py-16 text-center">
                     <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">
+                    <p className="text-gray-300">
                       Sélectionnez une shortlist pour voir les candidats
                     </p>
                   </CardContent>

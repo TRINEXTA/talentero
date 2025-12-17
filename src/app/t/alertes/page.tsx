@@ -215,46 +215,46 @@ export default function TalentAlertesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <User className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
-                <Link href="/t/entretiens" className="text-gray-600 hover:text-primary">
+                <Link href="/t/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
                 <Link href="/t/alertes" className="text-primary font-medium">
                   Alertes
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -275,11 +275,11 @@ export default function TalentAlertesPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Bell className="w-7 h-7" />
               Mes Alertes Emploi
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-300 mt-1">
               Recevez des notifications quand de nouvelles offres correspondent à vos critères
             </p>
           </div>
@@ -297,36 +297,36 @@ export default function TalentAlertesPage() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Bell className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-gray-500">Alertes créées</p>
+                <p className="text-2xl font-bold text-white">{stats.total}</p>
+                <p className="text-sm text-gray-300">Alertes créées</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.actives}</p>
-                <p className="text-sm text-gray-500">Alertes actives</p>
+                <p className="text-2xl font-bold text-white">{stats.actives}</p>
+                <p className="text-sm text-gray-300">Alertes actives</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.totalOffresEnvoyees}</p>
-                <p className="text-sm text-gray-500">Offres notifiées</p>
+                <p className="text-2xl font-bold text-white">{stats.totalOffresEnvoyees}</p>
+                <p className="text-sm text-gray-300">Offres notifiées</p>
               </div>
             </CardContent>
           </Card>
@@ -334,15 +334,15 @@ export default function TalentAlertesPage() {
 
         {/* Formulaire de création/édition */}
         {showForm && (
-          <Card className="mb-8">
+          <Card className="mb-8 bg-gray-600 border-gray-500">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>{editingId ? 'Modifier l\'alerte' : 'Nouvelle alerte'}</CardTitle>
+                <CardTitle className="text-white">{editingId ? 'Modifier l\'alerte' : 'Nouvelle alerte'}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => { setShowForm(false); resetForm(); }}>
                   <X className="w-5 h-5" />
                 </Button>
               </div>
-              <CardDescription>
+              <CardDescription className="text-gray-300">
                 Définissez vos critères pour recevoir des notifications sur les offres correspondantes
               </CardDescription>
             </CardHeader>
@@ -350,21 +350,22 @@ export default function TalentAlertesPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="nom">Nom de l'alerte</Label>
+                    <Label htmlFor="nom" className="text-gray-300">Nom de l'alerte</Label>
                     <Input
                       id="nom"
                       value={form.nom}
                       onChange={(e) => setForm({ ...form, nom: e.target.value })}
                       placeholder="Ex: Missions React Senior"
+                      className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="frequence">Fréquence des notifications</Label>
+                    <Label htmlFor="frequence" className="text-gray-300">Fréquence des notifications</Label>
                     <select
                       id="frequence"
                       value={form.frequence}
                       onChange={(e) => setForm({ ...form, frequence: e.target.value })}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      className="w-full h-10 px-3 rounded-md border bg-gray-500 border-gray-400 text-white"
                     >
                       <option value="INSTANTANEE">Instantanée</option>
                       <option value="QUOTIDIENNE">Résumé quotidien</option>
@@ -374,7 +375,7 @@ export default function TalentAlertesPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="competences">
+                  <Label htmlFor="competences" className="text-gray-300">
                     Compétences recherchées
                     <span className="text-gray-400 font-normal ml-2">(séparées par des virgules)</span>
                   </Label>
@@ -383,27 +384,29 @@ export default function TalentAlertesPage() {
                     value={form.competences}
                     onChange={(e) => setForm({ ...form, competences: e.target.value })}
                     placeholder="Ex: React, TypeScript, Node.js"
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="tjmMin">TJM minimum (€)</Label>
+                    <Label htmlFor="tjmMin" className="text-gray-300">TJM minimum (€)</Label>
                     <Input
                       id="tjmMin"
                       type="number"
                       value={form.tjmMin}
                       onChange={(e) => setForm({ ...form, tjmMin: e.target.value })}
                       placeholder="Ex: 500"
+                      className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="mobilite">Mode de travail</Label>
+                    <Label htmlFor="mobilite" className="text-gray-300">Mode de travail</Label>
                     <select
                       id="mobilite"
                       value={form.mobilite}
                       onChange={(e) => setForm({ ...form, mobilite: e.target.value })}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      className="w-full h-10 px-3 rounded-md border bg-gray-500 border-gray-400 text-white"
                     >
                       <option value="">Tous</option>
                       <option value="FULL_REMOTE">Full Remote</option>
@@ -412,7 +415,7 @@ export default function TalentAlertesPage() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="lieux">
+                    <Label htmlFor="lieux" className="text-gray-300">
                       Lieux
                       <span className="text-gray-400 font-normal ml-2">(séparés par des virgules)</span>
                     </Label>
@@ -421,18 +424,19 @@ export default function TalentAlertesPage() {
                       value={form.lieux}
                       onChange={(e) => setForm({ ...form, lieux: e.target.value })}
                       placeholder="Ex: Paris, Lyon, Remote"
+                      className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-500">
                   <div className="flex items-center gap-4">
                     <Button type="button" variant="outline" onClick={handlePreview}>
                       <Eye className="w-4 h-4 mr-2" />
                       Prévisualiser
                     </Button>
                     {previewCount !== null && (
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-300">
                         {previewCount} offre{previewCount !== 1 ? 's' : ''} correspondante{previewCount !== 1 ? 's' : ''}
                       </span>
                     )}
@@ -454,13 +458,13 @@ export default function TalentAlertesPage() {
 
         {/* Liste des alertes */}
         {alertes.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-12 text-center">
               <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-white mb-2">
                 Aucune alerte configurée
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-300 mb-4">
                 Créez votre première alerte pour être notifié des nouvelles offres
               </p>
               <Button onClick={() => setShowForm(true)}>
@@ -472,22 +476,22 @@ export default function TalentAlertesPage() {
         ) : (
           <div className="space-y-4">
             {alertes.map((alerte) => (
-              <Card key={alerte.id} className={!alerte.active ? 'opacity-60' : ''}>
+              <Card key={alerte.id} className={`bg-gray-600 border-gray-500 ${!alerte.active ? 'opacity-60' : ''}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">{alerte.nom || `Alerte #${alerte.id}`}</h3>
+                        <h3 className="font-semibold text-white">{alerte.nom || `Alerte #${alerte.id}`}</h3>
                         <Badge variant={alerte.active ? 'default' : 'secondary'}>
                           {alerte.active ? 'Active' : 'Inactive'}
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="border-gray-400 text-gray-200">
                           <Clock className="w-3 h-3 mr-1" />
                           {frequenceLabels[alerte.frequence]}
                         </Badge>
                       </div>
 
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-3">
                         {alerte.competences.length > 0 && (
                           <span className="flex items-center gap-1">
                             <Briefcase className="w-4 h-4" />

@@ -204,7 +204,7 @@ export default function TalentOffreDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -213,16 +213,16 @@ export default function TalentOffreDetailPage() {
   if (!offre) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Users className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
@@ -244,7 +244,7 @@ export default function TalentOffreDetailPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back link */}
-        <Link href="/t/offres" className="inline-flex items-center gap-1 text-gray-600 hover:text-primary mb-6">
+        <Link href="/t/offres" className="inline-flex items-center gap-1 text-gray-300 hover:text-primary mb-6">
           <ArrowLeft className="w-4 h-4" />
           Retour aux offres
         </Link>
@@ -253,18 +253,18 @@ export default function TalentOffreDetailPage() {
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Offre header */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">{offre.titre}</h1>
+                <h1 className="text-2xl font-bold text-white mb-4">{offre.titre}</h1>
 
                 {offre.client && (
-                  <p className="text-lg text-gray-600 mb-4 flex items-center gap-2">
+                  <p className="text-lg text-gray-300 mb-4 flex items-center gap-2">
                     <Building2 className="w-5 h-5" />
                     {offre.client.raisonSociale}
                   </p>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-gray-600">
+                <div className="flex flex-wrap gap-4 text-gray-300">
                   {offre.lieu && (
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
@@ -304,27 +304,27 @@ export default function TalentOffreDetailPage() {
             </Card>
 
             {/* Description */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
-                <CardTitle>Description de la mission</CardTitle>
+                <CardTitle className="text-white">Description de la mission</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose prose-gray max-w-none">
-                  <p className="whitespace-pre-wrap">{offre.description}</p>
+                  <p className="whitespace-pre-wrap text-gray-300">{offre.description}</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Compétences */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardHeader>
-                <CardTitle>Compétences recherchées</CardTitle>
+                <CardTitle className="text-white">Compétences recherchées</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {offre.competencesRequises.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Requises</h4>
+                      <h4 className="text-sm font-medium text-white mb-2">Requises</h4>
                       <div className="flex flex-wrap gap-2">
                         {offre.competencesRequises.map((comp, i) => {
                           const isMatched = matching?.details.competences.matched.some(
@@ -347,7 +347,7 @@ export default function TalentOffreDetailPage() {
 
                   {offre.competencesSouhaitees.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Souhaitées (bonus)</h4>
+                      <h4 className="text-sm font-medium text-white mb-2">Souhaitées (bonus)</h4>
                       <div className="flex flex-wrap gap-2">
                         {offre.competencesSouhaitees.map((comp, i) => {
                           const isMatched = matching?.details.competences.bonus.some(
@@ -357,7 +357,7 @@ export default function TalentOffreDetailPage() {
                             <Badge
                               key={i}
                               variant="outline"
-                              className={isMatched ? 'bg-blue-50 border-blue-300 text-blue-700' : 'text-gray-500'}
+                              className={isMatched ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-400 text-gray-200'}
                             >
                               {isMatched && <Star className="w-3 h-3 mr-1" />}
                               {comp}
@@ -370,7 +370,7 @@ export default function TalentOffreDetailPage() {
 
                   {offre.experienceMin && (
                     <div className="pt-2">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-300">
                         Expérience minimum: <strong>{offre.experienceMin} an(s)</strong>
                       </span>
                     </div>
@@ -384,14 +384,14 @@ export default function TalentOffreDetailPage() {
           <div className="space-y-6">
             {/* Matching Score */}
             {matchingLoading ? (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardContent className="p-6 flex items-center justify-center">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <span className="ml-2">Analyse en cours...</span>
+                  <span className="ml-2 text-gray-300">Analyse en cours...</span>
                 </CardContent>
               </Card>
             ) : matching ? (
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden bg-gray-600 border-gray-500">
                 <div className={`p-4 ${getRecommendationConfig(matching.recommendation).color}`}>
                   <div className="flex items-center gap-3">
                     {getRecommendationConfig(matching.recommendation).icon}
@@ -402,16 +402,16 @@ export default function TalentOffreDetailPage() {
                   </div>
                 </div>
                 <CardContent className="p-6 space-y-4">
-                  <p className="text-sm text-gray-700">{matching.message}</p>
+                  <p className="text-sm text-gray-300">{matching.message}</p>
 
                   {/* Details */}
                   <div className="space-y-3">
                     {/* Compétences */}
                     <div className="flex items-start gap-3">
-                      <Target className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <Target className="w-5 h-5 text-gray-300 mt-0.5" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Compétences</span>
+                          <span className="text-sm font-medium text-white">Compétences</span>
                           <Badge variant="outline" className={
                             matching.details.competences.score >= 80 ? 'bg-green-50 text-green-700' :
                             matching.details.competences.score >= 50 ? 'bg-amber-50 text-amber-700' :
@@ -421,7 +421,7 @@ export default function TalentOffreDetailPage() {
                           </Badge>
                         </div>
                         {matching.details.competences.missing.length > 0 && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-300 mt-1">
                             Manquantes: {matching.details.competences.missing.join(', ')}
                           </p>
                         )}
@@ -430,10 +430,10 @@ export default function TalentOffreDetailPage() {
 
                     {/* Expérience */}
                     <div className="flex items-start gap-3">
-                      <TrendingUp className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <TrendingUp className="w-5 h-5 text-gray-300 mt-0.5" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Expérience</span>
+                          <span className="text-sm font-medium text-white">Expérience</span>
                           <Badge variant="outline" className={
                             matching.details.experience.status === 'OK' ? 'bg-green-50 text-green-700' :
                             matching.details.experience.status === 'SURQUALIFIE' ? 'bg-blue-50 text-blue-700' :
@@ -443,16 +443,16 @@ export default function TalentOffreDetailPage() {
                              matching.details.experience.status === 'SURQUALIFIE' ? 'Surqualifié' : 'Insuffisant'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{matching.details.experience.message}</p>
+                        <p className="text-xs text-gray-300 mt-1">{matching.details.experience.message}</p>
                       </div>
                     </div>
 
                     {/* TJM */}
                     <div className="flex items-start gap-3">
-                      <Euro className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <Euro className="w-5 h-5 text-gray-300 mt-0.5" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">TJM</span>
+                          <span className="text-sm font-medium text-white">TJM</span>
                           <Badge variant="outline" className={
                             matching.details.tjm.status === 'OK' ? 'bg-green-50 text-green-700' :
                             matching.details.tjm.status === 'NON_RENSEIGNE' ? 'bg-gray-50 text-gray-600' :
@@ -463,16 +463,16 @@ export default function TalentOffreDetailPage() {
                              matching.details.tjm.status === 'TROP_HAUT' ? 'Trop élevé' : 'Trop bas'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{matching.details.tjm.message}</p>
+                        <p className="text-xs text-gray-300 mt-1">{matching.details.tjm.message}</p>
                       </div>
                     </div>
 
                     {/* Disponibilité */}
                     <div className="flex items-start gap-3">
-                      <UserCheck className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <UserCheck className="w-5 h-5 text-gray-300 mt-0.5" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Disponibilité</span>
+                          <span className="text-sm font-medium text-white">Disponibilité</span>
                           <Badge variant="outline" className={
                             matching.details.disponibilite.status === 'DISPONIBLE' ? 'bg-green-50 text-green-700' :
                             matching.details.disponibilite.status === 'BIENTOT' ? 'bg-blue-50 text-blue-700' :
@@ -483,7 +483,7 @@ export default function TalentOffreDetailPage() {
                              matching.details.disponibilite.status === 'EN_MISSION' ? 'En mission' : 'Indisponible'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{matching.details.disponibilite.message}</p>
+                        <p className="text-xs text-gray-300 mt-1">{matching.details.disponibilite.message}</p>
                         {matching.details.disponibilite.conflits.length > 0 && (
                           <p className="text-xs text-red-500 mt-1">
                             Conflits: {matching.details.disponibilite.conflits.join(', ')}
@@ -494,10 +494,10 @@ export default function TalentOffreDetailPage() {
 
                     {/* Localisation */}
                     <div className="flex items-start gap-3">
-                      <MapPinned className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <MapPinned className="w-5 h-5 text-gray-300 mt-0.5" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Mobilité</span>
+                          <span className="text-sm font-medium text-white">Mobilité</span>
                           <Badge variant="outline" className={
                             matching.details.localisation.status === 'OK' ? 'bg-green-50 text-green-700' :
                             'bg-red-50 text-red-700'
@@ -505,13 +505,13 @@ export default function TalentOffreDetailPage() {
                             {matching.details.localisation.status === 'OK' ? 'Compatible' : 'Incompatible'}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{matching.details.localisation.message}</p>
+                        <p className="text-xs text-gray-300 mt-1">{matching.details.localisation.message}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Action buttons */}
-                  <div className="pt-4 border-t space-y-3">
+                  <div className="pt-4 border-t border-gray-500 space-y-3">
                     {applied ? (
                       <Button className="w-full" disabled>
                         <CheckCircle className="w-4 h-4 mr-2" />
@@ -545,9 +545,9 @@ export default function TalentOffreDetailPage() {
             ) : null}
 
             {/* Published date */}
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-300">
                   Publiée le {formatDate(offre.publieLe)}
                 </p>
               </CardContent>

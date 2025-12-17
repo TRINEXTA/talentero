@@ -110,16 +110,16 @@ export default function ClientFacturesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
@@ -127,19 +127,19 @@ export default function ClientFacturesPage() {
                 <Logo size="sm" showText />
               </Link>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-gray-900">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-gray-900">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-gray-900">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
-                <Link href="/c/entretiens" className="text-gray-600 hover:text-gray-900">
+                <Link href="/c/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
-                <Link href="/c/reviews" className="text-gray-600 hover:text-gray-900">
+                <Link href="/c/reviews" className="text-gray-300 hover:text-primary">
                   Avis
                 </Link>
                 <Link href="/c/factures" className="text-primary font-medium">
@@ -175,65 +175,65 @@ export default function ClientFacturesPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes factures</h1>
-            <p className="text-gray-600">Consultez vos factures et suivez vos paiements</p>
+            <h1 className="text-2xl font-bold text-white">Mes factures</h1>
+            <p className="text-gray-300">Consultez vos factures et suivez vos paiements</p>
           </div>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Receipt className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.totalFactures}</p>
-                    <p className="text-sm text-gray-500">Factures totales</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalFactures}</p>
+                    <p className="text-sm text-gray-300">Factures totales</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-100 rounded-lg">
                     <Euro className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.totalTTC.toLocaleString('fr-FR')} €</p>
-                    <p className="text-sm text-gray-500">Total TTC</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalTTC.toLocaleString('fr-FR')} €</p>
+                    <p className="text-sm text-gray-300">Total TTC</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-yellow-100 rounded-lg">
                     <Clock className="h-5 w-5 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.enAttente}</p>
-                    <p className="text-sm text-gray-500">En attente</p>
+                    <p className="text-2xl font-bold text-white">{stats.enAttente}</p>
+                    <p className="text-sm text-gray-300">En attente</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-red-100 rounded-lg">
                     <AlertCircle className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.enRetard}</p>
-                    <p className="text-sm text-gray-500">En retard</p>
+                    <p className="text-2xl font-bold text-white">{stats.enRetard}</p>
+                    <p className="text-sm text-gray-300">En retard</p>
                   </div>
                 </div>
               </CardContent>
@@ -264,10 +264,10 @@ export default function ClientFacturesPage() {
           {/* Invoices List */}
           <div className="lg:col-span-2 space-y-4">
             {filteredFactures.length === 0 ? (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardContent className="py-12 text-center">
                   <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucune facture trouvée</p>
+                  <p className="text-gray-300">Aucune facture trouvée</p>
                 </CardContent>
               </Card>
             ) : (
@@ -279,7 +279,7 @@ export default function ClientFacturesPage() {
                 return (
                   <Card
                     key={facture.uid}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
+                    className={`bg-gray-600 border-gray-500 cursor-pointer transition-all hover:shadow-md ${
                       selectedFacture?.uid === facture.uid ? 'ring-2 ring-primary' : ''
                     } ${overdue ? 'border-red-300' : ''}`}
                     onClick={() => setSelectedFacture(facture)}
@@ -288,7 +288,7 @@ export default function ClientFacturesPage() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-lg">{facture.numero}</h3>
+                            <h3 className="font-semibold text-lg text-white">{facture.numero}</h3>
                             <Badge className={config.color}>
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {config.label}
@@ -300,8 +300,8 @@ export default function ClientFacturesPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-gray-600 mb-2">{facture.description}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <p className="text-gray-300 mb-2">{facture.description}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-300">
                             {facture.dateEmission && (
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
@@ -317,10 +317,10 @@ export default function ClientFacturesPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-gray-900">
+                          <p className="text-2xl font-bold text-white">
                             {facture.montantTTC.toLocaleString('fr-FR')} €
                           </p>
-                          <p className="text-sm text-gray-500">TTC</p>
+                          <p className="text-sm text-gray-300">TTC</p>
                         </div>
                       </div>
                     </CardContent>
@@ -333,7 +333,7 @@ export default function ClientFacturesPage() {
           {/* Invoice Detail */}
           <div className="lg:col-span-1">
             {selectedFacture ? (
-              <Card className="sticky top-24">
+              <Card className="bg-gray-600 border-gray-500 sticky top-24">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
@@ -353,7 +353,7 @@ export default function ClientFacturesPage() {
                       )
                     })()}
                     {selectedFacture.datePaiement && (
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-sm text-gray-300 mt-2">
                         Payée le {format(new Date(selectedFacture.datePaiement), 'd MMMM yyyy', { locale: fr })}
                         {selectedFacture.modePaiement && ` par ${selectedFacture.modePaiement.toLowerCase().replace('_', ' ')}`}
                       </p>
@@ -362,17 +362,17 @@ export default function ClientFacturesPage() {
 
                   {/* Dates */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-gray-700">Dates</h4>
+                    <h4 className="font-medium text-sm text-gray-300">Dates</h4>
                     {selectedFacture.dateEmission && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Émise le</span>
-                        <span>{format(new Date(selectedFacture.dateEmission), 'd MMM yyyy', { locale: fr })}</span>
+                        <span className="text-gray-300">Émise le</span>
+                        <span className="text-white">{format(new Date(selectedFacture.dateEmission), 'd MMM yyyy', { locale: fr })}</span>
                       </div>
                     )}
                     {selectedFacture.dateEcheance && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Échéance</span>
-                        <span className={isOverdue(selectedFacture) ? 'text-red-600 font-medium' : ''}>
+                        <span className="text-gray-300">Échéance</span>
+                        <span className={isOverdue(selectedFacture) ? 'text-red-400 font-medium' : 'text-white'}>
                           {format(new Date(selectedFacture.dateEcheance), 'd MMM yyyy', { locale: fr })}
                         </span>
                       </div>
@@ -382,15 +382,15 @@ export default function ClientFacturesPage() {
                   {/* Lines */}
                   {selectedFacture.lignes.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm text-gray-700">Détail</h4>
+                      <h4 className="font-medium text-sm text-gray-300">Détail</h4>
                       <div className="space-y-2">
                         {selectedFacture.lignes.map(ligne => (
-                          <div key={ligne.id} className="text-sm p-2 bg-gray-50 rounded">
+                          <div key={ligne.id} className="text-sm p-2 bg-gray-500 rounded">
                             <div className="flex justify-between">
-                              <span className="text-gray-700">{ligne.description}</span>
-                              <span className="font-medium">{ligne.montantHT.toLocaleString('fr-FR')} €</span>
+                              <span className="text-white">{ligne.description}</span>
+                              <span className="font-medium text-white">{ligne.montantHT.toLocaleString('fr-FR')} €</span>
                             </div>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-300">
                               {ligne.quantite} x {ligne.prixUnitaireHT.toLocaleString('fr-FR')} € HT
                             </p>
                           </div>
@@ -400,25 +400,25 @@ export default function ClientFacturesPage() {
                   )}
 
                   {/* Totals */}
-                  <div className="border-t pt-4 space-y-2">
+                  <div className="border-t border-gray-500 pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Total HT</span>
-                      <span>{selectedFacture.montantHT.toLocaleString('fr-FR')} €</span>
+                      <span className="text-gray-300">Total HT</span>
+                      <span className="text-white">{selectedFacture.montantHT.toLocaleString('fr-FR')} €</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">TVA ({selectedFacture.tauxTVA}%)</span>
-                      <span>{selectedFacture.montantTVA.toLocaleString('fr-FR')} €</span>
+                      <span className="text-gray-300">TVA ({selectedFacture.tauxTVA}%)</span>
+                      <span className="text-white">{selectedFacture.montantTVA.toLocaleString('fr-FR')} €</span>
                     </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                      <span>Total TTC</span>
-                      <span>{selectedFacture.montantTTC.toLocaleString('fr-FR')} €</span>
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-500">
+                      <span className="text-white">Total TTC</span>
+                      <span className="text-white">{selectedFacture.montantTTC.toLocaleString('fr-FR')} €</span>
                     </div>
                   </div>
 
                   {/* Actions */}
                   {selectedFacture.statut !== 'PAYEE' && selectedFacture.statut !== 'ANNULEE' && (
-                    <div className="pt-4 border-t">
-                      <p className="text-sm text-gray-600 mb-3">
+                    <div className="pt-4 border-t border-gray-500">
+                      <p className="text-sm text-gray-300 mb-3">
                         Pour procéder au paiement, veuillez contacter notre équipe ou utiliser les coordonnées bancaires indiquées sur la facture.
                       </p>
                       <Button variant="outline" className="w-full">
@@ -430,10 +430,10 @@ export default function ClientFacturesPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="bg-gray-600 border-gray-500">
                 <CardContent className="py-12 text-center">
                   <Eye className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Sélectionnez une facture pour voir les détails</p>
+                  <p className="text-gray-300">Sélectionnez une facture pour voir les détails</p>
                 </CardContent>
               </Card>
             )}

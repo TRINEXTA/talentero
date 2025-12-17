@@ -146,46 +146,46 @@ export default function TalentEntretiensPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <User className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
                 <Link href="/t/entretiens" className="text-primary font-medium">
                   Entretiens
                 </Link>
-                <Link href="/t/alertes" className="text-gray-600 hover:text-primary">
+                <Link href="/t/alertes" className="text-gray-300 hover:text-primary">
                   Alertes
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -205,11 +205,11 @@ export default function TalentEntretiensPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Calendar className="w-7 h-7" />
             Mes entretiens
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-300 mt-1">
             Gérez vos demandes d'entretiens
           </p>
         </div>
@@ -217,39 +217,39 @@ export default function TalentEntretiensPage() {
         {/* Stats */}
         {data && (
           <div className="grid md:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-yellow-50 border-yellow-200">
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-4 flex items-center gap-3">
-                <AlertCircle className="w-8 h-8 text-yellow-600" />
+                <AlertCircle className="w-8 h-8 text-yellow-400" />
                 <div>
-                  <p className="text-2xl font-bold text-yellow-800">{data.stats.enAttente}</p>
-                  <p className="text-sm text-yellow-600">En attente</p>
+                  <p className="text-2xl font-bold text-white">{data.stats.enAttente}</p>
+                  <p className="text-sm text-gray-300">En attente</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-green-50 border-green-200">
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-4 flex items-center gap-3">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+                <CheckCircle className="w-8 h-8 text-green-400" />
                 <div>
-                  <p className="text-2xl font-bold text-green-800">{data.stats.confirmes}</p>
-                  <p className="text-sm text-green-600">Confirmés</p>
+                  <p className="text-2xl font-bold text-white">{data.stats.confirmes}</p>
+                  <p className="text-sm text-gray-300">Confirmés</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-50 border-gray-200">
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-4 flex items-center gap-3">
-                <Check className="w-8 h-8 text-gray-600" />
+                <Check className="w-8 h-8 text-gray-300" />
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">{data.stats.passes}</p>
-                  <p className="text-sm text-gray-600">Réalisés</p>
+                  <p className="text-2xl font-bold text-white">{data.stats.passes}</p>
+                  <p className="text-sm text-gray-300">Réalisés</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-red-50 border-red-200">
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-4 flex items-center gap-3">
-                <XCircle className="w-8 h-8 text-red-600" />
+                <XCircle className="w-8 h-8 text-red-400" />
                 <div>
-                  <p className="text-2xl font-bold text-red-800">{data.stats.annules}</p>
-                  <p className="text-sm text-red-600">Annulés</p>
+                  <p className="text-2xl font-bold text-white">{data.stats.annules}</p>
+                  <p className="text-sm text-gray-300">Annulés</p>
                 </div>
               </CardContent>
             </Card>
@@ -258,27 +258,27 @@ export default function TalentEntretiensPage() {
 
         {/* En attente de réponse */}
         {data?.grouped.enAttente && data.grouped.enAttente.length > 0 && (
-          <Card className="mb-6 border-yellow-200">
-            <CardHeader className="bg-yellow-50">
-              <CardTitle className="text-yellow-800 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
+          <Card className="mb-6 bg-gray-600 border-gray-500">
+            <CardHeader className="bg-gray-600">
+              <CardTitle className="text-white flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-400" />
                 En attente de votre réponse ({data.grouped.enAttente.length})
               </CardTitle>
-              <CardDescription className="text-yellow-600">
+              <CardDescription className="text-gray-300">
                 Ces entretiens nécessitent votre confirmation
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y">
+              <div className="divide-y divide-gray-500">
                 {data.grouped.enAttente.map((entretien) => (
-                  <div key={entretien.uid} className="p-4 hover:bg-gray-50">
+                  <div key={entretien.uid} className="p-4 hover:bg-gray-500">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-gray-900">{entretien.offre.titre}</h3>
+                          <h3 className="font-semibold text-white">{entretien.offre.titre}</h3>
                           {getStatutBadge(entretien.statut)}
                         </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                           <span className="flex items-center gap-1">
                             <Building2 className="w-4 h-4" />
                             {entretien.offre.client?.raisonSociale || 'TRINEXTA'}
@@ -339,24 +339,24 @@ export default function TalentEntretiensPage() {
 
         {/* Entretiens confirmés */}
         {data?.grouped.confirmes && data.grouped.confirmes.length > 0 && (
-          <Card className="mb-6 border-green-200">
-            <CardHeader className="bg-green-50">
-              <CardTitle className="text-green-800 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" />
+          <Card className="mb-6 bg-gray-600 border-gray-500">
+            <CardHeader className="bg-gray-600">
+              <CardTitle className="text-white flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400" />
                 Entretiens confirmés ({data.grouped.confirmes.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y">
+              <div className="divide-y divide-gray-500">
                 {data.grouped.confirmes.map((entretien) => (
                   <div key={entretien.uid} className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-gray-900">{entretien.offre.titre}</h3>
+                          <h3 className="font-semibold text-white">{entretien.offre.titre}</h3>
                           {getStatutBadge(entretien.statut)}
                         </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                           <span className="flex items-center gap-1">
                             <Building2 className="w-4 h-4" />
                             {entretien.offre.client?.raisonSociale || 'TRINEXTA'}
@@ -392,22 +392,22 @@ export default function TalentEntretiensPage() {
 
         {/* Entretiens passés */}
         {data?.grouped.passes && data.grouped.passes.length > 0 && (
-          <Card className="mb-6">
+          <Card className="mb-6 bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="text-gray-700 flex items-center gap-2">
+              <CardTitle className="text-white flex items-center gap-2">
                 <Check className="w-5 h-5" />
                 Entretiens réalisés ({data.grouped.passes.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y">
+              <div className="divide-y divide-gray-500">
                 {data.grouped.passes.map((entretien) => (
                   <div key={entretien.uid} className="p-4 opacity-70">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-gray-700">{entretien.offre.titre}</h3>
+                      <h3 className="font-medium text-gray-300">{entretien.offre.titre}</h3>
                       {getStatutBadge(entretien.statut)}
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                       {formatDate(entretien.dateProposee)} à {entretien.heureDebut}
                     </p>
                   </div>
@@ -419,13 +419,13 @@ export default function TalentEntretiensPage() {
 
         {/* Aucun entretien */}
         {data?.stats.total === 0 && (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-12 text-center">
-              <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-white mb-2">
                 Aucun entretien
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-300 mb-4">
                 Vous n'avez pas encore d'entretiens planifiés.
                 Postulez à des offres pour recevoir des demandes d'entretien.
               </p>
@@ -440,39 +440,39 @@ export default function TalentEntretiensPage() {
       {/* Modal date alternative */}
       {showAlternativeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle>Proposer une autre date</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Proposer une autre date</CardTitle>
+              <CardDescription className="text-gray-300">
                 Indiquez vos disponibilités alternatives
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Date</label>
+                <label className="block text-sm font-medium mb-1 text-white">Date</label>
                 <input
                   type="date"
                   value={alternativeDate}
                   onChange={(e) => setAlternativeDate(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full bg-gray-500 border-gray-400 text-white rounded-lg px-3 py-2"
                   min={new Date().toISOString().split('T')[0]}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Heure</label>
+                <label className="block text-sm font-medium mb-1 text-white">Heure</label>
                 <input
                   type="time"
                   value={alternativeTime}
                   onChange={(e) => setAlternativeTime(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="w-full bg-gray-500 border-gray-400 text-white rounded-lg px-3 py-2"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Message (optionnel)</label>
+                <label className="block text-sm font-medium mb-1 text-white">Message (optionnel)</label>
                 <textarea
                   value={alternativeMessage}
                   onChange={(e) => setAlternativeMessage(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 h-20"
+                  className="w-full bg-gray-500 border-gray-400 text-white placeholder:text-gray-300 rounded-lg px-3 py-2 h-20"
                   placeholder="Expliquez pourquoi vous proposez cette date..."
                 />
               </div>

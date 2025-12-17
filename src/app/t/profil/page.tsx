@@ -487,7 +487,7 @@ export default function TalentProfilPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
       </div>
     )
@@ -496,12 +496,12 @@ export default function TalentProfilPage() {
   if (!profile) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/t/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-primary">
+            <Link href="/t/dashboard" className="flex items-center gap-2 text-gray-300 hover:text-primary">
               <ArrowLeft className="w-4 h-4" />
               Dashboard
             </Link>
@@ -514,13 +514,13 @@ export default function TalentProfilPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Mon profil</h1>
+        <h1 className="text-2xl font-bold text-white mb-8">Mon profil</h1>
 
         <div className="space-y-6">
           {/* Informations personnelles */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <User className="w-5 h-5" />
                 Informations personnelles
               </CardTitle>
@@ -528,91 +528,97 @@ export default function TalentProfilPage() {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Prénom</Label>
-                  <Input value={profile.prenom} onChange={(e) => setProfile({ ...profile, prenom: e.target.value })} />
+                  <Label className="text-gray-300">Prénom</Label>
+                  <Input value={profile.prenom} onChange={(e) => setProfile({ ...profile, prenom: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
                 <div>
-                  <Label>Nom</Label>
-                  <Input value={profile.nom} onChange={(e) => setProfile({ ...profile, nom: e.target.value })} />
+                  <Label className="text-gray-300">Nom</Label>
+                  <Input value={profile.nom} onChange={(e) => setProfile({ ...profile, nom: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="flex items-center gap-2"><Mail className="w-4 h-4" />Email</Label>
-                  <Input value={profile.email} disabled className="bg-gray-100" />
-                  <p className="text-xs text-gray-500 mt-1">Non modifiable</p>
+                  <Label className="flex items-center gap-2 text-gray-300"><Mail className="w-4 h-4" />Email</Label>
+                  <Input value={profile.email} disabled className="bg-gray-500 border-gray-400 text-white" />
+                  <p className="text-xs text-gray-300 mt-1">Non modifiable</p>
                 </div>
                 <div>
-                  <Label className="flex items-center gap-2"><Phone className="w-4 h-4" />Téléphone</Label>
+                  <Label className="flex items-center gap-2 text-gray-300"><Phone className="w-4 h-4" />Téléphone</Label>
                   <Input
                     value={profile.telephone || ''}
                     onChange={(e) => setProfile({ ...profile, telephone: e.target.value })}
                     placeholder="06 12 34 56 78"
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
               </div>
 
               <div>
-                <Label>Titre / Poste</Label>
+                <Label className="text-gray-300">Titre / Poste</Label>
                 <Input
                   value={profile.titrePoste || ''}
                   onChange={(e) => setProfile({ ...profile, titrePoste: e.target.value })}
                   placeholder="Développeur Full Stack Java/Angular"
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
 
               <div>
-                <Label>Bio / Présentation</Label>
+                <Label className="text-gray-300">Bio / Présentation</Label>
                 <Textarea
                   value={profile.bio || ''}
                   onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                   placeholder="Présentez-vous en quelques lignes..."
                   rows={4}
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
 
               <div>
-                <Label>Années d&apos;expérience</Label>
+                <Label className="text-gray-300">Années d&apos;expérience</Label>
                 <Input
                   type="number"
                   min="0"
                   value={profile.anneesExperience}
                   onChange={(e) => setProfile({ ...profile, anneesExperience: parseInt(e.target.value) || 0 })}
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Société / SIRET */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Building2 className="w-5 h-5" />
                 Ma société
               </CardTitle>
-              <CardDescription>Informations de votre structure (auto-entrepreneur, SASU, etc.)</CardDescription>
+              <CardDescription className="text-gray-300">Informations de votre structure (auto-entrepreneur, SASU, etc.)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label>SIRET</Label>
+                  <Label className="text-gray-300">SIRET</Label>
                   <Input
                     value={profile.siret || ''}
                     onChange={(e) => setProfile({ ...profile, siret: e.target.value.replace(/\D/g, '').slice(0, 14) })}
                     placeholder="12345678901234"
                     maxLength={14}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                   {profile.siretVerifie && (
                     <p className="text-xs text-green-600 mt-1">✓ SIRET vérifié</p>
                   )}
                 </div>
                 <div>
-                  <Label>Raison sociale</Label>
+                  <Label className="text-gray-300">Raison sociale</Label>
                   <Input
                     value={profile.raisonSociale || ''}
                     onChange={(e) => setProfile({ ...profile, raisonSociale: e.target.value })}
                     placeholder="Nom de votre société"
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -620,23 +626,23 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* CV */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <FileText className="w-5 h-5" />
                 Mon CV
               </CardTitle>
-              <CardDescription>PDF ou Word, max 5 Mo. Les données seront extraites automatiquement.</CardDescription>
+              <CardDescription className="text-gray-300">PDF ou Word, max 5 Mo. Les données seront extraites automatiquement.</CardDescription>
             </CardHeader>
             <CardContent>
               {profile.cvUrl ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-green-900/20 border border-green-600 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <FileText className="w-8 h-8 text-green-600" />
+                      <FileText className="w-8 h-8 text-green-500" />
                       <div>
-                        <p className="font-medium text-green-800">{profile.cvOriginalName || 'CV uploadé'}</p>
-                        <p className="text-sm text-green-600">CV actuel</p>
+                        <p className="font-medium text-green-300">{profile.cvOriginalName || 'CV uploadé'}</p>
+                        <p className="text-sm text-green-400">CV actuel</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -654,33 +660,33 @@ export default function TalentProfilPage() {
                         size="sm"
                         onClick={handleCVResync}
                         disabled={resyncingCV}
-                        className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                        className="text-blue-400 border-blue-500 hover:bg-blue-900/20"
                         title="Re-analyser le CV et mettre à jour le profil"
                       >
                         {resyncingCV ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                       </Button>
-                      <Button variant="outline" size="sm" onClick={handleCVDelete} className="text-red-600 border-red-300 hover:bg-red-50">
+                      <Button variant="outline" size="sm" onClick={handleCVDelete} className="text-red-400 border-red-500 hover:bg-red-900/20">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                   <div>
-                    <Label className="text-sm text-gray-500">Remplacer par un nouveau CV</Label>
-                    <Input type="file" accept=".pdf,.doc,.docx" onChange={handleCVUpload} disabled={uploadingCV} className="mt-1" />
+                    <Label className="text-sm text-gray-300">Remplacer par un nouveau CV</Label>
+                    <Input type="file" accept=".pdf,.doc,.docx" onChange={handleCVUpload} disabled={uploadingCV} className="mt-1 bg-gray-500 border-gray-400 text-white" />
                   </div>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <div className="border-2 border-dashed border-gray-400 rounded-lg p-8 text-center">
                   {uploadingCV ? (
                     <div className="flex flex-col items-center">
                       <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                      <p className="text-gray-600">Upload et extraction en cours...</p>
+                      <p className="text-gray-300">Upload et extraction en cours...</p>
                     </div>
                   ) : (
                     <>
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-4">Glissez votre CV ici ou cliquez pour parcourir</p>
-                      <Input type="file" accept=".pdf,.doc,.docx" onChange={handleCVUpload} className="max-w-xs mx-auto" />
+                      <p className="text-gray-300 mb-4">Glissez votre CV ici ou cliquez pour parcourir</p>
+                      <Input type="file" accept=".pdf,.doc,.docx" onChange={handleCVUpload} className="max-w-xs mx-auto bg-gray-500 border-gray-400 text-white" />
                     </>
                   )}
                 </div>
@@ -689,10 +695,10 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Expériences */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Briefcase className="w-5 h-5" />
                   Expériences professionnelles
                 </CardTitle>
@@ -704,23 +710,23 @@ export default function TalentProfilPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {showExpForm && (
-                <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+                <div className="p-4 border border-gray-500 rounded-lg bg-gray-700 space-y-3">
                   <div className="grid md:grid-cols-2 gap-3">
-                    <Input placeholder="Poste *" value={newExp.poste} onChange={(e) => setNewExp({ ...newExp, poste: e.target.value })} />
-                    <Input placeholder="Entreprise" value={newExp.entreprise} onChange={(e) => setNewExp({ ...newExp, entreprise: e.target.value })} />
+                    <Input placeholder="Poste *" value={newExp.poste} onChange={(e) => setNewExp({ ...newExp, poste: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
+                    <Input placeholder="Entreprise" value={newExp.entreprise} onChange={(e) => setNewExp({ ...newExp, entreprise: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   </div>
                   <div className="grid md:grid-cols-3 gap-3">
-                    <Input placeholder="Lieu" value={newExp.lieu} onChange={(e) => setNewExp({ ...newExp, lieu: e.target.value })} />
+                    <Input placeholder="Lieu" value={newExp.lieu} onChange={(e) => setNewExp({ ...newExp, lieu: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                     <div>
-                      <Label className="text-xs">Date début *</Label>
-                      <Input type="date" value={newExp.dateDebut} onChange={(e) => setNewExp({ ...newExp, dateDebut: e.target.value })} />
+                      <Label className="text-xs text-gray-300">Date début *</Label>
+                      <Input type="date" value={newExp.dateDebut} onChange={(e) => setNewExp({ ...newExp, dateDebut: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                     </div>
                     <div>
-                      <Label className="text-xs">Date fin</Label>
-                      <Input type="date" value={newExp.dateFin} onChange={(e) => setNewExp({ ...newExp, dateFin: e.target.value })} />
+                      <Label className="text-xs text-gray-300">Date fin</Label>
+                      <Input type="date" value={newExp.dateFin} onChange={(e) => setNewExp({ ...newExp, dateFin: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                     </div>
                   </div>
-                  <Textarea placeholder="Description" value={newExp.description} onChange={(e) => setNewExp({ ...newExp, description: e.target.value })} rows={2} />
+                  <Textarea placeholder="Description" value={newExp.description} onChange={(e) => setNewExp({ ...newExp, description: e.target.value })} rows={2} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={addExperience}>Ajouter</Button>
                     <Button size="sm" variant="outline" onClick={() => setShowExpForm(false)}>Annuler</Button>
@@ -729,21 +735,21 @@ export default function TalentProfilPage() {
               )}
 
               {experiences.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Aucune expérience ajoutée</p>
+                <p className="text-gray-300 text-center py-4">Aucune expérience ajoutée</p>
               ) : (
                 <div className="space-y-3">
                   {experiences.map((exp) => (
-                    <div key={exp.id} className="p-4 border rounded-lg">
+                    <div key={exp.id} className="p-4 border border-gray-500 rounded-lg bg-gray-700">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-semibold">{exp.poste}</h4>
-                          <p className="text-sm text-gray-600">{exp.entreprise}{exp.lieu && ` • ${exp.lieu}`}</p>
-                          <p className="text-xs text-gray-500">
+                          <h4 className="font-semibold text-white">{exp.poste}</h4>
+                          <p className="text-sm text-gray-300">{exp.entreprise}{exp.lieu && ` • ${exp.lieu}`}</p>
+                          <p className="text-xs text-gray-300">
                             {new Date(exp.dateDebut).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
                             {' - '}
                             {exp.dateFin ? new Date(exp.dateFin).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : "Aujourd'hui"}
                           </p>
-                          {exp.description && <p className="text-sm mt-2">{exp.description}</p>}
+                          {exp.description && <p className="text-sm mt-2 text-gray-300">{exp.description}</p>}
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => deleteExperience(exp.id)} className="text-red-600 hover:text-red-700">
                           <Trash2 className="w-4 h-4" />
@@ -757,10 +763,10 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Formations */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <GraduationCap className="w-5 h-5" />
                   Formations
                 </CardTitle>
@@ -772,14 +778,14 @@ export default function TalentProfilPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {showFormationForm && (
-                <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+                <div className="p-4 border border-gray-500 rounded-lg bg-gray-700 space-y-3">
                   <div className="grid md:grid-cols-2 gap-3">
-                    <Input placeholder="Diplôme *" value={newFormation.diplome} onChange={(e) => setNewFormation({ ...newFormation, diplome: e.target.value })} />
-                    <Input placeholder="Établissement" value={newFormation.etablissement} onChange={(e) => setNewFormation({ ...newFormation, etablissement: e.target.value })} />
+                    <Input placeholder="Diplôme *" value={newFormation.diplome} onChange={(e) => setNewFormation({ ...newFormation, diplome: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
+                    <Input placeholder="Établissement" value={newFormation.etablissement} onChange={(e) => setNewFormation({ ...newFormation, etablissement: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
-                    <Input type="number" placeholder="Année" value={newFormation.annee} onChange={(e) => setNewFormation({ ...newFormation, annee: e.target.value })} />
-                    <Input placeholder="Description" value={newFormation.description} onChange={(e) => setNewFormation({ ...newFormation, description: e.target.value })} />
+                    <Input type="number" placeholder="Année" value={newFormation.annee} onChange={(e) => setNewFormation({ ...newFormation, annee: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
+                    <Input placeholder="Description" value={newFormation.description} onChange={(e) => setNewFormation({ ...newFormation, description: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={addFormation}>Ajouter</Button>
@@ -789,16 +795,16 @@ export default function TalentProfilPage() {
               )}
 
               {formations.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Aucune formation ajoutée</p>
+                <p className="text-gray-300 text-center py-4">Aucune formation ajoutée</p>
               ) : (
                 <div className="space-y-3">
                   {formations.map((f) => (
-                    <div key={f.id} className="p-4 border rounded-lg">
+                    <div key={f.id} className="p-4 border border-gray-500 rounded-lg bg-gray-700">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-semibold">{f.diplome}</h4>
-                          <p className="text-sm text-gray-600">{f.etablissement}{f.annee && ` • ${f.annee}`}</p>
-                          {f.description && <p className="text-sm mt-1 text-gray-500">{f.description}</p>}
+                          <h4 className="font-semibold text-white">{f.diplome}</h4>
+                          <p className="text-sm text-gray-300">{f.etablissement}{f.annee && ` • ${f.annee}`}</p>
+                          {f.description && <p className="text-sm mt-1 text-gray-300">{f.description}</p>}
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => deleteFormation(f.id)} className="text-red-600 hover:text-red-700">
                           <Trash2 className="w-4 h-4" />
@@ -812,9 +818,9 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Compétences */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Briefcase className="w-5 h-5" />
                 Compétences techniques
               </CardTitle>
@@ -822,7 +828,7 @@ export default function TalentProfilPage() {
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-4">
                 {profile.competences.map((comp) => (
-                  <Badge key={comp} variant="secondary" className="px-3 py-1">
+                  <Badge key={comp} variant="secondary" className="px-3 py-1 bg-gray-700 border-gray-500 text-gray-200">
                     {comp}
                     <button onClick={() => removeTag('competences', comp)} className="ml-2 hover:text-red-500">
                       <X className="w-3 h-3" />
@@ -836,6 +842,7 @@ export default function TalentProfilPage() {
                   onChange={(e) => setNewCompetence(e.target.value)}
                   placeholder="React, Java, Docker..."
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('competences', newCompetence, setNewCompetence))}
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
                 <Button variant="outline" onClick={() => addTag('competences', newCompetence, setNewCompetence)}>
                   <Plus className="w-4 h-4" />
@@ -845,10 +852,10 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Certifications */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Award className="w-5 h-5" />
                   Certifications
                 </CardTitle>
@@ -860,24 +867,24 @@ export default function TalentProfilPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {showCertForm && (
-                <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+                <div className="p-4 border border-gray-500 rounded-lg bg-gray-700 space-y-3">
                   <div className="grid md:grid-cols-2 gap-3">
-                    <Input placeholder="Nom de la certification *" value={newCert.nom} onChange={(e) => setNewCert({ ...newCert, nom: e.target.value })} />
-                    <Input placeholder="Organisme (AWS, Microsoft...)" value={newCert.organisme} onChange={(e) => setNewCert({ ...newCert, organisme: e.target.value })} />
+                    <Input placeholder="Nom de la certification *" value={newCert.nom} onChange={(e) => setNewCert({ ...newCert, nom: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
+                    <Input placeholder="Organisme (AWS, Microsoft...)" value={newCert.organisme} onChange={(e) => setNewCert({ ...newCert, organisme: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs">Date d'obtention</Label>
-                      <Input type="date" value={newCert.dateObtention} onChange={(e) => setNewCert({ ...newCert, dateObtention: e.target.value })} />
+                      <Label className="text-xs text-gray-300">Date d'obtention</Label>
+                      <Input type="date" value={newCert.dateObtention} onChange={(e) => setNewCert({ ...newCert, dateObtention: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                     </div>
                     <div>
-                      <Label className="text-xs">Date d'expiration (optionnel)</Label>
-                      <Input type="date" value={newCert.dateExpiration} onChange={(e) => setNewCert({ ...newCert, dateExpiration: e.target.value })} />
+                      <Label className="text-xs text-gray-300">Date d'expiration (optionnel)</Label>
+                      <Input type="date" value={newCert.dateExpiration} onChange={(e) => setNewCert({ ...newCert, dateExpiration: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
-                    <Input placeholder="Numéro de certification" value={newCert.numeroCertification} onChange={(e) => setNewCert({ ...newCert, numeroCertification: e.target.value })} />
-                    <Input placeholder="URL de vérification" value={newCert.urlVerification} onChange={(e) => setNewCert({ ...newCert, urlVerification: e.target.value })} />
+                    <Input placeholder="Numéro de certification" value={newCert.numeroCertification} onChange={(e) => setNewCert({ ...newCert, numeroCertification: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
+                    <Input placeholder="URL de vérification" value={newCert.urlVerification} onChange={(e) => setNewCert({ ...newCert, urlVerification: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={addCertification}>Ajouter</Button>
@@ -887,16 +894,16 @@ export default function TalentProfilPage() {
               )}
 
               {certifications.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Aucune certification ajoutée</p>
+                <p className="text-gray-300 text-center py-4">Aucune certification ajoutée</p>
               ) : (
                 <div className="space-y-3">
                   {certifications.map((cert) => (
-                    <div key={cert.id} className="p-4 border rounded-lg">
+                    <div key={cert.id} className="p-4 border border-gray-500 rounded-lg bg-gray-700">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-semibold">{cert.nom}</h4>
-                          {cert.organisme && <p className="text-sm text-gray-600">{cert.organisme}</p>}
-                          <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                          <h4 className="font-semibold text-white">{cert.nom}</h4>
+                          {cert.organisme && <p className="text-sm text-gray-300">{cert.organisme}</p>}
+                          <div className="flex gap-4 mt-1 text-xs text-gray-300">
                             {cert.dateObtention && (
                               <span>Obtenue: {new Date(cert.dateObtention).toLocaleDateString('fr-FR')}</span>
                             )}
@@ -907,7 +914,7 @@ export default function TalentProfilPage() {
                             )}
                           </div>
                           {cert.numeroCertification && (
-                            <p className="text-xs text-gray-500 mt-1">ID: {cert.numeroCertification}</p>
+                            <p className="text-xs text-gray-300 mt-1">ID: {cert.numeroCertification}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -929,9 +936,9 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* TJM et disponibilité */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Euro className="w-5 h-5" />
                 Tarif et disponibilité
               </CardTitle>
@@ -939,24 +946,24 @@ export default function TalentProfilPage() {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <Label>TJM souhaité (€/jour)</Label>
-                  <Input type="number" value={profile.tjm || ''} onChange={(e) => setProfile({ ...profile, tjm: parseInt(e.target.value) || null })} placeholder="500" />
+                  <Label className="text-gray-300">TJM souhaité (€/jour)</Label>
+                  <Input type="number" value={profile.tjm || ''} onChange={(e) => setProfile({ ...profile, tjm: parseInt(e.target.value) || null })} placeholder="500" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
                 <div>
-                  <Label>TJM minimum</Label>
-                  <Input type="number" value={profile.tjmMin || ''} onChange={(e) => setProfile({ ...profile, tjmMin: parseInt(e.target.value) || null })} placeholder="400" />
+                  <Label className="text-gray-300">TJM minimum</Label>
+                  <Input type="number" value={profile.tjmMin || ''} onChange={(e) => setProfile({ ...profile, tjmMin: parseInt(e.target.value) || null })} placeholder="400" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
                 <div>
-                  <Label>TJM maximum</Label>
-                  <Input type="number" value={profile.tjmMax || ''} onChange={(e) => setProfile({ ...profile, tjmMax: parseInt(e.target.value) || null })} placeholder="700" />
+                  <Label className="text-gray-300">TJM maximum</Label>
+                  <Input type="number" value={profile.tjmMax || ''} onChange={(e) => setProfile({ ...profile, tjmMax: parseInt(e.target.value) || null })} placeholder="700" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Disponibilité</Label>
+                  <Label className="text-gray-300">Disponibilité</Label>
                   <Select value={profile.disponibilite} onValueChange={(value) => setProfile({ ...profile, disponibilite: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="bg-gray-500 border-gray-400 text-white"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {DISPONIBILITE_OPTIONS.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -965,9 +972,9 @@ export default function TalentProfilPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Mobilité</Label>
+                  <Label className="text-gray-300">Mobilité</Label>
                   <Select value={profile.mobilite} onValueChange={(value) => setProfile({ ...profile, mobilite: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="bg-gray-500 border-gray-400 text-white"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {MOBILITE_OPTIONS.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -980,9 +987,9 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Localisation */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <MapPin className="w-5 h-5" />
                 Localisation
               </CardTitle>
@@ -990,24 +997,24 @@ export default function TalentProfilPage() {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <Label>Adresse</Label>
-                  <Input value={profile.adresse || ''} onChange={(e) => setProfile({ ...profile, adresse: e.target.value })} placeholder="123 rue de Paris" />
+                  <Label className="text-gray-300">Adresse</Label>
+                  <Input value={profile.adresse || ''} onChange={(e) => setProfile({ ...profile, adresse: e.target.value })} placeholder="123 rue de Paris" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
                 <div>
-                  <Label>Code postal</Label>
-                  <Input value={profile.codePostal || ''} onChange={(e) => setProfile({ ...profile, codePostal: e.target.value })} placeholder="75001" />
+                  <Label className="text-gray-300">Code postal</Label>
+                  <Input value={profile.codePostal || ''} onChange={(e) => setProfile({ ...profile, codePostal: e.target.value })} placeholder="75001" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                 </div>
               </div>
               <div>
-                <Label>Ville</Label>
-                <Input value={profile.ville || ''} onChange={(e) => setProfile({ ...profile, ville: e.target.value })} placeholder="Paris" />
+                <Label className="text-gray-300">Ville</Label>
+                <Input value={profile.ville || ''} onChange={(e) => setProfile({ ...profile, ville: e.target.value })} placeholder="Paris" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
               </div>
 
               <div>
-                <Label>Zones géographiques acceptées</Label>
+                <Label className="text-gray-300">Zones géographiques acceptées</Label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {profile.zonesGeographiques.map((zone) => (
-                    <Badge key={zone} variant="outline" className="px-3 py-1">
+                    <Badge key={zone} variant="outline" className="px-3 py-1 border-gray-400 text-gray-200">
                       {zone}
                       <button onClick={() => removeTag('zonesGeographiques', zone)} className="ml-2 hover:text-red-500">
                         <X className="w-3 h-3" />
@@ -1021,6 +1028,7 @@ export default function TalentProfilPage() {
                     onChange={(e) => setNewZone(e.target.value)}
                     placeholder="Paris, Île-de-France, Remote..."
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('zonesGeographiques', newZone, setNewZone))}
+                    className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                   />
                   <Button variant="outline" onClick={() => addTag('zonesGeographiques', newZone, setNewZone)}>
                     <Plus className="w-4 h-4" />
@@ -1031,10 +1039,10 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Langues */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Languages className="w-5 h-5" />
                   Langues
                 </CardTitle>
@@ -1046,11 +1054,11 @@ export default function TalentProfilPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {showLangueForm && (
-                <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+                <div className="p-4 border border-gray-500 rounded-lg bg-gray-700 space-y-3">
                   <div className="grid md:grid-cols-3 gap-3">
-                    <Input placeholder="Langue *" value={newLangueData.langue} onChange={(e) => setNewLangueData({ ...newLangueData, langue: e.target.value })} />
+                    <Input placeholder="Langue *" value={newLangueData.langue} onChange={(e) => setNewLangueData({ ...newLangueData, langue: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                     <Select value={newLangueData.niveau} onValueChange={(value) => setNewLangueData({ ...newLangueData, niveau: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-gray-500 border-gray-400 text-white">
                         <SelectValue placeholder="Niveau *" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1059,7 +1067,7 @@ export default function TalentProfilPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Input placeholder="Score certif. (TOEIC 920...)" value={newLangueData.scoreCertification} onChange={(e) => setNewLangueData({ ...newLangueData, scoreCertification: e.target.value })} />
+                    <Input placeholder="Score certif. (TOEIC 920...)" value={newLangueData.scoreCertification} onChange={(e) => setNewLangueData({ ...newLangueData, scoreCertification: e.target.value })} className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={addLangue}>Ajouter</Button>
@@ -1069,15 +1077,15 @@ export default function TalentProfilPage() {
               )}
 
               {langues.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Aucune langue ajoutée</p>
+                <p className="text-gray-300 text-center py-4">Aucune langue ajoutée</p>
               ) : (
                 <div className="grid md:grid-cols-2 gap-3">
                   {langues.map((lang) => (
-                    <div key={lang.id} className="p-3 border rounded-lg flex justify-between items-center">
+                    <div key={lang.id} className="p-3 border border-gray-500 rounded-lg bg-gray-700 flex justify-between items-center">
                       <div>
-                        <span className="font-medium">{lang.langue}</span>
+                        <span className="font-medium text-white">{lang.langue}</span>
                         {lang.scoreCertification && (
-                          <span className="text-xs text-gray-500 ml-2">({lang.scoreCertification})</span>
+                          <span className="text-xs text-gray-300 ml-2">({lang.scoreCertification})</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -1101,9 +1109,9 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Loisirs */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Heart className="w-5 h-5" />
                 Loisirs & Centres d'intérêt
               </CardTitle>
@@ -1111,7 +1119,7 @@ export default function TalentProfilPage() {
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-4">
                 {loisirs.map((loisir) => (
-                  <Badge key={loisir} variant="outline" className="px-3 py-1">
+                  <Badge key={loisir} variant="outline" className="px-3 py-1 border-gray-400 text-gray-200">
                     {loisir}
                     <button onClick={() => removeLoisir(loisir)} className="ml-2 hover:text-red-500">
                       <X className="w-3 h-3" />
@@ -1125,6 +1133,7 @@ export default function TalentProfilPage() {
                   onChange={(e) => setNewLoisir(e.target.value)}
                   placeholder="Lecture, Sport, Musique..."
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addLoisir())}
+                  className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                 />
                 <Button variant="outline" onClick={addLoisir}>
                   <Plus className="w-4 h-4" />
@@ -1134,22 +1143,22 @@ export default function TalentProfilPage() {
           </Card>
 
           {/* Liens */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader>
-              <CardTitle>Liens professionnels</CardTitle>
+              <CardTitle className="text-white">Liens professionnels</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="flex items-center gap-2"><Linkedin className="w-4 h-4" />LinkedIn</Label>
-                <Input value={profile.linkedinUrl || ''} onChange={(e) => setProfile({ ...profile, linkedinUrl: e.target.value })} placeholder="https://linkedin.com/in/votre-profil" />
+                <Label className="flex items-center gap-2 text-gray-300"><Linkedin className="w-4 h-4" />LinkedIn</Label>
+                <Input value={profile.linkedinUrl || ''} onChange={(e) => setProfile({ ...profile, linkedinUrl: e.target.value })} placeholder="https://linkedin.com/in/votre-profil" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
               </div>
               <div>
-                <Label className="flex items-center gap-2"><Github className="w-4 h-4" />GitHub</Label>
-                <Input value={profile.githubUrl || ''} onChange={(e) => setProfile({ ...profile, githubUrl: e.target.value })} placeholder="https://github.com/votre-profil" />
+                <Label className="flex items-center gap-2 text-gray-300"><Github className="w-4 h-4" />GitHub</Label>
+                <Input value={profile.githubUrl || ''} onChange={(e) => setProfile({ ...profile, githubUrl: e.target.value })} placeholder="https://github.com/votre-profil" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
               </div>
               <div>
-                <Label className="flex items-center gap-2"><Globe className="w-4 h-4" />Portfolio / Site web</Label>
-                <Input value={profile.portfolioUrl || ''} onChange={(e) => setProfile({ ...profile, portfolioUrl: e.target.value })} placeholder="https://votre-site.com" />
+                <Label className="flex items-center gap-2 text-gray-300"><Globe className="w-4 h-4" />Portfolio / Site web</Label>
+                <Input value={profile.portfolioUrl || ''} onChange={(e) => setProfile({ ...profile, portfolioUrl: e.target.value })} placeholder="https://votre-site.com" className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300" />
               </div>
             </CardContent>
           </Card>

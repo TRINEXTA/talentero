@@ -222,43 +222,43 @@ export default function ClientReviewsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Building2 className="w-3 h-3 mr-1" />
                 Espace Entreprise
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/c/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/c/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/c/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/c/offres" className="text-gray-300 hover:text-primary">
                   Mes offres
                 </Link>
-                <Link href="/c/shortlists" className="text-gray-600 hover:text-primary">
+                <Link href="/c/shortlists" className="text-gray-300 hover:text-primary">
                   Shortlists
                 </Link>
-                <Link href="/c/entretiens" className="text-gray-600 hover:text-primary">
+                <Link href="/c/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
                 <Link href="/c/reviews" className="text-primary font-medium">
                   Évaluations
                 </Link>
-                <Link href="/c/factures" className="text-gray-600 hover:text-primary">
+                <Link href="/c/factures" className="text-gray-300 hover:text-primary">
                   Factures
                 </Link>
               </nav>
@@ -279,11 +279,11 @@ export default function ClientReviewsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Star className="w-7 h-7" />
               Mes Évaluations
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-300 mt-1">
               Évaluez les freelances avec qui vous avez travaillé
             </p>
           </div>
@@ -301,47 +301,47 @@ export default function ClientReviewsPage() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Star className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-gray-500">Évaluations</p>
+                <p className="text-2xl font-bold text-white">{stats.total}</p>
+                <p className="text-sm text-gray-300">Évaluations</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.publiees}</p>
-                <p className="text-sm text-gray-500">Publiées</p>
+                <p className="text-2xl font-bold text-white">{stats.publiees}</p>
+                <p className="text-sm text-gray-300">Publiées</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.enAttente}</p>
-                <p className="text-sm text-gray-500">En attente</p>
+                <p className="text-2xl font-bold text-white">{stats.enAttente}</p>
+                <p className="text-sm text-gray-300">En attente</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Star className="w-6 h-6 text-purple-600 fill-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.moyenneNote}</p>
-                <p className="text-sm text-gray-500">Note moyenne</p>
+                <p className="text-2xl font-bold text-white">{stats.moyenneNote}</p>
+                <p className="text-sm text-gray-300">Note moyenne</p>
               </div>
             </CardContent>
           </Card>
@@ -349,7 +349,7 @@ export default function ClientReviewsPage() {
 
         {/* Form */}
         {showForm && (
-          <Card className="mb-8">
+          <Card className="bg-gray-600 border-gray-500 mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Nouvelle évaluation</CardTitle>
@@ -365,12 +365,12 @@ export default function ClientReviewsPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Recherche talent */}
                 <div>
-                  <Label>Freelance à évaluer</Label>
+                  <Label className="text-gray-300">Freelance à évaluer</Label>
                   {selectedTalent ? (
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg mt-1">
+                    <div className="flex items-center gap-2 p-3 bg-gray-500 rounded-lg mt-1">
                       <User className="w-8 h-8 text-gray-400" />
                       <div className="flex-1">
-                        <p className="font-medium">{selectedTalent.prenom} {selectedTalent.nom}</p>
+                        <p className="font-medium text-white">{selectedTalent.prenom} {selectedTalent.nom}</p>
                       </div>
                       <Button
                         type="button"
@@ -390,14 +390,15 @@ export default function ClientReviewsPage() {
                           setSearchTalent(e.target.value)
                           searchTalents(e.target.value)
                         }}
+                        className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                       />
                       {talentResults.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border max-h-48 overflow-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-gray-600 rounded-lg shadow-lg border border-gray-500 max-h-48 overflow-auto">
                           {talentResults.map((t) => (
                             <button
                               key={t.uid}
                               type="button"
-                              className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-3"
+                              className="w-full p-3 text-left hover:bg-gray-500 flex items-center gap-3"
                               onClick={() => {
                                 setSelectedTalent(t)
                                 setTalentResults([])
@@ -406,9 +407,9 @@ export default function ClientReviewsPage() {
                             >
                               <User className="w-6 h-6 text-gray-400" />
                               <div>
-                                <p className="font-medium">{t.prenom} {t.nom}</p>
+                                <p className="font-medium text-white">{t.prenom} {t.nom}</p>
                                 {t.titrePoste && (
-                                  <p className="text-sm text-gray-500">{t.titrePoste}</p>
+                                  <p className="text-sm text-gray-300">{t.titrePoste}</p>
                                 )}
                               </div>
                             </button>
@@ -452,17 +453,18 @@ export default function ClientReviewsPage() {
 
                     {/* Commentaire */}
                     <div>
-                      <Label htmlFor="titre">Titre (optionnel)</Label>
+                      <Label htmlFor="titre" className="text-gray-300">Titre (optionnel)</Label>
                       <Input
                         id="titre"
                         value={form.titre}
                         onChange={(e) => setForm({ ...form, titre: e.target.value })}
                         placeholder="Ex: Excellente collaboration"
+                        className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="commentaire">Commentaire *</Label>
+                      <Label htmlFor="commentaire" className="text-gray-300">Commentaire *</Label>
                       <Textarea
                         id="commentaire"
                         value={form.commentaire}
@@ -470,6 +472,7 @@ export default function ClientReviewsPage() {
                         placeholder="Décrivez votre expérience avec ce freelance..."
                         rows={4}
                         required
+                        className="bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
                       />
                     </div>
 
@@ -482,13 +485,13 @@ export default function ClientReviewsPage() {
                         onChange={(e) => setForm({ ...form, recommande: e.target.checked })}
                         className="w-4 h-4 rounded border-gray-300"
                       />
-                      <Label htmlFor="recommande" className="flex items-center gap-2 cursor-pointer">
+                      <Label htmlFor="recommande" className="flex items-center gap-2 cursor-pointer text-gray-300">
                         <ThumbsUp className="w-4 h-4 text-green-600" />
                         Je recommande ce freelance
                       </Label>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-4 border-t">
+                    <div className="flex justify-end gap-2 pt-4 border-t border-gray-500">
                       <Button
                         type="button"
                         variant="outline"
@@ -509,13 +512,13 @@ export default function ClientReviewsPage() {
 
         {/* Liste des reviews */}
         {reviews.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="p-12 text-center">
               <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-white mb-2">
                 Aucune évaluation
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-300 mb-4">
                 Partagez votre expérience avec les freelances
               </p>
               <Button onClick={() => setShowForm(true)}>
@@ -527,7 +530,7 @@ export default function ClientReviewsPage() {
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (
-              <Card key={review.uid}>
+              <Card key={review.uid} className="bg-gray-600 border-gray-500">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
@@ -544,22 +547,22 @@ export default function ClientReviewsPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-gray-900">
+                          <h3 className="font-medium text-white">
                             {review.talent.prenom} {review.talent.nom}
                           </h3>
                           <Badge className={statutLabels[review.statut]?.color || 'bg-gray-100'}>
                             {statutLabels[review.statut]?.label || review.statut}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">
+                        <p className="text-sm text-gray-300 mb-2">
                           {review.talent.titrePoste || 'Freelance'}
                         </p>
                         <StarRating rating={review.noteGlobale} />
                         {review.titre && (
-                          <p className="font-medium mt-2">{review.titre}</p>
+                          <p className="font-medium text-white mt-2">{review.titre}</p>
                         )}
-                        <p className="text-gray-600 mt-1">{review.commentaire}</p>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-gray-300 mt-1">{review.commentaire}</p>
+                        <p className="text-xs text-gray-300 mt-2">
                           {format(new Date(review.createdAt), "d MMMM yyyy", { locale: fr })}
                         </p>
                       </div>

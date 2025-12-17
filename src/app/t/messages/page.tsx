@@ -181,36 +181,36 @@ export default function TalentMessagesPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <Users className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
               <nav className="hidden md:flex items-center gap-6">
-                <Link href="/t/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/t/dashboard" className="text-gray-300 hover:text-primary">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
                 <Link href="/t/messages" className="text-primary font-medium">
                   Messages
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -232,8 +232,8 @@ export default function TalentMessagesPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Messages</h1>
+          <p className="text-gray-300 mt-1">
             Annonces TRINEXTA et echanges avec les clients
           </p>
         </div>
@@ -264,12 +264,12 @@ export default function TalentMessagesPage() {
         {/* Annonces TRINEXTA */}
         {activeTab === 'annonces' && (
           selectedBroadcast ? (
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h2 className="text-xl font-semibold">{selectedBroadcast.sujet}</h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h2 className="text-xl font-semibold text-white">{selectedBroadcast.sujet}</h2>
+                    <p className="text-sm text-gray-300 mt-1">
                       Recu le {new Date(selectedBroadcast.recuLe).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'long',
@@ -284,17 +284,17 @@ export default function TalentMessagesPage() {
                     Retour
                   </Button>
                 </div>
-                <div className="whitespace-pre-wrap text-gray-700 bg-gray-50 p-4 rounded-lg">
+                <div className="whitespace-pre-wrap text-gray-300 bg-gray-500 p-4 rounded-lg">
                   {selectedBroadcast.contenu}
                 </div>
               </CardContent>
             </Card>
           ) : broadcastMessages.length === 0 ? (
-            <Card>
+            <Card className="bg-gray-600 border-gray-500">
               <CardContent className="py-16 text-center">
                 <Megaphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune annonce</h3>
-                <p className="text-gray-500">Les annonces de TRINEXTA apparaitront ici</p>
+                <h3 className="text-lg font-semibold text-white mb-2">Aucune annonce</h3>
+                <p className="text-gray-300">Les annonces de TRINEXTA apparaitront ici</p>
               </CardContent>
             </Card>
           ) : (
@@ -302,7 +302,7 @@ export default function TalentMessagesPage() {
               {broadcastMessages.map((msg) => (
                 <Card
                   key={msg.uid}
-                  className={`cursor-pointer hover:shadow-md transition ${
+                  className={`cursor-pointer hover:shadow-md transition bg-gray-600 border-gray-500 ${
                     !msg.lu ? 'bg-primary/5 border-primary/20' : ''
                   }`}
                   onClick={() => openBroadcast(msg)}
@@ -318,7 +318,7 @@ export default function TalentMessagesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <h3 className={`font-medium ${!msg.lu ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>
+                          <h3 className={`font-medium ${!msg.lu ? 'text-white font-semibold' : 'text-gray-300'}`}>
                             {msg.sujet}
                           </h3>
                           <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
@@ -328,7 +328,7 @@ export default function TalentMessagesPage() {
                             })}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500 truncate mt-1">
+                        <p className="text-sm text-gray-300 truncate mt-1">
                           {msg.contenu}
                         </p>
                       </div>
@@ -349,7 +349,7 @@ export default function TalentMessagesPage() {
               placeholder="Rechercher dans les conversations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-gray-500 border-gray-400 text-white placeholder:text-gray-300"
             />
           </div>
         )}
@@ -361,13 +361,13 @@ export default function TalentMessagesPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardContent className="py-16 text-center">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 {search ? 'Aucun resultat' : 'Aucune conversation'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-300">
                 {search
                   ? 'Essayez une autre recherche'
                   : 'Vos echanges avec TRINEXTA apparaitront ici'}
@@ -378,7 +378,7 @@ export default function TalentMessagesPage() {
           <div className="space-y-2">
             {filteredConversations.map((conv) => (
               <Link key={conv.uid} href={`/t/messages/${conv.uid}`}>
-                <Card className={`hover:shadow-md transition-shadow cursor-pointer ${conv.unreadCount > 0 ? 'bg-blue-50/50 border-blue-200' : ''}`}>
+                <Card className={`hover:shadow-md transition-shadow cursor-pointer bg-gray-600 border-gray-500 ${conv.unreadCount > 0 ? 'bg-primary/10 border-primary/30' : ''}`}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
                       {/* Avatar / Icon */}
@@ -398,7 +398,7 @@ export default function TalentMessagesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <h3 className={`font-semibold text-gray-900 truncate ${conv.unreadCount > 0 ? 'font-bold' : ''}`}>
+                            <h3 className={`font-semibold text-white truncate ${conv.unreadCount > 0 ? 'font-bold' : ''}`}>
                               {conv.type === 'DIRECT' ? (conv.sujet || 'Message de TRINEXTA') :
                                conv.type === 'SUPPORT' ? (conv.sujet || 'Demande de support') :
                                conv.offre?.titre || conv.sujet || 'Conversation'}
@@ -414,7 +414,7 @@ export default function TalentMessagesPage() {
                               </p>
                             )}
                             {conv.offre?.client && conv.type === 'OFFRE' && (
-                              <p className="text-sm text-gray-500 truncate">
+                              <p className="text-sm text-gray-300 truncate">
                                 {conv.offre.client.raisonSociale}
                               </p>
                             )}
@@ -432,7 +432,7 @@ export default function TalentMessagesPage() {
                         </div>
 
                         {conv.lastMessage && (
-                          <p className={`text-sm mt-1 truncate ${conv.unreadCount > 0 ? 'text-gray-900' : 'text-gray-500'}`}>
+                          <p className={`text-sm mt-1 truncate ${conv.unreadCount > 0 ? 'text-white' : 'text-gray-300'}`}>
                             {conv.lastMessage.isFromMe && <span className="text-gray-400">Vous: </span>}
                             {conv.lastMessage.contenu}
                           </p>
@@ -440,7 +440,7 @@ export default function TalentMessagesPage() {
 
                         <div className="flex items-center gap-2 mt-2">
                           {conv.offre?.codeUnique && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                               {conv.offre.codeUnique}
                             </Badge>
                           )}
