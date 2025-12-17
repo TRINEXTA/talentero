@@ -62,7 +62,7 @@ export async function GET(
             telephone: true,
             linkedinUrl: true,
             cvUrl: true,
-            experience: true,
+            anneesExperience: true,
             user: {
               select: {
                 email: true,

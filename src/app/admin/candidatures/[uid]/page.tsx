@@ -76,7 +76,7 @@ interface Candidature {
     telephone: string | null
     linkedinUrl: string | null
     cvUrl: string | null
-    experience: number | null
+    anneesExperience: number | null
     user?: {
       email: string
       isActive: boolean
@@ -554,10 +554,10 @@ export default function AdminCandidatureDetailPage() {
                     <Clock className="w-4 h-4 text-gray-500" />
                     {candidature.talent.disponibilite}
                   </div>
-                  {candidature.talent.experience && (
+                  {candidature.talent.anneesExperience && (
                     <div className="flex items-center gap-2 text-gray-300">
                       <Briefcase className="w-4 h-4 text-gray-500" />
-                      {candidature.talent.experience} ans d'experience
+                      {candidature.talent.anneesExperience} ans d'experience
                     </div>
                   )}
                 </div>
