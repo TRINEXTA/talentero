@@ -195,6 +195,7 @@ model Talent {
   planning              TalentPlanning[]        // Planning de disponibilité
   missions              Mission[]               // Missions en cours/passées
   reviews               Review[]                // Avis reçus des clients
+  contrats              Contrat[]               // Contrats avec les clients
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -351,6 +352,7 @@ model Client {
   conversations         ConversationParticipant[]
   reviews               Review[]                    // Avis laissés sur les talents
   factures              Facture[]                   // Factures émises
+  contrats              Contrat[]                   // Contrats avec les talents
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -1405,4 +1407,157 @@ enum ModePaiement {
   PRELEVEMENT
   ESPECES
   AUTRE
+}
+
+// ============================================
+// CONTRATS
+// ============================================
+
+model Contrat {
+  id              Int       @id @default(autoincrement())
+  uid             String    @unique @default(uuid())
+
+  // Numéro de contrat unique (CTR-2024-0001)
+  numero          String    @unique
+
+  // Parties du contrat
+  talent          Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId        Int
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId        Int
+
+  // Références associées
+  offreId         Int?
+  candidatureId   Int?
+  missionId       Int?
+
+  // Informations du talent au moment du contrat
+  talentNom       String
+  talentPrenom    String
+  talentSiret     String?
+  talentAdresse   String?
+
+  // Informations du client au moment du contrat
+  clientNom       String
+  clientSiret     String?
+  clientAdresse   String?
+
+  // Type de contrat
+  typeContrat     TypeContrat @default(FREELANCE)
+
+  // Détails de la mission
+  titre           String              // Titre de la mission
+  description     String?             // Description détaillée
+  lieu            String?             // Lieu d'exécution
+  mobilite        Mobilite?           // Mode de travail
+
+  // Période
+  dateDebut       DateTime
+  dateFin         DateTime?
+  dureeNombre     Int?
+  dureeUnite      DureeUnite @default(MOIS)
+  renouvelable    Boolean   @default(false)
+
+  // Conditions de renouvellement
+  conditionsRenouvellement String?
+  preavisJours    Int       @default(30)   // Préavis en jours
+
+  // Conditions financières
+  tjm             Int                 // TJM négocié
+  tauxTVA         Float     @default(20)
+  plafondJours    Int?                // Nombre max de jours
+  plafondMontant  Float?              // Montant max HT
+
+  // Clauses particulières
+  clauses         Json?               // [{titre, contenu}]
+  conditionsParticulieres String?
+
+  // Statut du contrat
+  statut          ContratStatut @default(BROUILLON)
+
+  // Dates du workflow
+  envoyeLe        DateTime?           // Envoyé pour signature
+  signeParTalent  Boolean   @default(false)
+  signeParTalentLe DateTime?
+  signeParClient  Boolean   @default(false)
+  signeParClientLe DateTime?
+  activeDepuis    DateTime?           // Date d'activation
+  termineLe       DateTime?           // Date de fin effective
+  motifFin        String?             // Motif de fin anticipée
+
+  // Documents
+  pdfUrl          String?             // PDF du contrat
+  signatureTalentUrl String?          // Signature du talent
+  signatureClientUrl String?          // Signature du client
+
+  // Avenants
+  avenants        Avenant[]
+
+  // Notes
+  notes           String?
+  notesInternes   String?             // Notes visibles seulement par admin
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       Int?                // Admin qui a créé
+
+  @@index([talentId])
+  @@index([clientId])
+  @@index([statut])
+  @@index([numero])
+}
+
+model Avenant {
+  id              Int       @id @default(autoincrement())
+  uid             String    @unique @default(uuid())
+
+  contrat         Contrat   @relation(fields: [contratId], references: [id], onDelete: Cascade)
+  contratId       Int
+
+  // Numéro d'avenant (AVN-CTR-2024-0001-01)
+  numero          String    @unique
+
+  // Modifications
+  objet           String                // Objet de l'avenant
+  modifications   String                // Description des modifications
+
+  // Nouvelles conditions (si modifiées)
+  nouveauTjm      Int?
+  nouvelleDateFin DateTime?
+  nouveauPlafond  Float?
+
+  // Statut
+  statut          ContratStatut @default(BROUILLON)
+  signeParTalent  Boolean   @default(false)
+  signeParTalentLe DateTime?
+  signeParClient  Boolean   @default(false)
+  signeParClientLe DateTime?
+
+  // PDF
+  pdfUrl          String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([contratId])
+}
+
+enum TypeContrat {
+  FREELANCE           // Contrat de prestation freelance standard
+  PORTAGE             // Contrat via portage salarial
+  REGIE               // Contrat de régie
+  FORFAIT             // Contrat au forfait
+  CDI_CHANTIER        // CDI de chantier
+}
+
+enum ContratStatut {
+  BROUILLON           // En cours de rédaction
+  EN_ATTENTE_SIGNATURE // Envoyé pour signature
+  SIGNE_TALENT        // Signé par le talent uniquement
+  SIGNE_CLIENT        // Signé par le client uniquement
+  ACTIF               // Signé par les deux parties, en cours
+  SUSPENDU            // Suspendu temporairement
+  TERMINE             // Terminé normalement
+  RESILIE             // Résilié avant terme
+  ANNULE              // Annulé avant exécution
 }

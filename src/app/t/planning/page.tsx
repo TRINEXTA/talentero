@@ -171,6 +171,9 @@ export default function TalentPlanningPage() {
                 <Link href="/t/offres" className="text-gray-600 hover:text-primary">
                   Offres
                 </Link>
+                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                  Mes Matchs
+                </Link>
                 <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
                   Candidatures
                 </Link>
