@@ -15,8 +15,17 @@ import {
   Shield, ArrowLeft, Save, User, Briefcase, MapPin, Euro, Clock,
   Mail, Phone, Globe, Github, Linkedin, FileText, Calendar,
   CheckCircle, XCircle, Loader2, Send, Eye, Building2, Trash2,
-  Ban, Download, FileDown
+  Ban, Download, FileDown, MessageSquare
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface Talent {
   uid: string
@@ -124,6 +133,11 @@ export default function AdminTalentDetailPage() {
   const [deletingCV, setDeletingCV] = useState(false)
   const [uploadingCV, setUploadingCV] = useState(false)
   const [activeTab, setActiveTab] = useState<'profil' | 'experiences' | 'candidatures'>('profil')
+  // Message dialog
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false)
+  const [messageSujet, setMessageSujet] = useState('')
+  const [messageContent, setMessageContent] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   useEffect(() => {
     if (uid) {
@@ -419,6 +433,41 @@ export default function AdminTalentDetailPage() {
     }
   }
 
+  const sendMessage = async () => {
+    if (!talent || !messageContent.trim()) return
+    setSendingMessage(true)
+    try {
+      const res = await fetch('/api/admin/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          talentUid: talent.uid,
+          sujet: messageSujet || `Message pour ${talent.prenom} ${talent.nom}`,
+          message: messageContent,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Erreur')
+      }
+      toast({
+        title: "Message envoye",
+        description: `Votre message a ete envoye a ${talent.prenom} ${talent.nom}`,
+      })
+      setMessageDialogOpen(false)
+      setMessageSujet('')
+      setMessageContent('')
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible d'envoyer le message",
+        variant: "destructive",
+      })
+    } finally {
+      setSendingMessage(false)
+    }
+  }
+
   const getStatutBadge = (statut: string) => {
     const configs: Record<string, { label: string; className: string }> = {
       ACTIF: { label: 'Actif', className: 'bg-green-600' },
@@ -470,6 +519,68 @@ export default function AdminTalentDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Bouton Envoyer un message */}
+              <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-600 text-blue-400 hover:bg-blue-600/20"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Envoyer un message
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-gray-800 border-gray-700">
+                  <DialogHeader>
+                    <DialogTitle className="text-white">Envoyer un message a {talent.prenom} {talent.nom}</DialogTitle>
+                    <DialogDescription className="text-gray-400">
+                      Ce message sera envoye directement au freelance et apparaitra dans sa messagerie.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label className="text-gray-300">Sujet (optionnel)</Label>
+                      <Input
+                        value={messageSujet}
+                        onChange={(e) => setMessageSujet(e.target.value)}
+                        placeholder="Ex: Opportunite de mission"
+                        className="bg-gray-700 border-gray-600 text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Message *</Label>
+                      <Textarea
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        placeholder="Ecrivez votre message..."
+                        className="bg-gray-700 border-gray-600 text-white min-h-[150px]"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setMessageDialogOpen(false)}
+                      className="border-gray-600 text-gray-300"
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={sendMessage}
+                      disabled={sendingMessage || !messageContent.trim()}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {sendingMessage ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-1" />
+                      )}
+                      Envoyer
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               {!talent.user.emailVerified && talent.user.activationToken && (
                 <Button
                   variant="outline"

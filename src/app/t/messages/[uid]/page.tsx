@@ -32,6 +32,7 @@ interface Message {
 interface Conversation {
   uid: string
   sujet: string | null
+  type: 'OFFRE' | 'DIRECT' | 'SUPPORT'
   offre: {
     uid: string
     codeUnique: string
@@ -43,7 +44,7 @@ interface Conversation {
       raisonSociale: string
       logoUrl: string | null
     } | null
-  }
+  } | null
   participants: Array<{
     type: string
     talent: any | null
@@ -83,10 +84,31 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
         return
       }
 
-      const res = await fetch(`/api/messages/${uid}`, { credentials: 'include' })
+      // Utiliser la nouvelle API talent conversations
+      const res = await fetch(`/api/talent/conversations/${uid}/messages`, { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
-        setConversation(data.conversation)
+        // Transformer les messages
+        const conv = data.conversation
+        const transformedConv = {
+          ...conv,
+          participants: conv.participants?.map((p: any) => ({
+            type: p.isAdmin ? 'admin' : p.talentId ? 'talent' : 'client',
+            talent: p.talent,
+            client: null,
+            isAdmin: p.isAdmin,
+          })) || [],
+          messages: conv.messages?.map((m: any) => ({
+            uid: m.uid,
+            contenu: m.contenu,
+            pieceJointe: m.pieceJointe,
+            pieceJointeNom: m.pieceJointeNom,
+            expediteur: m.expediteur,
+            isFromMe: m.expediteur?.type === 'moi',
+            createdAt: m.createdAt,
+          })) || [],
+        }
+        setConversation(transformedConv)
       } else if (res.status === 404) {
         router.push('/t/messages')
       }
@@ -107,7 +129,8 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
 
     setSending(true)
     try {
-      const res = await fetch(`/api/messages/${uid}`, {
+      // Utiliser la nouvelle API talent conversations
+      const res = await fetch(`/api/talent/conversations/${uid}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: newMessage.trim() }),
@@ -224,11 +247,27 @@ export default function TalentConversationPage({ params }: { params: Promise<{ u
               </Button>
             </Link>
             <div className="flex-1">
-              <h2 className="font-semibold text-gray-900">{conversation.offre?.titre || conversation.sujet}</h2>
+              <h2 className="font-semibold text-gray-900">
+                {conversation.type === 'DIRECT' ? (conversation.sujet || 'Message de TRINEXTA') :
+                 conversation.type === 'SUPPORT' ? (conversation.sujet || 'Support') :
+                 conversation.offre?.titre || conversation.sujet || 'Conversation'}
+              </h2>
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Badge variant="outline" className="text-xs">
-                  {conversation.offre?.codeUnique}
-                </Badge>
+                {conversation.type === 'DIRECT' && (
+                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                    Message direct
+                  </Badge>
+                )}
+                {conversation.type === 'SUPPORT' && (
+                  <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+                    Support
+                  </Badge>
+                )}
+                {conversation.offre?.codeUnique && (
+                  <Badge variant="outline" className="text-xs">
+                    {conversation.offre.codeUnique}
+                  </Badge>
+                )}
                 {conversation.offre?.client && (
                   <span>{conversation.offre.client.raisonSociale}</span>
                 )}

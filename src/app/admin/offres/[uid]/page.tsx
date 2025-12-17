@@ -107,6 +107,7 @@ interface Candidature {
   motivation: string | null
   scoreMatch: number | null
   statut: string
+  origine: 'POSTULE' | 'IMPORTE' | 'MATCH_PROPOSE' | null
   vueLe: string | null
   reponduLe: string | null
   notesTrinexta: string | null
@@ -147,6 +148,10 @@ interface CandidatureStats {
   acceptee: number
   refusee: number
   matchsSansCandidature: number
+  // Stats par origine
+  postule: number
+  importe: number
+  matchPropose: number
 }
 
 const STATUT_OPTIONS = [
@@ -207,6 +212,7 @@ export default function AdminOffreDetailPage() {
   const [runningMatching, setRunningMatching] = useState(false)
   const [activeTab, setActiveTab] = useState<'details' | 'matchs' | 'candidatures'>('details')
   const [candidatureFilter, setCandidatureFilter] = useState<string | null>(null)
+  const [origineFilter, setOrigineFilter] = useState<string | null>(null)
   const [updatingCandidature, setUpdatingCandidature] = useState<string | null>(null)
   const [expandedCandidature, setExpandedCandidature] = useState<string | null>(null)
   const [noteInput, setNoteInput] = useState<string>('')
@@ -255,9 +261,14 @@ export default function AdminOffreDetailPage() {
     }
   }
 
-  const fetchCandidatures = async () => {
+  const fetchCandidatures = async (origineParam?: string | null) => {
     try {
-      const res = await fetch(`/api/admin/offres/${uid}/candidatures`)
+      const params = new URLSearchParams()
+      if (origineParam) {
+        params.set('origine', origineParam)
+      }
+      const url = `/api/admin/offres/${uid}/candidatures${params.toString() ? `?${params.toString()}` : ''}`
+      const res = await fetch(url)
       if (res.ok) {
         const data = await res.json()
         setCandidatures(data.candidatures || [])
@@ -1069,6 +1080,48 @@ export default function AdminOffreDetailPage() {
               </div>
             )}
 
+            {/* Filtre par origine */}
+            {candidatureStats && (
+              <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                <span className="text-sm text-gray-400 flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filtrer par origine:
+                </span>
+                <Button
+                  size="sm"
+                  variant={!origineFilter ? 'default' : 'outline'}
+                  onClick={() => { setOrigineFilter(null); fetchCandidatures(null); }}
+                  className={!origineFilter ? '' : 'border-gray-600 text-gray-300'}
+                >
+                  Tous ({candidatureStats.total})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={origineFilter === 'POSTULE' ? 'default' : 'outline'}
+                  onClick={() => { setOrigineFilter('POSTULE'); fetchCandidatures('POSTULE'); }}
+                  className={origineFilter === 'POSTULE' ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-400 hover:bg-green-600/20'}
+                >
+                  A postule ({candidatureStats.postule})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={origineFilter === 'IMPORTE' ? 'default' : 'outline'}
+                  onClick={() => { setOrigineFilter('IMPORTE'); fetchCandidatures('IMPORTE'); }}
+                  className={origineFilter === 'IMPORTE' ? 'bg-orange-600 hover:bg-orange-700' : 'border-orange-600 text-orange-400 hover:bg-orange-600/20'}
+                >
+                  Importe ({candidatureStats.importe})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={origineFilter === 'MATCH_PROPOSE' ? 'default' : 'outline'}
+                  onClick={() => { setOrigineFilter('MATCH_PROPOSE'); fetchCandidatures('MATCH_PROPOSE'); }}
+                  className={origineFilter === 'MATCH_PROPOSE' ? 'bg-purple-600 hover:bg-purple-700' : 'border-purple-600 text-purple-400 hover:bg-purple-600/20'}
+                >
+                  Match propose ({candidatureStats.matchPropose})
+                </Button>
+              </div>
+            )}
+
             {/* Liste des candidatures */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -1108,6 +1161,16 @@ export default function AdminOffreDetailPage() {
                                 </h4>
                               </Link>
                               {getCandidatureStatutBadge(candidature.statut)}
+                              {/* Badge origine */}
+                              {candidature.origine === 'POSTULE' && (
+                                <Badge className="bg-green-600/20 text-green-400 border border-green-600">A postule</Badge>
+                              )}
+                              {candidature.origine === 'IMPORTE' && (
+                                <Badge className="bg-orange-600/20 text-orange-400 border border-orange-600">Importe</Badge>
+                              )}
+                              {candidature.origine === 'MATCH_PROPOSE' && (
+                                <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600">Match propose</Badge>
+                              )}
                               {candidature.talent.user?.isActive === false && (
                                 <Badge className="bg-orange-600">Compte inactif</Badge>
                               )}

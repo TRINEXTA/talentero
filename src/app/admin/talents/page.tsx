@@ -225,13 +225,14 @@ function AdminTalentsContent() {
                   <option value="SUSPENDU">Suspendu</option>
                 </select>
                 <select
-                  value={searchParams.get('compteActif') || ''}
-                  onChange={(e) => handleFilterChange('compteActif', e.target.value)}
+                  value={searchParams.get('emailVerifie') || ''}
+                  onChange={(e) => handleFilterChange('emailVerifie', e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                   <option value="">Tous les comptes</option>
-                  <option value="true">Comptes actifs</option>
-                  <option value="false">Comptes inactifs</option>
+                  <option value="true">Email vérifié (activé)</option>
+                  <option value="false">Email non vérifié</option>
+                  <option value="jamaisConnecte">Jamais connecté</option>
                 </select>
                 <Button
                   variant="outline"
@@ -284,32 +285,36 @@ function AdminTalentsContent() {
                       <tr key={talent.uid} className="hover:bg-gray-50">
                         <td className="px-4 py-4">
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-gray-900">
                                 {talent.prenom} {talent.nom}
                               </span>
-                              {talent.user.isActive ? (
-                                <Badge className="bg-green-100 text-green-800 text-xs">Compte actif</Badge>
+                              {/* Email vérifié ou non */}
+                              {talent.user.emailVerified ? (
+                                <span title="Email vérifié - Compte activé"><CheckCircle className="w-4 h-4 text-green-500" /></span>
                               ) : (
-                                <Badge className="bg-red-100 text-red-800 text-xs">Compte inactif</Badge>
+                                <Badge className="bg-orange-100 text-orange-800 text-xs">Non activé</Badge>
                               )}
+                              {/* Importé par admin */}
                               {talent.importeParAdmin && (
                                 <Badge variant="outline" className="text-xs">Importé</Badge>
                               )}
+                              {/* Compte limité (sans SIRET) */}
                               {talent.compteLimite && (
                                 <Badge className="bg-yellow-100 text-yellow-800 text-xs">Limité</Badge>
-                              )}
-                              {!talent.user.activationToken && talent.user.emailVerified && (
-                                <span title="Email vérifié"><CheckCircle className="w-4 h-4 text-green-500" /></span>
                               )}
                             </div>
                             <div className="text-sm text-gray-500">{talent.user.email}</div>
                             {talent.titrePoste && (
                               <div className="text-sm text-gray-400">{talent.titrePoste}</div>
                             )}
-                            {talent.user.lastLoginAt && (
-                              <div className="text-xs text-gray-400">
-                                Dernière connexion: {new Date(talent.user.lastLoginAt).toLocaleDateString('fr-FR')}
+                            {talent.user.lastLoginAt ? (
+                              <div className="text-xs text-green-600">
+                                Connecté le {new Date(talent.user.lastLoginAt).toLocaleDateString('fr-FR')}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-red-500">
+                                Jamais connecté
                               </div>
                             )}
                           </div>

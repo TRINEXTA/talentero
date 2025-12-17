@@ -24,10 +24,14 @@ export async function GET(
 
     const { searchParams } = new URL(request.url)
     const statut = searchParams.get('statut')
+    const origine = searchParams.get('origine')
 
     const where: any = { offreId: offre.id }
     if (statut) {
       where.statut = statut
+    }
+    if (origine) {
+      where.origine = origine
     }
 
     const candidatures = await prisma.candidature.findMany({
@@ -36,7 +40,18 @@ export async function GET(
         { scoreMatch: 'desc' },
         { createdAt: 'desc' }
       ],
-      include: {
+      select: {
+        id: true,
+        uid: true,
+        tjmPropose: true,
+        motivation: true,
+        scoreMatch: true,
+        statut: true,
+        origine: true,
+        vueLe: true,
+        reponduLe: true,
+        notesTrinexta: true,
+        createdAt: true,
         talent: {
           select: {
             uid: true,
@@ -71,6 +86,12 @@ export async function GET(
           }
         }
       }
+    })
+
+    // Stats par origine
+    const allCandidatures = await prisma.candidature.findMany({
+      where: { offreId: offre.id },
+      select: { statut: true, origine: true }
     })
 
     // Récupérer aussi les matchs (talents matchés qui n'ont pas encore postulé)
@@ -109,16 +130,20 @@ export async function GET(
       }
     })
 
-    // Stats par statut
+    // Stats par statut (utiliser allCandidatures pour avoir les stats complètes même avec filtres)
     const stats = {
-      total: candidatures.length,
-      nouvelle: candidatures.filter(c => c.statut === 'NOUVELLE').length,
-      enRevue: candidatures.filter(c => c.statut === 'EN_REVUE').length,
-      preSelectionne: candidatures.filter(c => ['PRE_SELECTIONNE', 'SHORTLIST'].includes(c.statut)).length,
-      entretien: candidatures.filter(c => ['ENTRETIEN_DEMANDE', 'ENTRETIEN_PLANIFIE', 'ENTRETIEN_REALISE'].includes(c.statut)).length,
-      acceptee: candidatures.filter(c => c.statut === 'ACCEPTEE').length,
-      refusee: candidatures.filter(c => c.statut === 'REFUSEE').length,
+      total: allCandidatures.length,
+      nouvelle: allCandidatures.filter(c => c.statut === 'NOUVELLE').length,
+      enRevue: allCandidatures.filter(c => c.statut === 'EN_REVUE').length,
+      preSelectionne: allCandidatures.filter(c => ['PRE_SELECTIONNE', 'SHORTLIST'].includes(c.statut)).length,
+      entretien: allCandidatures.filter(c => ['ENTRETIEN_DEMANDE', 'ENTRETIEN_PLANIFIE', 'ENTRETIEN_REALISE'].includes(c.statut)).length,
+      acceptee: allCandidatures.filter(c => c.statut === 'ACCEPTEE').length,
+      refusee: allCandidatures.filter(c => c.statut === 'REFUSEE').length,
       matchsSansCandidature: matchs.length,
+      // Stats par origine
+      postule: allCandidatures.filter(c => c.origine === 'POSTULE').length,
+      importe: allCandidatures.filter(c => c.origine === 'IMPORTE').length,
+      matchPropose: allCandidatures.filter(c => c.origine === 'MATCH_PROPOSE').length,
     }
 
     return NextResponse.json({
