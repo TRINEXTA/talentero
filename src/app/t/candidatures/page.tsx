@@ -33,16 +33,20 @@ interface Candidature {
   }
 }
 
-const STATUT_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'info'; icon: any }> = {
-  NOUVELLE: { label: 'Nouvelle', variant: 'info', icon: Clock },
-  VUE: { label: 'Vue', variant: 'secondary', icon: Eye },
-  EN_REVUE: { label: 'En revue', variant: 'warning', icon: AlertCircle },
-  SHORTLIST: { label: 'Présélectionné', variant: 'success', icon: CheckCircle },
-  PROPOSEE_CLIENT: { label: 'Proposée au client', variant: 'info', icon: Building2 },
-  ENTRETIEN: { label: 'Entretien', variant: 'success', icon: CheckCircle },
-  ACCEPTEE: { label: 'Acceptée', variant: 'success', icon: CheckCircle },
-  REFUSEE: { label: 'Refusée', variant: 'destructive', icon: XCircle },
-  RETIREE: { label: 'Retirée', variant: 'secondary', icon: XCircle },
+const STATUT_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'info'; icon: any; description: string }> = {
+  NOUVELLE: { label: 'Envoyée', variant: 'info', icon: Clock, description: 'Votre candidature a été envoyée et sera bientôt examinée' },
+  VUE: { label: 'Vue', variant: 'secondary', icon: Eye, description: 'Votre candidature a été consultée par notre équipe' },
+  EN_REVUE: { label: 'En cours d\'analyse', variant: 'warning', icon: AlertCircle, description: 'Votre profil est en cours d\'évaluation' },
+  PRE_SELECTIONNE: { label: 'Présélectionné', variant: 'success', icon: CheckCircle, description: 'Félicitations ! Votre profil a été présélectionné' },
+  SHORTLIST: { label: 'Shortlisté', variant: 'success', icon: CheckCircle, description: 'Vous faites partie des meilleurs candidats retenus' },
+  PROPOSEE_CLIENT: { label: 'Proposé au client', variant: 'info', icon: Building2, description: 'Votre profil a été transmis au client final' },
+  ENTRETIEN_DEMANDE: { label: 'Entretien demandé', variant: 'success', icon: CheckCircle, description: 'Un entretien est demandé, nous vous contacterons bientôt' },
+  ENTRETIEN_PLANIFIE: { label: 'Entretien planifié', variant: 'success', icon: CheckCircle, description: 'Votre entretien est confirmé' },
+  ENTRETIEN_REALISE: { label: 'Entretien réalisé', variant: 'success', icon: CheckCircle, description: 'Entretien terminé, décision en attente' },
+  ACCEPTEE: { label: 'Retenu !', variant: 'success', icon: CheckCircle, description: 'Félicitations ! Votre candidature a été acceptée' },
+  REFUSEE: { label: 'Non retenue', variant: 'destructive', icon: XCircle, description: 'Votre candidature n\'a pas été retenue pour cette offre' },
+  MISSION_PERDUE: { label: 'Offre fermée', variant: 'secondary', icon: XCircle, description: 'L\'offre a été fermée' },
+  RETIREE: { label: 'Retirée', variant: 'secondary', icon: XCircle, description: 'Vous avez retiré votre candidature' },
 }
 
 export default function TalentCandidaturesPage() {

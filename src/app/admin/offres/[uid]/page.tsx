@@ -14,8 +14,17 @@ import { useToast } from '@/components/ui/use-toast'
 import {
   Shield, ArrowLeft, Save, Briefcase, Building2, MapPin, Euro, Calendar,
   Users, Clock, CheckCircle, XCircle, Play, Eye, Send, Loader2, Zap,
-  FileText, Globe, Car, Plane
+  FileText, Globe, Car, Plane, Star, MessageSquare, Phone, Mail,
+  UserCheck, UserX, AlertCircle, ThumbsUp, ThumbsDown, MoreHorizontal,
+  ChevronDown, ChevronUp, Filter, Search
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Offre {
   uid: string
@@ -79,15 +88,72 @@ interface Match {
     competences: string[]
     tjm: number | null
     disponibilite: string
+    ville: string | null
+    photoUrl: string | null
+    statut: string
+    user?: {
+      email: string
+      isActive: boolean
+    }
   }
   competencesMatchees: string[]
   competencesManquantes: string[]
+}
+
+interface Candidature {
+  id: number
+  uid: string
+  tjmPropose: number | null
+  motivation: string | null
+  scoreMatch: number | null
+  statut: string
+  vueLe: string | null
+  reponduLe: string | null
+  notesTrinexta: string | null
+  createdAt: string
+  talent: {
+    uid: string
+    codeUnique: string
+    prenom: string
+    nom: string
+    titrePoste: string | null
+    competences: string[]
+    tjm: number | null
+    tjmMin: number | null
+    tjmMax: number | null
+    disponibilite: string
+    ville: string | null
+    photoUrl: string | null
+    statut: string
+    user?: {
+      email: string
+      isActive: boolean
+      lastLoginAt: string | null
+    }
+  }
+  entretiens: Array<{
+    uid: string
+    dateHeure: string
+    statut: string
+  }>
+}
+
+interface CandidatureStats {
+  total: number
+  nouvelle: number
+  enRevue: number
+  preSelectionne: number
+  entretien: number
+  acceptee: number
+  refusee: number
+  matchsSansCandidature: number
 }
 
 const STATUT_OPTIONS = [
   { value: 'BROUILLON', label: 'Brouillon' },
   { value: 'EN_ATTENTE_VALIDATION', label: 'En attente validation' },
   { value: 'PUBLIEE', label: 'Publiee' },
+  { value: 'EN_EVALUATION', label: 'En evaluation candidats' },
   { value: 'SHORTLIST_ENVOYEE', label: 'Shortlist envoyee' },
   { value: 'ENTRETIENS_EN_COURS', label: 'Entretiens en cours' },
   { value: 'POURVUE', label: 'Pourvue' },
@@ -109,6 +175,22 @@ const MOBILITE_OPTIONS = [
   { value: 'DEPLACEMENT_MULTI_SITE', label: 'Multi-sites' },
 ]
 
+const CANDIDATURE_STATUT_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
+  NOUVELLE: { label: 'Nouvelle', color: 'text-blue-400', bgColor: 'bg-blue-600' },
+  VUE: { label: 'Vue', color: 'text-gray-400', bgColor: 'bg-gray-600' },
+  EN_REVUE: { label: 'En revue', color: 'text-yellow-400', bgColor: 'bg-yellow-600' },
+  PRE_SELECTIONNE: { label: 'Pre-selectionne', color: 'text-purple-400', bgColor: 'bg-purple-600' },
+  SHORTLIST: { label: 'Shortlist', color: 'text-indigo-400', bgColor: 'bg-indigo-600' },
+  PROPOSEE_CLIENT: { label: 'Propose au client', color: 'text-cyan-400', bgColor: 'bg-cyan-600' },
+  ENTRETIEN_DEMANDE: { label: 'Entretien demande', color: 'text-orange-400', bgColor: 'bg-orange-600' },
+  ENTRETIEN_PLANIFIE: { label: 'Entretien planifie', color: 'text-orange-300', bgColor: 'bg-orange-500' },
+  ENTRETIEN_REALISE: { label: 'Entretien realise', color: 'text-teal-400', bgColor: 'bg-teal-600' },
+  ACCEPTEE: { label: 'Acceptee', color: 'text-green-400', bgColor: 'bg-green-600' },
+  REFUSEE: { label: 'Refusee', color: 'text-red-400', bgColor: 'bg-red-600' },
+  MISSION_PERDUE: { label: 'Mission perdue', color: 'text-gray-500', bgColor: 'bg-gray-700' },
+  RETIREE: { label: 'Retiree', color: 'text-gray-500', bgColor: 'bg-gray-700' },
+}
+
 export default function AdminOffreDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -117,15 +199,23 @@ export default function AdminOffreDetailPage() {
 
   const [offre, setOffre] = useState<Offre | null>(null)
   const [matches, setMatches] = useState<Match[]>([])
+  const [candidatures, setCandidatures] = useState<Candidature[]>([])
+  const [matchsSansCandidature, setMatchsSansCandidature] = useState<Match[]>([])
+  const [candidatureStats, setCandidatureStats] = useState<CandidatureStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [runningMatching, setRunningMatching] = useState(false)
   const [activeTab, setActiveTab] = useState<'details' | 'matchs' | 'candidatures'>('details')
+  const [candidatureFilter, setCandidatureFilter] = useState<string | null>(null)
+  const [updatingCandidature, setUpdatingCandidature] = useState<string | null>(null)
+  const [expandedCandidature, setExpandedCandidature] = useState<string | null>(null)
+  const [noteInput, setNoteInput] = useState<string>('')
 
   useEffect(() => {
     if (uid) {
       fetchOffre()
       fetchMatches()
+      fetchCandidatures()
     }
   }, [uid])
 
@@ -162,6 +252,20 @@ export default function AdminOffreDetailPage() {
       }
     } catch (error) {
       console.error('Erreur matches:', error)
+    }
+  }
+
+  const fetchCandidatures = async () => {
+    try {
+      const res = await fetch(`/api/admin/offres/${uid}/candidatures`)
+      if (res.ok) {
+        const data = await res.json()
+        setCandidatures(data.candidatures || [])
+        setMatchsSansCandidature(data.matchsSansCandidature || [])
+        setCandidatureStats(data.stats || null)
+      }
+    } catch (error) {
+      console.error('Erreur candidatures:', error)
     }
   }
 
@@ -228,6 +332,7 @@ export default function AdminOffreDetailPage() {
         description: `${data.matchCount} talents matches`,
       })
       fetchMatches()
+      fetchCandidatures()
     } catch (error) {
       toast({
         title: "Erreur",
@@ -239,12 +344,42 @@ export default function AdminOffreDetailPage() {
     }
   }
 
+  const handleCandidatureAction = async (candidatureUid: string, action: string, notes?: string) => {
+    setUpdatingCandidature(candidatureUid)
+    try {
+      const res = await fetch(`/api/admin/offres/${uid}/candidatures`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidatureUid, action, notes }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Erreur')
+      }
+      toast({
+        title: "Succes",
+        description: "Candidature mise a jour",
+      })
+      fetchCandidatures()
+      setNoteInput('')
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Erreur",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdatingCandidature(null)
+    }
+  }
+
   const getStatutBadge = (statut: string) => {
     const configs: Record<string, { label: string; className: string }> = {
       BROUILLON: { label: 'Brouillon', className: 'bg-gray-600' },
       EN_ATTENTE_VALIDATION: { label: 'En attente', className: 'bg-yellow-600' },
       PUBLIEE: { label: 'Publiee', className: 'bg-green-600' },
-      SHORTLIST_ENVOYEE: { label: 'Shortlist envoyee', className: 'bg-blue-600' },
+      EN_EVALUATION: { label: 'En evaluation', className: 'bg-blue-600' },
+      SHORTLIST_ENVOYEE: { label: 'Shortlist envoyee', className: 'bg-indigo-600' },
       ENTRETIENS_EN_COURS: { label: 'Entretiens', className: 'bg-purple-600' },
       POURVUE: { label: 'Pourvue', className: 'bg-emerald-600' },
       FERMEE: { label: 'Fermee', className: 'bg-orange-600' },
@@ -253,6 +388,40 @@ export default function AdminOffreDetailPage() {
     const config = configs[statut] || { label: statut, className: 'bg-gray-600' }
     return <Badge className={config.className}>{config.label}</Badge>
   }
+
+  const getCandidatureStatutBadge = (statut: string) => {
+    const config = CANDIDATURE_STATUT_CONFIG[statut] || { label: statut, bgColor: 'bg-gray-600' }
+    return <Badge className={config.bgColor}>{config.label}</Badge>
+  }
+
+  const getScoreColor = (score: number | null) => {
+    if (!score) return 'text-gray-400'
+    if (score >= 80) return 'text-green-400'
+    if (score >= 60) return 'text-yellow-400'
+    return 'text-red-400'
+  }
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const filteredCandidatures = candidatureFilter
+    ? candidatures.filter(c => {
+        if (candidatureFilter === 'nouvelle') return c.statut === 'NOUVELLE'
+        if (candidatureFilter === 'en_revue') return c.statut === 'EN_REVUE'
+        if (candidatureFilter === 'pre_selectionne') return ['PRE_SELECTIONNE', 'SHORTLIST'].includes(c.statut)
+        if (candidatureFilter === 'entretien') return ['ENTRETIEN_DEMANDE', 'ENTRETIEN_PLANIFIE', 'ENTRETIEN_REALISE'].includes(c.statut)
+        if (candidatureFilter === 'acceptee') return c.statut === 'ACCEPTEE'
+        if (candidatureFilter === 'refusee') return c.statut === 'REFUSEE'
+        return true
+      })
+    : candidatures
 
   if (loading) {
     return (
@@ -316,19 +485,60 @@ export default function AdminOffreDetailPage() {
                 </>
               )}
               {offre.statut === 'PUBLIEE' && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={runMatching}
+                    disabled={runningMatching}
+                  >
+                    {runningMatching ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4 mr-1" />
+                    )}
+                    Lancer Matching
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => handleAction('passer_evaluation')}
+                  >
+                    <Users className="w-4 h-4 mr-1" />
+                    Passer en evaluation
+                  </Button>
+                </>
+              )}
+              {offre.statut === 'EN_EVALUATION' && (
                 <Button
                   size="sm"
-                  className="bg-purple-600 hover:bg-purple-700"
-                  onClick={runMatching}
-                  disabled={runningMatching}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  onClick={() => handleAction('envoyer_shortlist')}
                 >
-                  {runningMatching ? (
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  ) : (
-                    <Zap className="w-4 h-4 mr-1" />
-                  )}
-                  Lancer Matching
+                  <Send className="w-4 h-4 mr-1" />
+                  Envoyer shortlist
                 </Button>
+              )}
+              {['SHORTLIST_ENVOYEE', 'ENTRETIENS_EN_COURS'].includes(offre.statut) && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => handleAction('marquer_pourvue')}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Poste pourvu
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-orange-600 text-orange-400"
+                    onClick={() => handleAction('fermer')}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    Fermer offre
+                  </Button>
+                </>
               )}
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
@@ -364,7 +574,7 @@ export default function AdminOffreDetailPage() {
             className={activeTab !== 'candidatures' ? 'border-gray-700 text-gray-300' : ''}
           >
             <Users className="w-4 h-4 mr-2" />
-            Candidatures ({offre._count.candidatures})
+            Candidatures ({candidatures.length})
           </Button>
         </div>
 
@@ -677,12 +887,12 @@ export default function AdminOffreDetailPage() {
                     </div>
                     <div className="text-center p-3 bg-gray-700 rounded-lg">
                       <Users className="w-5 h-5 mx-auto mb-1 text-primary" />
-                      <p className="text-2xl font-bold text-white">{offre._count.candidatures}</p>
+                      <p className="text-2xl font-bold text-white">{candidatures.length}</p>
                       <p className="text-xs text-gray-400">Candidatures</p>
                     </div>
                     <div className="text-center p-3 bg-gray-700 rounded-lg">
                       <Zap className="w-5 h-5 mx-auto mb-1 text-yellow-500" />
-                      <p className="text-2xl font-bold text-white">{offre._count.matchs}</p>
+                      <p className="text-2xl font-bold text-white">{matches.length}</p>
                       <p className="text-xs text-gray-400">Matchs</p>
                     </div>
                     <div className="text-center p-3 bg-gray-700 rounded-lg">
@@ -734,8 +944,10 @@ export default function AdminOffreDetailPage() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                            <span className="text-lg font-bold text-primary">{match.score}%</span>
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            match.score >= 80 ? 'bg-green-600/20' : match.score >= 60 ? 'bg-yellow-600/20' : 'bg-red-600/20'
+                          }`}>
+                            <span className={`text-lg font-bold ${getScoreColor(match.score)}`}>{match.score}%</span>
                           </div>
                           <div>
                             <Link href={`/admin/talents/${match.talent.uid}`}>
@@ -781,17 +993,354 @@ export default function AdminOffreDetailPage() {
         )}
 
         {activeTab === 'candidatures' && (
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="py-12 text-center">
-              <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">
-                {offre._count.candidatures} candidature(s)
-              </p>
-              <Link href={`/admin/candidatures?offre=${offre.uid}`}>
-                <Button className="mt-4">Voir les candidatures</Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Stats candidatures */}
+            {candidatureStats && (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-primary transition ${!candidatureFilter ? 'border-primary' : ''}`}
+                  onClick={() => setCandidatureFilter(null)}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-white">{candidatureStats.total}</p>
+                    <p className="text-xs text-gray-400">Total</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-blue-500 transition ${candidatureFilter === 'nouvelle' ? 'border-blue-500' : ''}`}
+                  onClick={() => setCandidatureFilter('nouvelle')}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-400">{candidatureStats.nouvelle}</p>
+                    <p className="text-xs text-gray-400">Nouvelles</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-yellow-500 transition ${candidatureFilter === 'en_revue' ? 'border-yellow-500' : ''}`}
+                  onClick={() => setCandidatureFilter('en_revue')}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-yellow-400">{candidatureStats.enRevue}</p>
+                    <p className="text-xs text-gray-400">En revue</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-purple-500 transition ${candidatureFilter === 'pre_selectionne' ? 'border-purple-500' : ''}`}
+                  onClick={() => setCandidatureFilter('pre_selectionne')}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-purple-400">{candidatureStats.preSelectionne}</p>
+                    <p className="text-xs text-gray-400">Preselectionnes</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-orange-500 transition ${candidatureFilter === 'entretien' ? 'border-orange-500' : ''}`}
+                  onClick={() => setCandidatureFilter('entretien')}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-orange-400">{candidatureStats.entretien}</p>
+                    <p className="text-xs text-gray-400">Entretiens</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-green-500 transition ${candidatureFilter === 'acceptee' ? 'border-green-500' : ''}`}
+                  onClick={() => setCandidatureFilter('acceptee')}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-green-400">{candidatureStats.acceptee}</p>
+                    <p className="text-xs text-gray-400">Acceptees</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={`bg-gray-800 border-gray-700 cursor-pointer hover:border-red-500 transition ${candidatureFilter === 'refusee' ? 'border-red-500' : ''}`}
+                  onClick={() => setCandidatureFilter('refusee')}
+                >
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-red-400">{candidatureStats.refusee}</p>
+                    <p className="text-xs text-gray-400">Refusees</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl font-bold text-cyan-400">{candidatureStats.matchsSansCandidature}</p>
+                    <p className="text-xs text-gray-400">Matchs en attente</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Liste des candidatures */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Candidatures ({filteredCandidatures.length})
+              </h3>
+
+              {filteredCandidatures.length === 0 ? (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="py-12 text-center">
+                    <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">Aucune candidature</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredCandidatures.map((candidature) => (
+                  <Card key={candidature.uid} className="bg-gray-800 border-gray-700">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4 flex-1">
+                          {/* Score */}
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            (candidature.scoreMatch || 0) >= 80 ? 'bg-green-600/20' :
+                            (candidature.scoreMatch || 0) >= 60 ? 'bg-yellow-600/20' : 'bg-red-600/20'
+                          }`}>
+                            <span className={`text-lg font-bold ${getScoreColor(candidature.scoreMatch)}`}>
+                              {candidature.scoreMatch || 0}%
+                            </span>
+                          </div>
+
+                          {/* Info candidat */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link href={`/admin/talents/${candidature.talent.uid}`}>
+                                <h4 className="font-medium text-white hover:text-primary">
+                                  {candidature.talent.prenom} {candidature.talent.nom}
+                                </h4>
+                              </Link>
+                              {getCandidatureStatutBadge(candidature.statut)}
+                              {candidature.talent.user?.isActive === false && (
+                                <Badge className="bg-orange-600">Compte inactif</Badge>
+                              )}
+                              {!candidature.vueLe && candidature.statut === 'NOUVELLE' && (
+                                <Badge className="bg-blue-600 animate-pulse">Nouveau</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-400">
+                              {candidature.talent.codeUnique} - {candidature.talent.titrePoste || 'Freelance'}
+                              {candidature.talent.ville && ` - ${candidature.talent.ville}`}
+                            </p>
+                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Euro className="w-3 h-3" />
+                                {candidature.tjmPropose ? `${candidature.tjmPropose}EUR/j propose` :
+                                 candidature.talent.tjm ? `${candidature.talent.tjm}EUR/j` : 'TJM N/A'}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {candidature.talent.disponibilite}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {formatDate(candidature.createdAt)}
+                              </span>
+                            </div>
+
+                            {/* Competences */}
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {candidature.talent.competences.slice(0, 6).map((c, i) => (
+                                <Badge key={i} className="bg-gray-700 text-gray-300 text-xs">
+                                  {c}
+                                </Badge>
+                              ))}
+                              {candidature.talent.competences.length > 6 && (
+                                <Badge className="bg-gray-700 text-gray-400 text-xs">
+                                  +{candidature.talent.competences.length - 6}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Motivation (si expandue) */}
+                            {expandedCandidature === candidature.uid && candidature.motivation && (
+                              <div className="mt-3 p-3 bg-gray-700 rounded-lg">
+                                <p className="text-sm text-gray-300">{candidature.motivation}</p>
+                              </div>
+                            )}
+
+                            {/* Notes TRINEXTA */}
+                            {candidature.notesTrinexta && (
+                              <div className="mt-2 p-2 bg-yellow-900/20 border border-yellow-600/30 rounded">
+                                <p className="text-xs text-yellow-400">
+                                  <strong>Note interne:</strong> {candidature.notesTrinexta}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 ml-4">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setExpandedCandidature(
+                              expandedCandidature === candidature.uid ? null : candidature.uid
+                            )}
+                          >
+                            {expandedCandidature === candidature.uid ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </Button>
+
+                          <Link href={`/admin/talents/${candidature.talent.uid}`}>
+                            <Button size="sm" variant="outline" className="border-gray-600">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-gray-600"
+                                disabled={updatingCandidature === candidature.uid}
+                              >
+                                {updatingCandidature === candidature.uid ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <MoreHorizontal className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              {candidature.statut === 'NOUVELLE' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleCandidatureAction(candidature.uid, 'marquer_vue')}
+                                >
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  Marquer comme vue
+                                </DropdownMenuItem>
+                              )}
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'mettre_en_revue')}
+                              >
+                                <AlertCircle className="w-4 h-4 mr-2" />
+                                Mettre en revue
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'pre_selectionner')}
+                                className="text-purple-400"
+                              >
+                                <Star className="w-4 h-4 mr-2" />
+                                Pre-selectionner
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'ajouter_shortlist')}
+                                className="text-indigo-400"
+                              >
+                                <UserCheck className="w-4 h-4 mr-2" />
+                                Ajouter a la shortlist
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'proposer_client')}
+                                className="text-cyan-400"
+                              >
+                                <Send className="w-4 h-4 mr-2" />
+                                Proposer au client
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'demander_entretien')}
+                                className="text-orange-400"
+                              >
+                                <Phone className="w-4 h-4 mr-2" />
+                                Demander entretien
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'attente_client')}
+                              >
+                                <Clock className="w-4 h-4 mr-2" />
+                                Attente retour client
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'accepter')}
+                                className="text-green-400"
+                              >
+                                <ThumbsUp className="w-4 h-4 mr-2" />
+                                Accepter / Valider
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={() => handleCandidatureAction(candidature.uid, 'refuser')}
+                                className="text-red-400"
+                              >
+                                <ThumbsDown className="w-4 h-4 mr-2" />
+                                Refuser
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Matchs sans candidature */}
+            {matchsSansCandidature.length > 0 && (
+              <div className="space-y-3 mt-8">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                  Talents matches (sans candidature) ({matchsSansCandidature.length})
+                </h3>
+                <p className="text-sm text-gray-400">
+                  Ces talents correspondent au profil recherche mais n'ont pas encore postule.
+                </p>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  {matchsSansCandidature.slice(0, 10).map((match) => (
+                    <Card key={match.id} className="bg-gray-800 border-gray-700 border-dashed">
+                      <CardContent className="p-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            match.score >= 80 ? 'bg-green-600/20' : match.score >= 60 ? 'bg-yellow-600/20' : 'bg-red-600/20'
+                          }`}>
+                            <span className={`text-sm font-bold ${getScoreColor(match.score)}`}>{match.score}%</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/admin/talents/${match.talent.uid}`}>
+                              <p className="font-medium text-white hover:text-primary truncate">
+                                {match.talent.prenom} {match.talent.nom}
+                              </p>
+                            </Link>
+                            <p className="text-xs text-gray-400 truncate">
+                              {match.talent.titrePoste || 'Freelance'} - {match.talent.tjm ? `${match.talent.tjm}EUR/j` : 'TJM N/A'}
+                            </p>
+                          </div>
+                          <Link href={`/admin/talents/${match.talent.uid}`}>
+                            <Button size="sm" variant="ghost">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {matchsSansCandidature.length > 10 && (
+                  <p className="text-sm text-gray-400 text-center">
+                    Et {matchsSansCandidature.length - 10} autres matchs...
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </main>
     </div>

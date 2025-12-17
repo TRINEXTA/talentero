@@ -137,10 +137,115 @@ export async function PATCH(
 
     const offre = await prisma.offre.findUnique({
       where: { uid },
+      include: {
+        candidatures: {
+          include: {
+            talent: {
+              include: { user: { select: { id: true, email: true } } }
+            }
+          }
+        }
+      }
     })
 
     if (!offre) {
       return NextResponse.json({ error: 'Offre non trouvée' }, { status: 404 })
+    }
+
+    // Gestion des actions spéciales
+    if (body.action) {
+      switch (body.action) {
+        case 'valider':
+          await prisma.offre.update({
+            where: { uid },
+            data: { statut: 'PUBLIEE', publieLe: new Date() }
+          })
+          return NextResponse.json({ success: true, message: 'Offre validée et publiée' })
+
+        case 'refuser':
+          await prisma.offre.update({
+            where: { uid },
+            data: { statut: 'ANNULEE' }
+          })
+          return NextResponse.json({ success: true, message: 'Offre refusée' })
+
+        case 'passer_evaluation':
+          await prisma.offre.update({
+            where: { uid },
+            data: { statut: 'EN_EVALUATION' }
+          })
+          return NextResponse.json({ success: true, message: 'Offre passée en évaluation des candidats' })
+
+        case 'envoyer_shortlist':
+          await prisma.offre.update({
+            where: { uid },
+            data: { statut: 'SHORTLIST_ENVOYEE' }
+          })
+          return NextResponse.json({ success: true, message: 'Shortlist envoyée' })
+
+        case 'marquer_pourvue':
+          // Notifie les candidats non retenus
+          for (const candidature of offre.candidatures) {
+            if (candidature.statut !== 'ACCEPTEE') {
+              // Notifier le candidat et marquer comme refusé
+              await prisma.candidature.update({
+                where: { id: candidature.id },
+                data: {
+                  statut: 'REFUSEE',
+                  notificationRefusEnvoyee: true,
+                  reponduLe: new Date()
+                }
+              })
+              // Créer notification
+              if (candidature.talent.user) {
+                await prisma.notification.create({
+                  data: {
+                    userId: candidature.talent.user.id,
+                    type: 'CANDIDATURE_REFUSEE',
+                    titre: 'Poste pourvu',
+                    message: `Le poste "${offre.titre}" a été pourvu. Votre candidature n'a pas été retenue.`,
+                    lien: '/t/candidatures'
+                  }
+                })
+              }
+            }
+          }
+          await prisma.offre.update({
+            where: { uid },
+            data: { statut: 'POURVUE' }
+          })
+          return NextResponse.json({ success: true, message: 'Poste marqué comme pourvu, candidats notifiés' })
+
+        case 'fermer':
+          // Notifie tous les candidats que l'offre est fermée
+          for (const candidature of offre.candidatures) {
+            if (!['ACCEPTEE', 'REFUSEE', 'MISSION_PERDUE'].includes(candidature.statut)) {
+              await prisma.candidature.update({
+                where: { id: candidature.id },
+                data: {
+                  statut: 'MISSION_PERDUE',
+                  notificationMissionPerdueEnvoyee: true
+                }
+              })
+              if (candidature.talent.user) {
+                await prisma.notification.create({
+                  data: {
+                    userId: candidature.talent.user.id,
+                    type: 'MISSION_PERDUE',
+                    titre: 'Offre fermée',
+                    message: `L'offre "${offre.titre}" a été fermée.`,
+                    lien: '/t/candidatures'
+                  }
+                })
+              }
+            }
+          }
+          await prisma.offre.update({
+            where: { uid },
+            data: { statut: 'FERMEE' }
+          })
+          return NextResponse.json({ success: true, message: 'Offre fermée, candidats notifiés' })
+      }
     }
 
     // Champs modifiables
