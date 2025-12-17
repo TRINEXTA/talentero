@@ -44,6 +44,9 @@ model User {
   // Notifications
   notifications Notification[]
 
+  // Broadcast messages envoyés (admin uniquement)
+  broadcastMessages BroadcastMessage[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
@@ -196,6 +199,7 @@ model Talent {
   missions              Mission[]               // Missions en cours/passées
   reviews               Review[]                // Avis reçus des clients
   contrats              Contrat[]               // Contrats avec les clients
+  messagesRecus         BroadcastDestinataire[] // Messages broadcast reçus
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -684,6 +688,9 @@ model Candidature {
   talent        Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
   talentId      Int
 
+  // Origine de la candidature
+  origine       CandidatureOrigine @default(POSTULE)
+
   // Candidature
   tjmPropose    Int?
   motivation    String?
@@ -734,6 +741,12 @@ enum CandidatureStatus {
   REFUSEE            // Refusé par client ou TRINEXTA
   MISSION_PERDUE     // Appel d'offre perdu (tous candidats)
   RETIREE            // Candidat s'est retiré
+}
+
+enum CandidatureOrigine {
+  POSTULE            // Le talent a cliqué sur "Postuler"
+  IMPORTE            // Importé par l'admin lors d'un import en masse
+  MATCH_PROPOSE      // Ajouté par l'admin depuis un match
 }
 
 // ============================================
@@ -882,6 +895,53 @@ model Message {
   createdAt       DateTime  @default(now())
 
   @@index([conversationId])
+}
+
+// ============================================
+// MESSAGERIE BROADCAST (Admin vers talents)
+// ============================================
+
+model BroadcastMessage {
+  id              Int       @id @default(autoincrement())
+  uid             String    @unique @default(uuid())
+
+  // Expéditeur (admin)
+  expediteurId    Int?
+  expediteur      User?     @relation(fields: [expediteurId], references: [id], onDelete: SetNull)
+
+  // Sujet et contenu
+  sujet           String
+  contenu         String
+
+  // Destinataires
+  destinataires   BroadcastDestinataire[]
+
+  // Stats
+  totalEnvoye     Int       @default(0)
+  totalLu         Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+model BroadcastDestinataire {
+  id              Int       @id @default(autoincrement())
+
+  message         BroadcastMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId       Int
+
+  talent          Talent    @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  talentId        Int
+
+  // Statut
+  lu              Boolean   @default(false)
+  luLe            DateTime?
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([messageId, talentId])
+  @@index([talentId])
 }
 
 // ============================================

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Logo } from '@/components/ui/logo'
 import {
   Users, Bell, Settings, LogOut, MessageSquare,
-  Briefcase, Clock, ChevronRight, Mail, Search
+  Briefcase, Clock, ChevronRight, Mail, Search, MailOpen, Megaphone, ArrowLeft
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
@@ -41,14 +41,29 @@ interface Conversation {
   updatedAt: string
 }
 
+interface BroadcastMessage {
+  id: number
+  uid: string
+  sujet: string
+  contenu: string
+  lu: boolean
+  luLe: string | null
+  recuLe: string
+}
+
 export default function TalentMessagesPage() {
   const router = useRouter()
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [broadcastMessages, setBroadcastMessages] = useState<BroadcastMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [activeTab, setActiveTab] = useState<'conversations' | 'annonces'>('annonces')
+  const [broadcastUnread, setBroadcastUnread] = useState(0)
+  const [selectedBroadcast, setSelectedBroadcast] = useState<BroadcastMessage | null>(null)
 
   useEffect(() => {
     fetchConversations()
+    fetchBroadcastMessages()
   }, [])
 
   const fetchConversations = async () => {
@@ -69,6 +84,42 @@ export default function TalentMessagesPage() {
       console.error('Erreur:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchBroadcastMessages = async () => {
+    try {
+      const res = await fetch('/api/talent/messages', { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setBroadcastMessages(data.messages || [])
+        setBroadcastUnread(data.nonLus || 0)
+      }
+    } catch (error) {
+      console.error('Erreur broadcast:', error)
+    }
+  }
+
+  const markBroadcastAsRead = async (messageUid: string) => {
+    try {
+      await fetch('/api/talent/messages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageUid }),
+      })
+      setBroadcastMessages(broadcastMessages.map(m =>
+        m.uid === messageUid ? { ...m, lu: true, luLe: new Date().toISOString() } : m
+      ))
+      setBroadcastUnread(Math.max(0, broadcastUnread - 1))
+    } catch (error) {
+      console.error('Erreur:', error)
+    }
+  }
+
+  const openBroadcast = (msg: BroadcastMessage) => {
+    setSelectedBroadcast(msg)
+    if (!msg.lu) {
+      markBroadcastAsRead(msg.uid)
     }
   }
 
@@ -158,23 +209,129 @@ export default function TalentMessagesPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
           <p className="text-gray-600 mt-1">
-            Echangez avec TRINEXTA et les clients
+            Annonces TRINEXTA et echanges avec les clients
           </p>
         </div>
 
-        {/* Recherche */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Rechercher dans les conversations..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={activeTab === 'annonces' ? 'default' : 'outline'}
+            onClick={() => { setActiveTab('annonces'); setSelectedBroadcast(null); }}
+            className="flex items-center gap-2"
+          >
+            <Megaphone className="w-4 h-4" />
+            Annonces TRINEXTA
+            {broadcastUnread > 0 && (
+              <Badge className="bg-red-500 text-white ml-1">{broadcastUnread}</Badge>
+            )}
+          </Button>
+          <Button
+            variant={activeTab === 'conversations' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('conversations')}
+            className="flex items-center gap-2"
+          >
+            <MessageSquare className="w-4 h-4" />
+            Conversations
+          </Button>
         </div>
 
+        {/* Annonces TRINEXTA */}
+        {activeTab === 'annonces' && (
+          selectedBroadcast ? (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold">{selectedBroadcast.sujet}</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Recu le {new Date(selectedBroadcast.recuLe).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setSelectedBroadcast(null)}>
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    Retour
+                  </Button>
+                </div>
+                <div className="whitespace-pre-wrap text-gray-700 bg-gray-50 p-4 rounded-lg">
+                  {selectedBroadcast.contenu}
+                </div>
+              </CardContent>
+            </Card>
+          ) : broadcastMessages.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center">
+                <Megaphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune annonce</h3>
+                <p className="text-gray-500">Les annonces de TRINEXTA apparaitront ici</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {broadcastMessages.map((msg) => (
+                <Card
+                  key={msg.uid}
+                  className={`cursor-pointer hover:shadow-md transition ${
+                    !msg.lu ? 'bg-primary/5 border-primary/20' : ''
+                  }`}
+                  onClick={() => openBroadcast(msg)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1">
+                        {msg.lu ? (
+                          <MailOpen className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <Mail className="w-5 h-5 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <h3 className={`font-medium ${!msg.lu ? 'text-gray-900 font-semibold' : 'text-gray-600'}`}>
+                            {msg.sujet}
+                          </h3>
+                          <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                            {new Date(msg.recuLe).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 truncate mt-1">
+                          {msg.contenu}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Recherche conversations */}
+        {activeTab === 'conversations' && (
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Rechercher dans les conversations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
+
         {/* Liste des conversations */}
-        {loading ? (
+        {activeTab === 'conversations' && (
+          loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
@@ -254,6 +411,7 @@ export default function TalentMessagesPage() {
               </Link>
             ))}
           </div>
+        )
         )}
       </main>
     </div>

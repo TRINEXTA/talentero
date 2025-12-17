@@ -175,6 +175,9 @@ export default function AdminDashboardPage() {
               <Link href="/admin/candidatures" className="text-gray-400 hover:text-white">
                 Candidatures
               </Link>
+              <Link href="/admin/broadcast" className="text-gray-400 hover:text-white">
+                Messages
+              </Link>
               <Link href="/admin/facturation" className="text-gray-400 hover:text-white">
                 Facturation
               </Link>
