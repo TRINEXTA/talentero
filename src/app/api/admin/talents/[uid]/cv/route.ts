@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole, getCurrentUser } from '@/lib/auth'
-import { extractTextFromFile, parseCV } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
@@ -160,12 +160,11 @@ export async function POST(
     let extractedData = null
     let statsInfo = null
 
-    // Parser le CV si demandé
+    // Parser le CV si demandé (supporte les CVs visuels/scannes via Vision)
     if (parseAndUpdate) {
       try {
-        const cvText = await extractTextFromFile(buffer, file.name)
-        if (cvText && cvText.trim().length > 50) {
-          extractedData = await parseCV(cvText)
+        extractedData = await parseCVSmart(buffer, file.name)
+        if (extractedData) {
 
           // Supprimer les anciennes expériences et formations
           await prisma.experience.deleteMany({

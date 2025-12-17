@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole, getCurrentUser } from '@/lib/auth'
-import { extractTextFromFile, parseCV } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
@@ -53,18 +53,17 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
-    // Lire et parser le CV
+    // Lire et parser le CV (supporte les CVs visuels/scannes via Vision)
     const fileBuffer = await readFile(cvPath)
-    const cvText = await extractTextFromFile(fileBuffer, filename)
 
-    if (!cvText || cvText.trim().length < 50) {
+    let extractedData
+    try {
+      extractedData = await parseCVSmart(fileBuffer, filename)
+    } catch (parseError) {
       return NextResponse.json({
         error: 'Impossible d\'extraire le texte du CV. Le fichier est peut-être corrompu.'
       }, { status: 400 })
     }
-
-    // Parser le CV avec Claude
-    const extractedData = await parseCV(cvText)
 
     // Options de mise à jour (par défaut: remplacer tout)
     const body = await request.json().catch(() => ({}))

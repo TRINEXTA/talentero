@@ -7,9 +7,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
-import { parseCV, extractTextFromFile } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 import { generateTalentCode } from '@/lib/utils'
 import { classifyTalent } from '@/lib/category-classifier'
+import { writeFile, mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
+import path from 'path'
 import crypto from 'crypto'
 
 // Pour Next.js 14 App Router - timeout étendu pour traiter beaucoup de CVs
@@ -80,6 +83,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // IMPORTANT: Créer le dossier de destination pour les CVs
+    const uploadsDir = path.join(process.cwd(), 'data', 'cv')
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true })
+    }
+
     const results: ImportResult[] = []
 
     // Traite chaque CV
@@ -87,13 +96,13 @@ export async function POST(request: NextRequest) {
       const file = files[i]
 
       try {
-        // Lit et parse le CV en premier pour extraire l'email
+        // Lit et parse le CV (supporte les CVs visuels/scannes via Vision)
         const cvBuffer = Buffer.from(await file.arrayBuffer())
 
-        // Extrait le texte du fichier (supporte PDF et texte)
-        const cvText = await extractTextFromFile(cvBuffer, file.name)
-
-        if (!cvText || cvText.trim().length < 50) {
+        let parsedData
+        try {
+          parsedData = await parseCVSmart(cvBuffer, file.name)
+        } catch (parseError) {
           results.push({
             filename: file.name,
             success: false,
@@ -101,8 +110,6 @@ export async function POST(request: NextRequest) {
           })
           continue
         }
-
-        const parsedData = await parseCV(cvText)
 
         // Récupère l'email extrait du CV
         const email = parsedData.email?.toLowerCase()
@@ -229,6 +236,12 @@ export async function POST(request: NextRequest) {
             }
           })
 
+          // IMPORTANT: Sauvegarder le fichier CV maintenant qu'on a le user.uid
+          const ext = path.extname(file.name)
+          const cvFilename = `${user.uid}_${Date.now()}${ext}`
+          const cvFilepath = path.join(uploadsDir, cvFilename)
+          await writeFile(cvFilepath, cvBuffer)
+
           // Génère le code unique
           const codeUnique = await generateTalentCode()
 
@@ -250,7 +263,7 @@ export async function POST(request: NextRequest) {
               softSkills: parsedData.softSkills,
               linkedinUrl: parsedData.linkedinUrl,
               githubUrl: parsedData.githubUrl,
-              cvUrl: `/uploads/cv/${user.uid}_${file.name}`,
+              cvUrl: `/api/cv/${cvFilename}`,
               cvOriginalName: file.name,
               cvParsedData: parsedData as object,
               importeParAdmin: true,

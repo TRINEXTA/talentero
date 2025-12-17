@@ -6,9 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
-import { parseCV } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 import { sendAccountActivationEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
+import { writeFile, mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
+import path from 'path'
 import crypto from 'crypto'
 
 // GET - Liste des talents avec filtres
@@ -132,12 +135,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Lit le contenu du CV
+    // Lit et parse le CV (supporte les CVs visuels/scannes via Vision)
     const cvBuffer = Buffer.from(await cvFile.arrayBuffer())
-    const cvText = cvBuffer.toString('utf-8')
+    const parsedData = await parseCVSmart(cvBuffer, cvFile.name)
 
-    // Parse le CV avec Claude
-    const parsedData = await parseCV(cvText)
+    // IMPORTANT: Sauvegarder le fichier CV sur le disque
+    const uploadsDir = path.join(process.cwd(), 'data', 'cv')
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true })
+    }
 
     // Génère un token d'activation
     const activationToken = crypto.randomBytes(32).toString('hex')
@@ -159,6 +165,12 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // IMPORTANT: Sauvegarder le fichier CV maintenant qu'on a le user.uid
+      const ext = path.extname(cvFile.name)
+      const cvFilename = `${user.uid}_${Date.now()}${ext}`
+      const cvFilepath = path.join(uploadsDir, cvFilename)
+      await writeFile(cvFilepath, cvBuffer)
+
       // Génère le code unique talent
       const codeUnique = await generateTalentCode()
 
@@ -179,7 +191,7 @@ export async function POST(request: NextRequest) {
           softSkills: parsedData.softSkills,
           linkedinUrl: parsedData.linkedinUrl,
           githubUrl: parsedData.githubUrl,
-          cvUrl: `/uploads/cv/${user.uid}_${cvFile.name}`,
+          cvUrl: `/api/cv/${cvFilename}`,
           cvOriginalName: cvFile.name,
           cvParsedData: parsedData as object,
           importeParAdmin: true,

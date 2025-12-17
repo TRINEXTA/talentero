@@ -104,12 +104,19 @@ export async function PUT(request: NextRequest) {
 
     const data = validation.data
 
-    // Helper pour convertir string en number, retourne null si explicitement null, undefined si non défini
-    const toNumber = (val: string | number | null | undefined): number | null | undefined => {
+    // Helper pour convertir string en number (nullable) - pour tjm, tjmMin, tjmMax
+    const toNumberNullable = (val: string | number | null | undefined): number | null | undefined => {
       if (val === null) return null  // Explicitement null = on veut effacer la valeur
       if (val === undefined || val === '') return undefined  // Non défini = ne pas modifier
       const num = typeof val === 'string' ? parseFloat(val) : val
       return isNaN(num) ? null : num
+    }
+
+    // Helper pour convertir string en number (non-nullable) - pour anneesExperience
+    const toNumberRequired = (val: string | number | null | undefined): number | undefined => {
+      if (val === null || val === undefined || val === '') return undefined  // Ne pas modifier
+      const num = typeof val === 'string' ? parseInt(val, 10) : val
+      return isNaN(num) ? undefined : num
     }
 
     // Mise à jour du profil (prenom/nom non modifiables par le talent)
@@ -125,17 +132,17 @@ export async function PUT(request: NextRequest) {
         categorieProfessionnelle: data.categorieProfessionnelle ?? null,
         bio: data.bio ?? null,
         competences: data.competences ?? [],
-        anneesExperience: toNumber(data.anneesExperience),
-        tjm: toNumber(data.tjm),
-        tjmMin: toNumber(data.tjmMin),
-        tjmMax: toNumber(data.tjmMax),
-        mobilite: data.mobilite !== undefined ? data.mobilite : undefined,
+        anneesExperience: toNumberRequired(data.anneesExperience),
+        tjm: toNumberNullable(data.tjm),
+        tjmMin: toNumberNullable(data.tjmMin),
+        tjmMax: toNumberNullable(data.tjmMax),
+        mobilite: data.mobilite && data.mobilite !== null ? data.mobilite : undefined,
         zonesGeographiques: data.zonesGeographiques ?? [],
         zonesIntervention: data.zonesIntervention ?? [],
         permisConduire: data.permisConduire ?? undefined,
         vehicule: data.vehicule ?? undefined,
         accepteDeplacementEtranger: data.accepteDeplacementEtranger ?? undefined,
-        disponibilite: data.disponibilite !== undefined ? data.disponibilite : undefined,
+        disponibilite: data.disponibilite && data.disponibilite !== null ? data.disponibilite : undefined,
         disponibleLe: data.disponibleLe ? new Date(data.disponibleLe) : null,
         logiciels: data.logiciels ?? [],
         frameworks: data.frameworks ?? [],

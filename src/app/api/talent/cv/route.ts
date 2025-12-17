@@ -8,7 +8,7 @@ import { requireRole, getCurrentUser } from '@/lib/auth'
 import { writeFile, unlink, mkdir } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
-import { extractTextFromFile, parseCV } from '@/lib/cv-parser'
+import { parseCVSmart } from '@/lib/cv-parser'
 
 // POST - Upload CV with extraction
 export async function POST(request: NextRequest) {
@@ -76,12 +76,11 @@ export async function POST(request: NextRequest) {
     // Use API route for CV access (better persistence and security)
     const cvUrl = `/api/cv/${filename}`
 
-    // Extract and parse CV data
+    // Extract and parse CV data (supporte les CVs visuels/scannes)
     let extractedData = null
     try {
-      const cvText = await extractTextFromFile(buffer, file.name)
-      if (cvText && cvText.trim().length > 50) {
-        extractedData = await parseCV(cvText)
+      extractedData = await parseCVSmart(buffer, file.name)
+      if (extractedData) {
 
         // Update talent with extracted data (only non-empty fields)
         const updateData: Record<string, unknown> = {
