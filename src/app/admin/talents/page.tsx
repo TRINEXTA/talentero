@@ -224,6 +224,15 @@ function AdminTalentsContent() {
                   <option value="EN_MISSION">En mission</option>
                   <option value="SUSPENDU">Suspendu</option>
                 </select>
+                <select
+                  value={searchParams.get('compteActif') || ''}
+                  onChange={(e) => handleFilterChange('compteActif', e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">Tous les comptes</option>
+                  <option value="true">Comptes actifs</option>
+                  <option value="false">Comptes inactifs</option>
+                </select>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -279,6 +288,11 @@ function AdminTalentsContent() {
                               <span className="font-medium text-gray-900">
                                 {talent.prenom} {talent.nom}
                               </span>
+                              {talent.user.isActive ? (
+                                <Badge className="bg-green-100 text-green-800 text-xs">Compte actif</Badge>
+                              ) : (
+                                <Badge className="bg-red-100 text-red-800 text-xs">Compte inactif</Badge>
+                              )}
                               {talent.importeParAdmin && (
                                 <Badge variant="outline" className="text-xs">Importé</Badge>
                               )}
@@ -286,12 +300,17 @@ function AdminTalentsContent() {
                                 <Badge className="bg-yellow-100 text-yellow-800 text-xs">Limité</Badge>
                               )}
                               {!talent.user.activationToken && talent.user.emailVerified && (
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <CheckCircle className="w-4 h-4 text-green-500" title="Email vérifié" />
                               )}
                             </div>
                             <div className="text-sm text-gray-500">{talent.user.email}</div>
                             {talent.titrePoste && (
                               <div className="text-sm text-gray-400">{talent.titrePoste}</div>
+                            )}
+                            {talent.user.lastLoginAt && (
+                              <div className="text-xs text-gray-400">
+                                Dernière connexion: {new Date(talent.user.lastLoginAt).toLocaleDateString('fr-FR')}
+                              </div>
                             )}
                           </div>
                         </td>

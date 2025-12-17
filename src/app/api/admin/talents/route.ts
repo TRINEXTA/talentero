@@ -47,6 +47,14 @@ export async function GET(request: NextRequest) {
       where.importeParAdmin = true
     }
 
+    // Filtre par compte actif/inactif
+    const compteActif = searchParams.get('compteActif')
+    if (compteActif === 'true') {
+      where.user = { ...(where.user as object || {}), isActive: true }
+    } else if (compteActif === 'false') {
+      where.user = { ...(where.user as object || {}), isActive: false }
+    }
+
     const [talents, total] = await Promise.all([
       prisma.talent.findMany({
         where,
