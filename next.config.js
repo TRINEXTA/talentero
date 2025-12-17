@@ -19,6 +19,15 @@ const nextConfig = {
       bodySizeLimit: '100mb',
     },
   },
+  // Redirection des anciennes URLs de CV vers la nouvelle API
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/cv/:filename*',
+        destination: '/api/cv/:filename*',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
