@@ -135,6 +135,9 @@ export default function TalentOffresPage() {
                 <Link href="/t/offres" className="text-primary font-medium">
                   Offres
                 </Link>
+                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                  Mes Matchs
+                </Link>
                 <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
                   Candidatures
                 </Link>
