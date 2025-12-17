@@ -201,7 +201,7 @@ export async function PATCH(
                 await prisma.notification.create({
                   data: {
                     userId: candidature.talent.user.id,
-                    type: 'CANDIDATURE_REFUSEE',
+                    type: 'STATUT_CANDIDATURE',
                     titre: 'Poste pourvu',
                     message: `Le poste "${offre.titre}" a été pourvu. Votre candidature n'a pas été retenue.`,
                     lien: '/t/candidatures'

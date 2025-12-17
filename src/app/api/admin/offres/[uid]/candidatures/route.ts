@@ -235,8 +235,7 @@ export async function PATCH(
       await prisma.notification.create({
         data: {
           userId: candidature.talent.user.id,
-          type: action === 'accepter' ? 'CANDIDATURE_ACCEPTEE' :
-                action === 'refuser' ? 'CANDIDATURE_REFUSEE' : 'CANDIDATURE_UPDATE',
+          type: 'STATUT_CANDIDATURE',
           titre: notif.titre,
           message: notif.message,
           lien: `/t/candidatures`,
