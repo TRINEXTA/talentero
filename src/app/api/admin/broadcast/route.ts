@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     await prisma.notification.createMany({
       data: talentUsers.map(t => ({
         userId: t.userId,
-        type: 'MESSAGE',
+        type: 'NOUVEAU_MESSAGE',
         titre: `Nouveau message: ${sujet}`,
         message: contenu.substring(0, 200) + (contenu.length > 200 ? '...' : ''),
         lien: `/t/messages`,
