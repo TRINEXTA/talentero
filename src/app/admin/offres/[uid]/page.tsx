@@ -133,7 +133,7 @@ interface Candidature {
   }
   entretiens: Array<{
     uid: string
-    dateHeure: string
+    dateProposee: string
     statut: string
   }>
 }

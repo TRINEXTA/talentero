@@ -62,11 +62,11 @@ export async function GET(
           }
         },
         entretiens: {
-          orderBy: { dateHeure: 'desc' },
+          orderBy: { dateProposee: 'desc' },
           take: 1,
           select: {
             uid: true,
-            dateHeure: true,
+            dateProposee: true,
             statut: true,
           }
         }
