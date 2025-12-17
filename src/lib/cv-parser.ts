@@ -74,67 +74,76 @@ export async function extractTextFromFile(buffer: Buffer, filename: string): Pro
 
 /**
  * Prompt systeme commun pour le parsing de CV
+ * IMPORTANT: Extraction FIDELE sauf pour la bio qui est amelioree
  */
-const CV_SYSTEM_PROMPT = `Tu es un expert en analyse de CV IT avec plus de 20 ans d'experience. Tu dois extraire TOUTES les informations du CV fourni et les retourner en JSON structure.
+const CV_SYSTEM_PROMPT = `Tu es un expert en analyse de CV IT. Tu dois extraire les informations du CV et les retourner en JSON structure.
 
-REGLES CRITIQUES - A SUIVRE ABSOLUMENT:
-1. Extrais CHAQUE experience professionnelle mentionnee dans le CV, meme les plus anciennes
-2. Ne resume pas et ne fusionne pas les experiences - chaque poste doit etre une entree separee
-3. Si quelqu'un a 25 ans d'experience, tu dois extraire toutes les experiences sur ces 25 ans
-4. Lis le CV en ENTIER du debut a la fin avant d'extraire les donnees
-5. Si une information n'est pas trouvee, utilise null ou un tableau vide
-6. Pour les competences, normalise les noms (ex: "JS" -> "JavaScript", "React.js" -> "React")
-7. Calcule les annees d'experience en additionnant les durees de TOUTES les experiences
-8. Les dates doivent etre au format ISO (YYYY-MM-DD) ou approximees au premier du mois/annee
-9. Pour les langues, indique le niveau si mentionne (ex: "Anglais:Courant")
-10. Extrais aussi les missions freelance/consulting comme des experiences separees
+=== REGLES D'EXTRACTION FIDELE ===
+Tu dois extraire les informations EXACTEMENT comme elles apparaissent dans le CV:
 
-IMPORTANT: Ne tronque JAMAIS les experiences. Si le CV contient 15 experiences, retourne les 15.
+1. COMPETENCES: Liste TOUTES les competences techniques EXACTEMENT comme ecrites
+   - Ne supprime aucune competence
+   - Normalise seulement les abreviations evidentes (JS -> JavaScript)
+   - Garde les versions specifiques si mentionnees (React 18, Python 3.11, etc.)
 
-COMPETENCES IT A DETECTER:
-- Langages: Java, Python, JavaScript, TypeScript, C#, C++, Go, Rust, PHP, Ruby, Scala, Kotlin, Swift, etc.
-- Frontend: React, Angular, Vue.js, Next.js, HTML, CSS, Tailwind, Bootstrap, jQuery, etc.
-- Backend: Spring, Node.js, Express, NestJS, Django, FastAPI, .NET, Laravel, Symfony, etc.
-- Base de donnees: PostgreSQL, MySQL, MongoDB, Redis, Oracle, SQL Server, Cassandra, etc.
-- DevOps: Docker, Kubernetes, AWS, Azure, GCP, CI/CD, Jenkins, GitLab CI, Terraform, Ansible, etc.
-- Systemes: Linux, Windows Server, Active Directory, VMware, Hyper-V, etc.
-- Reseau: VLAN, VPN, Firewall, TCP/IP, DNS, DHCP, etc.
-- Securite: Pentest, SIEM, SOC, ISO 27001, ANSSI, etc.
-- Autres: Git, Agile, Scrum, REST API, GraphQL, Microservices, SOAP, etc.
-- Outils: Jira, Confluence, Slack, VS Code, IntelliJ, Eclipse, etc.`
+2. EXPERIENCES: Copie FIDELEMENT chaque experience
+   - Garde le titre du poste EXACTEMENT comme ecrit
+   - Garde le nom de l'entreprise EXACTEMENT comme ecrit
+   - La description doit reprendre les points cles SANS les reformuler
+   - Extrais TOUTES les experiences, meme les plus anciennes
+   - Ne fusionne JAMAIS plusieurs postes
+
+3. FORMATIONS: Copie EXACTEMENT les diplomes et etablissements
+
+4. CERTIFICATIONS/LANGUES: Liste EXACTEMENT comme ecrit dans le CV
+
+=== EXCEPTION: LA BIO ===
+Pour le champ "bio", tu dois CREER une presentation professionnelle et commerciale:
+- Redige 2-3 phrases percutantes qui mettent en valeur le profil
+- Mentionne les annees d'experience, les domaines d'expertise principaux
+- Utilise un ton professionnel et vendeur (mais pas exagere)
+- Exemple: "Developpeur Full Stack senior avec 8 ans d'experience, specialise en React et Node.js. Expert en architectures cloud AWS et methodologies Agile. Reconnu pour sa capacite a delivrer des solutions performantes et scalables."
+
+=== COMPETENCES IT A DETECTER ===
+- Langages: Java, Python, JavaScript, TypeScript, C#, C++, Go, Rust, PHP, Ruby, etc.
+- Frontend: React, Angular, Vue.js, Next.js, HTML, CSS, Tailwind, etc.
+- Backend: Spring, Node.js, Express, NestJS, Django, .NET, Laravel, etc.
+- Base de donnees: PostgreSQL, MySQL, MongoDB, Redis, Oracle, etc.
+- DevOps: Docker, Kubernetes, AWS, Azure, GCP, CI/CD, Jenkins, Terraform, etc.
+- Autres: Git, Agile, Scrum, REST API, GraphQL, Microservices, etc.`
 
 /**
  * Structure JSON attendue pour le parsing
  */
 const CV_JSON_STRUCTURE = `{
-  "prenom": "string",
-  "nom": "string",
+  "prenom": "string (EXACTEMENT comme dans le CV)",
+  "nom": "string (EXACTEMENT comme dans le CV)",
   "email": "string | null",
   "telephone": "string | null",
-  "titrePoste": "string | null (poste actuel ou dernier poste)",
-  "bio": "string | null (resume du profil si present)",
-  "competences": ["string (liste de TOUTES les competences techniques)"],
-  "anneesExperience": number (calcule a partir de la premiere experience jusqu'a aujourd'hui),
+  "titrePoste": "string | null (poste actuel ou dernier poste - EXACTEMENT comme ecrit)",
+  "bio": "string (GENERE: presentation commerciale professionnelle de 2-3 phrases)",
+  "competences": ["string (TOUTES les competences techniques du CV, EXACTEMENT comme ecrites)"],
+  "anneesExperience": number (calcule depuis la premiere experience),
   "experiences": [
     {
-      "poste": "string",
-      "entreprise": "string",
+      "poste": "string (EXACTEMENT comme dans le CV)",
+      "entreprise": "string (EXACTEMENT comme dans le CV)",
       "lieu": "string | null",
       "dateDebut": "YYYY-MM-DD",
       "dateFin": "YYYY-MM-DD | null (null si en cours)",
-      "description": "string | null",
-      "competences": ["string"]
+      "description": "string | null (points cles FIDELES au CV, pas de reformulation)",
+      "competences": ["string (competences de cette experience)"]
     }
   ],
   "formations": [
     {
-      "diplome": "string",
+      "diplome": "string (EXACTEMENT comme ecrit)",
       "etablissement": "string | null",
       "annee": number | null
     }
   ],
-  "langues": ["string"],
-  "certifications": ["string"],
+  "langues": ["string (avec niveau si mentionne)"],
+  "certifications": ["string (EXACTEMENT comme ecrit)"],
   "softSkills": ["string"],
   "linkedinUrl": "string | null",
   "githubUrl": "string | null"
@@ -216,20 +225,24 @@ ${CV_JSON_STRUCTURE}`
 
 /**
  * Parse le contenu textuel d'un CV et extrait les informations structurees
+ * EXTRACTION FIDELE sauf pour la bio qui est generee/amelioree
  */
 export async function parseCV(cvText: string): Promise<ParsedCV> {
-  const userPrompt = `Analyse ce CV COMPLETEMENT et retourne TOUTES les informations en JSON.
-IMPORTANT: Extrais CHAQUE experience professionnelle, meme les plus anciennes. Ne resume pas.
+  const userPrompt = `Analyse ce CV et extrais les informations en JSON.
+
+RAPPELS IMPORTANTS:
+- Extrais les informations EXACTEMENT comme ecrites dans le CV (pas de reformulation)
+- EXCEPTION: Le champ "bio" doit etre une presentation commerciale GENEREE (2-3 phrases professionnelles)
+- Extrais TOUTES les experiences, meme les plus anciennes
+- Ne fusionne JAMAIS plusieurs postes en un seul
 
 CONTENU DU CV:
 ---
 ${cvText}
 ---
 
-Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte:
-${CV_JSON_STRUCTURE}
-
-RAPPEL: Extrais TOUTES les experiences du CV, pas seulement les plus recentes.`
+Retourne UNIQUEMENT un objet JSON valide:
+${CV_JSON_STRUCTURE}`
 
   try {
     const response = await anthropic.messages.create({
