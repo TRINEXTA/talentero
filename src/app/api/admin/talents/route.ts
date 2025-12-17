@@ -9,9 +9,7 @@ import { requireRole } from '@/lib/auth'
 import { parseCVSmart } from '@/lib/cv-parser'
 import { sendAccountActivationEmail } from '@/lib/microsoft-graph'
 import { generateTalentCode } from '@/lib/utils'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
+import { saveCVSecurely } from '@/lib/cv-storage'
 import crypto from 'crypto'
 
 // GET - Liste des talents avec filtres
@@ -139,12 +137,6 @@ export async function POST(request: NextRequest) {
     const cvBuffer = Buffer.from(await cvFile.arrayBuffer())
     const parsedData = await parseCVSmart(cvBuffer, cvFile.name)
 
-    // IMPORTANT: Sauvegarder le fichier CV sur le disque
-    const uploadsDir = path.join(process.cwd(), 'data', 'cv')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
     // Génère un token d'activation
     const activationToken = crypto.randomBytes(32).toString('hex')
     const activationTokenExpiry = new Date()
@@ -165,11 +157,11 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // IMPORTANT: Sauvegarder le fichier CV maintenant qu'on a le user.uid
-      const ext = path.extname(cvFile.name)
-      const cvFilename = `${user.uid}_${Date.now()}${ext}`
-      const cvFilepath = path.join(uploadsDir, cvFilename)
-      await writeFile(cvFilepath, cvBuffer)
+      // IMPORTANT: Sauvegarder le fichier CV avec VÉRIFICATION
+      const saveResult = await saveCVSecurely(cvBuffer, user.uid, cvFile.name)
+      if (!saveResult.success) {
+        throw new Error(`Échec sauvegarde CV: ${saveResult.error}`)
+      }
 
       // Génère le code unique talent
       const codeUnique = await generateTalentCode()
@@ -191,7 +183,7 @@ export async function POST(request: NextRequest) {
           softSkills: parsedData.softSkills,
           linkedinUrl: parsedData.linkedinUrl,
           githubUrl: parsedData.githubUrl,
-          cvUrl: `/api/cv/${cvFilename}`,
+          cvUrl: saveResult.cvUrl,
           cvOriginalName: cvFile.name,
           cvParsedData: parsedData as object,
           importeParAdmin: true,
