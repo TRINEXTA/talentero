@@ -78,8 +78,8 @@ export async function GET(
             uid: true,
             dateProposee: true,
             statut: true,
-            type: true,
-            notes: true,
+            heureDebut: true,
+            heureFin: true,
           }
         }
       }

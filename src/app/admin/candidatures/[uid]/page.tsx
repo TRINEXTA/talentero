@@ -87,8 +87,8 @@ interface Candidature {
     uid: string
     dateProposee: string
     statut: string
-    type: string
-    notes: string | null
+    heureDebut: string
+    heureFin: string | null
   }>
 }
 
@@ -463,7 +463,9 @@ export default function AdminCandidatureDetailPage() {
                                 minute: '2-digit'
                               })}
                             </p>
-                            <p className="text-sm text-gray-400">{entretien.type}</p>
+                            <p className="text-sm text-gray-400">
+                              {entretien.heureDebut}{entretien.heureFin ? ` - ${entretien.heureFin}` : ''}
+                            </p>
                           </div>
                           <Badge className={
                             entretien.statut === 'REALISE' ? 'bg-green-600' :
@@ -473,9 +475,6 @@ export default function AdminCandidatureDetailPage() {
                             {entretien.statut}
                           </Badge>
                         </div>
-                        {entretien.notes && (
-                          <p className="text-sm text-gray-400 mt-2">{entretien.notes}</p>
-                        )}
                       </div>
                     ))}
                   </div>
