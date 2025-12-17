@@ -828,9 +828,12 @@ model Conversation {
   id          Int       @id @default(autoincrement())
   uid         String    @unique @default(uuid())
 
-  // Liée à une offre
-  offre       Offre     @relation(fields: [offreId], references: [id], onDelete: Cascade)
-  offreId     Int
+  // Liée à une offre (optionnel - peut être une conversation directe)
+  offre       Offre?    @relation(fields: [offreId], references: [id], onDelete: Cascade)
+  offreId     Int?
+
+  // Type de conversation
+  type        ConversationType @default(OFFRE)
 
   // Sujet
   sujet       String?
@@ -848,6 +851,13 @@ model Conversation {
   updatedAt   DateTime  @updatedAt
 
   @@index([offreId])
+  @@index([type])
+}
+
+enum ConversationType {
+  OFFRE       // Conversation liée à une offre
+  DIRECT      // Message direct admin -> talent
+  SUPPORT     // Support/Question du talent
 }
 
 model ConversationParticipant {

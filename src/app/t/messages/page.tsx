@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 interface Conversation {
   uid: string
   sujet: string | null
+  type: 'OFFRE' | 'DIRECT' | 'SUPPORT'
   offre: {
     uid: string
     codeUnique: string
@@ -23,7 +24,7 @@ interface Conversation {
     client: {
       raisonSociale: string
     } | null
-  }
+  } | null
   participants: Array<{
     type: string
     talent: any | null
@@ -75,10 +76,33 @@ export default function TalentMessagesPage() {
         return
       }
 
-      const res = await fetch('/api/messages', { credentials: 'include' })
+      // Utiliser la nouvelle API conversations
+      const res = await fetch('/api/talent/conversations', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
-        setConversations(data.conversations || [])
+        // Transformer les donnees pour le format attendu
+        const transformedConversations = (data.conversations || []).map((conv: any) => ({
+          uid: conv.uid,
+          sujet: conv.sujet,
+          type: conv.type,
+          offre: conv.offre,
+          participants: conv.participants.map((p: any) => ({
+            type: p.isAdmin ? 'admin' : p.talentId ? 'talent' : 'client',
+            talent: p.talent,
+            client: null,
+            isAdmin: p.isAdmin,
+          })),
+          lastMessage: conv.messages?.[0] ? {
+            uid: conv.messages[0].uid,
+            contenu: conv.messages[0].contenu,
+            createdAt: conv.messages[0].createdAt,
+            isFromMe: !!conv.messages[0].expediteurTalentId,
+          } : null,
+          unreadCount: conv.unreadCount || 0,
+          archivee: conv.archivee,
+          updatedAt: conv.updatedAt,
+        }))
+        setConversations(transformedConversations)
       }
     } catch (error) {
       console.error('Erreur:', error)
@@ -357,17 +381,38 @@ export default function TalentMessagesPage() {
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
                       {/* Avatar / Icon */}
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-6 h-6 text-primary" />
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        conv.type === 'DIRECT' ? 'bg-red-100' :
+                        conv.type === 'SUPPORT' ? 'bg-yellow-100' : 'bg-primary/10'
+                      }`}>
+                        {conv.type === 'DIRECT' ? (
+                          <MessageSquare className="w-6 h-6 text-red-600" />
+                        ) : conv.type === 'SUPPORT' ? (
+                          <Mail className="w-6 h-6 text-yellow-600" />
+                        ) : (
+                          <Briefcase className="w-6 h-6 text-primary" />
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <h3 className={`font-semibold text-gray-900 truncate ${conv.unreadCount > 0 ? 'font-bold' : ''}`}>
-                              {conv.offre?.titre || conv.sujet || 'Conversation'}
+                              {conv.type === 'DIRECT' ? (conv.sujet || 'Message de TRINEXTA') :
+                               conv.type === 'SUPPORT' ? (conv.sujet || 'Demande de support') :
+                               conv.offre?.titre || conv.sujet || 'Conversation'}
                             </h3>
-                            {conv.offre?.client && (
+                            {conv.type === 'DIRECT' && (
+                              <p className="text-sm text-red-600 truncate">
+                                Message direct de TRINEXTA
+                              </p>
+                            )}
+                            {conv.type === 'SUPPORT' && (
+                              <p className="text-sm text-yellow-600 truncate">
+                                Question / Support
+                              </p>
+                            )}
+                            {conv.offre?.client && conv.type === 'OFFRE' && (
                               <p className="text-sm text-gray-500 truncate">
                                 {conv.offre.client.raisonSociale}
                               </p>
@@ -393,10 +438,17 @@ export default function TalentMessagesPage() {
                         )}
 
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {conv.offre?.codeUnique}
-                          </Badge>
-                          {conv.participants.some(p => p.isAdmin) && (
+                          {conv.offre?.codeUnique && (
+                            <Badge variant="outline" className="text-xs">
+                              {conv.offre.codeUnique}
+                            </Badge>
+                          )}
+                          {conv.type === 'DIRECT' && (
+                            <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                              Message direct
+                            </Badge>
+                          )}
+                          {conv.participants.some(p => p.isAdmin) && conv.type !== 'DIRECT' && (
                             <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
                               TRINEXTA
                             </Badge>
