@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { sendNewMessageNotification } from '@/lib/microsoft-graph'
 
 // GET - Liste des conversations
 export async function GET(request: NextRequest) {
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     // Trouver le talent
     const talent = await prisma.talent.findUnique({
       where: { uid: talentUid },
-      include: { user: { select: { id: true } } }
+      include: { user: { select: { id: true, email: true } } }
     })
 
     if (!talent) {
@@ -158,6 +159,19 @@ export async function POST(request: NextRequest) {
         lien: '/t/messages',
       }
     })
+
+    // Envoyer un email de notification
+    try {
+      await sendNewMessageNotification(
+        talent.user.email,
+        talent.prenom,
+        sujet || `Message pour ${talent.prenom} ${talent.nom}`,
+        message
+      )
+    } catch (emailError) {
+      // Log l'erreur mais ne pas bloquer la reponse
+      console.error('Erreur envoi email notification:', emailError)
+    }
 
     return NextResponse.json({
       success: true,
