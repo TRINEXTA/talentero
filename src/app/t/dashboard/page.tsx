@@ -158,7 +158,7 @@ export default function TalentDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     )
@@ -167,16 +167,16 @@ export default function TalentDashboardPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-700">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-gray-600 border-b border-gray-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <Link href="/">
                 <Logo size="sm" showText />
               </Link>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-400 text-gray-200">
                 <User className="w-3 h-3 mr-1" />
                 Espace Freelance
               </Badge>
@@ -184,22 +184,22 @@ export default function TalentDashboardPage() {
                 <Link href="/t/dashboard" className="text-primary font-medium">
                   Dashboard
                 </Link>
-                <Link href="/t/offres" className="text-gray-600 hover:text-primary">
+                <Link href="/t/offres" className="text-gray-300 hover:text-primary">
                   Offres
                 </Link>
-                <Link href="/t/matchs" className="text-gray-600 hover:text-primary">
+                <Link href="/t/matchs" className="text-gray-300 hover:text-primary">
                   Mes Matchs
                 </Link>
-                <Link href="/t/candidatures" className="text-gray-600 hover:text-primary">
+                <Link href="/t/candidatures" className="text-gray-300 hover:text-primary">
                   Candidatures
                 </Link>
-                <Link href="/t/entretiens" className="text-gray-600 hover:text-primary">
+                <Link href="/t/entretiens" className="text-gray-300 hover:text-primary">
                   Entretiens
                 </Link>
-                <Link href="/t/alertes" className="text-gray-600 hover:text-primary">
+                <Link href="/t/alertes" className="text-gray-300 hover:text-primary">
                   Alertes
                 </Link>
-                <Link href="/t/profil" className="text-gray-600 hover:text-primary">
+                <Link href="/t/profil" className="text-gray-300 hover:text-primary">
                   Mon profil
                 </Link>
               </nav>
@@ -221,10 +221,10 @@ export default function TalentDashboardPage() {
         {/* Welcome Section */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-white">
               Bonjour {user.details?.prenom || 'Freelance'} !
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-300 mt-1">
               {getDisponibiliteLabel(user.details?.disponibilite || null)}
             </p>
           </div>
@@ -238,57 +238,57 @@ export default function TalentDashboardPage() {
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Candidatures</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalCandidatures}</p>
+                  <p className="text-sm text-gray-300">Candidatures</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalCandidatures}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-900/50 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">En cours</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.candidaturesEnCours}</p>
+                  <p className="text-sm text-gray-300">En cours</p>
+                  <p className="text-2xl font-bold text-white">{stats.candidaturesEnCours}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-green-900/50 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Retenues</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.candidaturesAcceptees}</p>
+                  <p className="text-sm text-gray-300">Retenues</p>
+                  <p className="text-2xl font-bold text-white">{stats.candidaturesAcceptees}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="bg-gray-600 border-gray-500 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-purple-900/50 rounded-xl flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Matchs</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.matchsRecents}</p>
+                  <p className="text-sm text-gray-300">Matchs</p>
+                  <p className="text-2xl font-bold text-white">{stats.matchsRecents}</p>
                 </div>
               </div>
             </CardContent>
@@ -297,11 +297,11 @@ export default function TalentDashboardPage() {
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Candidatures récentes */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Mes candidatures</CardTitle>
-                <CardDescription>Suivez l'état de vos candidatures</CardDescription>
+                <CardTitle className="text-white">Mes candidatures</CardTitle>
+                <CardDescription className="text-gray-300">Suivez l'état de vos candidatures</CardDescription>
               </div>
               <Link href="/t/candidatures">
                 <Button variant="ghost" size="sm">
@@ -359,11 +359,11 @@ export default function TalentDashboardPage() {
           </Card>
 
           {/* Offres recommandées */}
-          <Card>
+          <Card className="bg-gray-600 border-gray-500">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Offres pour vous</CardTitle>
-                <CardDescription>Basées sur votre profil et vos compétences</CardDescription>
+                <CardTitle className="text-white">Offres pour vous</CardTitle>
+                <CardDescription className="text-gray-300">Basées sur votre profil et vos compétences</CardDescription>
               </div>
               <Link href="/t/offres">
                 <Button variant="ghost" size="sm">
@@ -431,9 +431,9 @@ export default function TalentDashboardPage() {
         </div>
 
         {/* Actions rapides */}
-        <Card className="mt-8">
+        <Card className="bg-gray-600 border-gray-500 mt-8">
           <CardHeader>
-            <CardTitle>Actions rapides</CardTitle>
+            <CardTitle className="text-white">Actions rapides</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-5 gap-4">
@@ -472,7 +472,7 @@ export default function TalentDashboardPage() {
         </Card>
 
         {/* Status */}
-        <Card className="mt-8">
+        <Card className="bg-gray-600 border-gray-500 mt-8">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -482,14 +482,14 @@ export default function TalentDashboardPage() {
                   'bg-gray-400'
                 }`} />
                 <div>
-                  <p className="font-medium">
+                  <p className="font-medium text-white">
                     Statut: {
                       user.details?.statut === 'ACTIF' ? 'Disponible' :
                       user.details?.statut === 'EN_MISSION' ? 'En mission' :
                       user.details?.statut || 'Non défini'
                     }
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-300">
                     {user.details?.statut === 'ACTIF' ? 'Votre profil est visible par les recruteurs' :
                      user.details?.statut === 'EN_MISSION' ? 'Votre profil est masqué' :
                      'Complétez votre profil pour être visible'}
@@ -497,7 +497,7 @@ export default function TalentDashboardPage() {
                 </div>
               </div>
               <Link href="/t/profil">
-                <Button variant="outline">Modifier mon statut</Button>
+                <Button variant="outline" className="border-gray-400 text-gray-200 hover:bg-gray-500">Modifier mon statut</Button>
               </Link>
             </div>
           </CardContent>
