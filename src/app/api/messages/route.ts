@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 /**
  * GET /api/messages - Liste des conversations de l'utilisateur
@@ -139,6 +140,11 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/messages - Créer une nouvelle conversation
+ *
+ * Supporte maintenant 3 types de conversations :
+ * - OFFRE : Discussion liée à une offre (nécessite offreId)
+ * - DIRECT : Message direct à TRINEXTA (sans offre)
+ * - SUPPORT : Demande de support (sans offre)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -148,26 +154,62 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { offreId, sujet, message, destinataireType, destinataireId } = body
+    const { offreId, sujet, message, destinataireType, destinataireId, type } = body
 
-    // Validation
-    if (!offreId || !message) {
+    // Validation - message est toujours requis
+    if (!message || message.trim() === '') {
       return NextResponse.json(
-        { error: 'offreId et message sont requis' },
+        { error: 'Le message est requis' },
         { status: 400 }
       )
     }
 
-    // Vérifier que l'offre existe
-    const offre = await prisma.offre.findUnique({
-      where: { uid: offreId },
-      include: {
-        client: true,
-      },
-    })
+    // Déterminer le type de conversation
+    const conversationType = type || (offreId ? 'OFFRE' : 'DIRECT')
 
-    if (!offre) {
-      return NextResponse.json({ error: 'Offre non trouvee' }, { status: 404 })
+    // Si c'est une conversation liée à une offre, vérifier que l'offre existe
+    let offre = null
+    if (offreId) {
+      offre = await prisma.offre.findUnique({
+        where: { uid: offreId },
+        include: {
+          client: true,
+        },
+      })
+
+      if (!offre) {
+        return NextResponse.json({ error: 'Offre non trouvee' }, { status: 404 })
+      }
+    }
+
+    // Récupérer les infos de l'expéditeur pour le sujet par défaut
+    let expediteurNom = 'Utilisateur'
+    if (user.role === 'TALENT' && user.talentId) {
+      const talent = await prisma.talent.findUnique({
+        where: { id: user.talentId },
+        select: { prenom: true, nom: true },
+      })
+      expediteurNom = talent ? `${talent.prenom} ${talent.nom}` : 'Freelance'
+    } else if (user.role === 'CLIENT' && user.clientId) {
+      const client = await prisma.client.findUnique({
+        where: { id: user.clientId },
+        select: { raisonSociale: true },
+      })
+      expediteurNom = client?.raisonSociale || 'Client'
+    } else if (user.role === 'ADMIN') {
+      expediteurNom = 'TRINEXTA'
+    }
+
+    // Déterminer le sujet par défaut selon le type
+    let defaultSujet = sujet
+    if (!defaultSujet) {
+      if (conversationType === 'OFFRE' && offre) {
+        defaultSujet = `Discussion - ${offre.titre}`
+      } else if (conversationType === 'SUPPORT') {
+        defaultSujet = `Demande de support - ${expediteurNom}`
+      } else {
+        defaultSujet = `Message de ${expediteurNom}`
+      }
     }
 
     // Créer la conversation avec les participants
@@ -175,8 +217,9 @@ export async function POST(request: NextRequest) {
       // Créer la conversation
       const conv = await tx.conversation.create({
         data: {
-          offreId: offre.id,
-          sujet: sujet || `Discussion - ${offre.titre}`,
+          offreId: offre?.id || null,
+          type: conversationType as 'OFFRE' | 'DIRECT' | 'SUPPORT',
+          sujet: defaultSujet,
         },
       })
 
@@ -232,49 +275,75 @@ export async function POST(request: NextRequest) {
       await tx.message.create({
         data: {
           conversationId: conv.id,
-          contenu: message,
+          contenu: message.trim(),
           expediteurTalentId: user.role === 'TALENT' ? user.talentId : null,
           expediteurClientId: user.role === 'CLIENT' ? user.clientId : null,
           expediteurAdmin: user.role === 'ADMIN',
         },
       })
 
-      // Créer une notification pour les destinataires
-      const participants = await tx.conversationParticipant.findMany({
-        where: { conversationId: conv.id },
-        include: {
-          talent: { include: { user: true } },
-          client: { include: { user: true } },
-        },
-      })
-
-      for (const part of participants) {
-        // Ne pas notifier l'expéditeur
-        if (user.role === 'TALENT' && part.talentId === user.talentId) continue
-        if (user.role === 'CLIENT' && part.clientId === user.clientId) continue
-        if (user.role === 'ADMIN' && part.isAdmin) continue
-
-        const targetUserId = part.talent?.user?.id || part.client?.user?.id
-        if (targetUserId) {
-          await tx.notification.create({
-            data: {
-              userId: targetUserId,
-              type: 'NOUVEAU_MESSAGE',
-              titre: 'Nouveau message',
-              message: `Nouveau message concernant "${offre.titre}"`,
-              lien: `/messages/${conv.uid}`,
-            },
-          })
-        }
-      }
-
       return conv
     })
+
+    // Envoyer les notifications AVEC email (hors transaction pour ne pas bloquer)
+    const participants = await prisma.conversationParticipant.findMany({
+      where: { conversationId: conversation.id },
+      include: {
+        talent: { include: { user: true } },
+        client: { include: { user: true } },
+      },
+    })
+
+    // Récupérer les admins pour les conversations DIRECT/SUPPORT
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN', isActive: true },
+      select: { id: true, email: true },
+    })
+
+    const sujetNotif = offre?.titre || defaultSujet
+
+    for (const part of participants) {
+      // Ne pas notifier l'expéditeur
+      if (user.role === 'TALENT' && part.talentId === user.talentId) continue
+      if (user.role === 'CLIENT' && part.clientId === user.clientId) continue
+      if (user.role === 'ADMIN' && part.isAdmin) continue
+
+      const targetUserId = part.talent?.user?.id || part.client?.user?.id
+
+      // Notifier les participants non-admin
+      if (targetUserId) {
+        await createNotificationWithEmail({
+          userId: targetUserId,
+          type: 'NOUVEAU_MESSAGE',
+          titre: `Message de ${expediteurNom}`,
+          message: `Nouveau message concernant "${sujetNotif}"`,
+          lien: `/t/messages/${conversation.uid}`,
+          data: { conversationUid: conversation.uid, expediteur: expediteurNom },
+        }).catch((err) => console.error('Erreur notif message:', err))
+      }
+    }
+
+    // Notifier les admins si c'est un message vers TRINEXTA
+    if (user.role !== 'ADMIN') {
+      for (const admin of admins) {
+        await createNotificationWithEmail({
+          userId: admin.id,
+          type: 'NOUVEAU_MESSAGE',
+          titre: `Message de ${expediteurNom}`,
+          message: conversationType === 'SUPPORT'
+            ? `Nouvelle demande de support : "${message.substring(0, 50)}..."`
+            : `Nouveau message : "${message.substring(0, 50)}..."`,
+          lien: `/admin/messages/${conversation.uid}`,
+          data: { conversationUid: conversation.uid, expediteur: expediteurNom, type: conversationType },
+        }).catch((err) => console.error('Erreur notif admin:', err))
+      }
+    }
 
     return NextResponse.json({
       success: true,
       conversation: {
         uid: conversation.uid,
+        type: conversationType,
       },
     })
   } catch (error) {
