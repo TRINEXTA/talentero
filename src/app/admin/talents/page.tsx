@@ -289,11 +289,11 @@ function AdminTalentsContent() {
                               <span className="font-medium text-gray-900">
                                 {talent.prenom} {talent.nom}
                               </span>
-                              {/* Email vérifié ou non */}
+                              {/* Statut du compte */}
                               {talent.user.emailVerified ? (
-                                <span title="Email vérifié - Compte activé"><CheckCircle className="w-4 h-4 text-green-500" /></span>
+                                <Badge className="bg-green-100 text-green-800 text-xs font-semibold">Actif</Badge>
                               ) : (
-                                <Badge className="bg-orange-100 text-orange-800 text-xs">Non activé</Badge>
+                                <Badge className="bg-red-100 text-red-800 text-xs font-semibold">Non actif</Badge>
                               )}
                               {/* Importé par admin */}
                               {talent.importeParAdmin && (
