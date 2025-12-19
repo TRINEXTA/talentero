@@ -68,6 +68,9 @@ function AdminTalentsContent() {
       if (statutFilter) params.set('statut', statutFilter)
       if (searchParams.get('compteLimite')) params.set('compteLimite', 'true')
       if (searchParams.get('importeParAdmin')) params.set('importeParAdmin', 'true')
+      // FIX: Ajouter le filtre emailVerifie
+      const emailVerifie = searchParams.get('emailVerifie')
+      if (emailVerifie) params.set('emailVerifie', emailVerifie)
 
       const res = await fetch(`/api/admin/talents?${params.toString()}`)
       if (res.ok) {
@@ -107,8 +110,8 @@ function AdminTalentsContent() {
 
   const getStatutBadge = (statut: string) => {
     const configs: Record<string, { label: string; className: string }> = {
-      ACTIF: { label: 'Actif', className: 'bg-green-100 text-green-800' },
-      INACTIF: { label: 'Inactif', className: 'bg-gray-100 text-gray-800' },
+      ACTIF: { label: 'Disponible', className: 'bg-green-100 text-green-800' },
+      INACTIF: { label: 'Pas dispo', className: 'bg-gray-100 text-gray-800' },
       EN_MISSION: { label: 'En mission', className: 'bg-blue-100 text-blue-800' },
       SUSPENDU: { label: 'Suspendu', className: 'bg-red-100 text-red-800' },
     }
@@ -218,9 +221,9 @@ function AdminTalentsContent() {
                   onChange={(e) => handleFilterChange('statut', e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
-                  <option value="">Tous les statuts</option>
-                  <option value="ACTIF">Actif</option>
-                  <option value="INACTIF">Inactif</option>
+                  <option value="">Statut freelance</option>
+                  <option value="ACTIF">Disponible</option>
+                  <option value="INACTIF">Pas dispo</option>
                   <option value="EN_MISSION">En mission</option>
                   <option value="SUSPENDU">Suspendu</option>
                 </select>
@@ -229,9 +232,9 @@ function AdminTalentsContent() {
                   onChange={(e) => handleFilterChange('emailVerifie', e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
-                  <option value="">Tous les comptes</option>
-                  <option value="true">Email vérifié (activé)</option>
-                  <option value="false">Email non vérifié</option>
+                  <option value="">Statut compte</option>
+                  <option value="true">Compte actif</option>
+                  <option value="false">Compte non actif</option>
                   <option value="jamaisConnecte">Jamais connecté</option>
                 </select>
                 <Button
@@ -275,7 +278,7 @@ function AdminTalentsContent() {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Compétences</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">TJM</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dispo</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut Freelance</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matchs</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
