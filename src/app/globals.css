@@ -90,13 +90,22 @@
    AMÉLIORATION LISIBILITÉ ESPACE CANDIDAT
    =========================================== */
 
-/* Texte secondaire plus lisible */
+/* Texte secondaire plus lisible - RENFORCÉ */
 .text-gray-400 {
   color: #6b7280 !important; /* gray-500 au lieu de gray-400 */
 }
 
 .text-gray-500 {
-  color: #4b5563 !important; /* gray-600 au lieu de gray-500 */
+  color: #374151 !important; /* gray-700 au lieu de gray-500 - plus foncé */
+}
+
+.text-gray-600 {
+  color: #1f2937 !important; /* gray-800 au lieu de gray-600 */
+}
+
+/* Texte muted plus visible */
+.text-muted-foreground {
+  color: hsl(215.4 25% 30%) !important; /* Plus foncé que la variable */
 }
 
 /* Badges plus visibles */
@@ -120,7 +129,23 @@
 }
 
 .text-talent-secondary {
-  @apply text-gray-600;
+  @apply text-gray-700; /* Plus foncé */
+}
+
+/* Paragraphes et descriptions plus lisibles */
+p, .description {
+  color: #374151; /* gray-700 */
+}
+
+/* Labels et petits textes */
+label, .label {
+  color: #1f2937; /* gray-800 */
+  font-weight: 500;
+}
+
+/* Amélioration des bordures pour plus de définition */
+.border-gray-200 {
+  border-color: #d1d5db !important; /* gray-300 */
 }
 
 /* Status badges plus lisibles */

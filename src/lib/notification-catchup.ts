@@ -72,12 +72,10 @@ export async function sendActivationReminders(): Promise<CatchupResult> {
           lte: twoDaysAgo,
         },
         // Ne pas renvoyer si rappel déjà envoyé récemment
-        lastReminderSentAt: {
-          OR: [
-            { equals: null },
-            { lt: twoDaysAgo }, // Plus de 2 jours depuis le dernier rappel
-          ],
-        },
+        OR: [
+          { lastReminderSentAt: null },
+          { lastReminderSentAt: { lt: twoDaysAgo } }, // Plus de 2 jours depuis le dernier rappel
+        ],
       },
       include: {
         talent: { select: { prenom: true, nom: true } },
@@ -580,4 +578,4 @@ export async function runFullNotificationCatchup(): Promise<CatchupReport> {
 }
 
 // Export pour utilisation via API
-export { CatchupReport, CatchupResult }
+export type { CatchupReport, CatchupResult }

@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
           take: 1,
           select: {
             id: true,
+            uid: true,
             contenu: true,
             createdAt: true,
             expediteurAdmin: true,
