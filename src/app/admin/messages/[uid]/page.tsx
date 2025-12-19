@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -50,15 +49,18 @@ interface Conversation {
 }
 
 export default function AdminConversationPage({ params }: { params: Promise<{ uid: string }> }) {
-  const { uid } = use(params)
+  const resolvedParams = use(params)
+  const uid = resolvedParams?.uid || ''
   const router = useRouter()
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!uid) return
     fetchConversation()
     const interval = setInterval(fetchConversation, 10000)
     return () => clearInterval(interval)
@@ -70,6 +72,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
 
   const fetchConversation = async () => {
     try {
+      setError(null)
       const res = await fetch(`/api/admin/conversations/${uid}/messages`)
       if (res.status === 401) {
         router.push('/admin/login')
@@ -81,10 +84,37 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
       }
       if (res.ok) {
         const data = await res.json()
-        setConversation(data.conversation)
+        if (data.conversation) {
+          // Transformation sécurisée des données
+          const conv = data.conversation
+          const safeConversation: Conversation = {
+            uid: conv.uid || uid,
+            type: conv.type || 'DIRECT',
+            sujet: conv.sujet || null,
+            createdAt: conv.createdAt || new Date().toISOString(),
+            participants: Array.isArray(conv.participants) ? conv.participants.map((p: any) => ({
+              talent: p.talent || null,
+              isAdmin: !!p.isAdmin
+            })) : [],
+            messages: Array.isArray(conv.messages) ? conv.messages.map((m: any) => ({
+              id: m.id || 0,
+              uid: m.uid || '',
+              contenu: m.contenu || '',
+              createdAt: m.createdAt || new Date().toISOString(),
+              expediteurAdmin: !!m.expediteurAdmin,
+              expediteurTalentId: m.expediteurTalentId || null,
+              expediteur: m.expediteur || null
+            })) : [],
+            offre: conv.offre || null
+          }
+          setConversation(safeConversation)
+        }
+      } else {
+        setError('Erreur lors du chargement')
       }
-    } catch (error) {
-      console.error('Erreur:', error)
+    } catch (err) {
+      console.error('Erreur:', err)
+      setError('Erreur de connexion')
     } finally {
       setLoading(false)
     }
@@ -109,22 +139,30 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
       if (res.ok) {
         setNewMessage('')
         await fetchConversation()
+      } else {
+        const errorData = await res.json()
+        alert(errorData.error || 'Erreur lors de l\'envoi')
       }
-    } catch (error) {
-      console.error('Erreur:', error)
+    } catch (err) {
+      console.error('Erreur:', err)
+      alert('Erreur lors de l\'envoi du message')
     } finally {
       setSending(false)
     }
   }
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    try {
+      const date = new Date(dateStr)
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return ''
+    }
   }
 
   const getTypeIcon = (type: string) => {
@@ -143,7 +181,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
   const getTalent = () => {
     if (!conversation) return null
     const talentParticipant = conversation.participants.find(p => p.talent)
-    return talentParticipant?.talent
+    return talentParticipant?.talent || null
   }
 
   if (loading) {
@@ -154,8 +192,31 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
     )
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={() => router.push('/admin/messages')}>
+            Retour aux messages
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   if (!conversation) {
-    return null
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">Conversation non trouvée</p>
+          <Button onClick={() => router.push('/admin/messages')}>
+            Retour aux messages
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const talent = getTalent()
@@ -213,7 +274,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
 
               return (
                 <div
-                  key={msg.id}
+                  key={msg.id || msg.uid}
                   className={`flex ${isFromAdmin ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[70%] ${isFromAdmin ? 'order-2' : ''}`}>
@@ -224,7 +285,9 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
                           <User className="w-4 h-4 text-gray-600" />
                         </div>
                         <span className="text-xs text-gray-500 font-medium">
-                          {msg.expediteur?.prenom} {msg.expediteur?.nom || 'Talent'}
+                          {msg.expediteur?.prenom
+                            ? `${msg.expediteur.prenom} ${msg.expediteur.nom || ''}`
+                            : msg.expediteur?.nom || 'Talent'}
                         </span>
                       </div>
                     )}
@@ -265,7 +328,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <Textarea
-                placeholder="Ecrire une reponse..."
+                placeholder="Écrire une réponse..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => {
@@ -287,7 +350,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
             </Button>
           </div>
           <p className="text-xs text-gray-400 mt-2">
-            Entree pour envoyer, Shift+Entree pour saut de ligne
+            Entrée pour envoyer, Shift+Entrée pour saut de ligne
           </p>
         </form>
       </div>
