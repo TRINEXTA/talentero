@@ -24,39 +24,51 @@ export async function GET(request: NextRequest) {
     const statut = searchParams.get('statut') || ''
     const compteLimite = searchParams.get('compteLimite')
     const importeParAdmin = searchParams.get('importeParAdmin')
-
-    const where: Record<string, unknown> = {}
-
-    if (search) {
-      where.OR = [
-        { prenom: { contains: search, mode: 'insensitive' } },
-        { nom: { contains: search, mode: 'insensitive' } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-        { competences: { hasSome: [search] } },
-      ]
-    }
-
-    if (statut) {
-      where.statut = statut
-    }
-
-    if (compteLimite === 'true') {
-      where.compteLimite = true
-    }
-
-    if (importeParAdmin === 'true') {
-      where.importeParAdmin = true
-    }
-
-    // Filtre par email vérifié (compte activé)
     const emailVerifie = searchParams.get('emailVerifie')
-    if (emailVerifie === 'true') {
-      where.user = { ...(where.user as object || {}), emailVerified: true }
-    } else if (emailVerifie === 'false') {
-      where.user = { ...(where.user as object || {}), emailVerified: false }
-    } else if (emailVerifie === 'jamaisConnecte') {
-      where.user = { ...(where.user as object || {}), lastLoginAt: null }
+
+    // Construction correcte du where avec AND pour combiner les filtres
+    const andConditions: Record<string, unknown>[] = []
+
+    // Filtre par statut talent
+    if (statut) {
+      andConditions.push({ statut })
     }
+
+    // Filtre par compte limité
+    if (compteLimite === 'true') {
+      andConditions.push({ compteLimite: true })
+    }
+
+    // Filtre par importé par admin
+    if (importeParAdmin === 'true') {
+      andConditions.push({ importeParAdmin: true })
+    }
+
+    // Filtre par email vérifié / jamais connecté
+    if (emailVerifie === 'true') {
+      andConditions.push({ user: { emailVerified: true } })
+    } else if (emailVerifie === 'false') {
+      andConditions.push({ user: { emailVerified: false } })
+    } else if (emailVerifie === 'jamaisConnecte') {
+      andConditions.push({ user: { lastLoginAt: null } })
+    }
+
+    // Recherche textuelle (nom, prénom, email, compétences)
+    if (search) {
+      const searchLower = search.toLowerCase()
+      andConditions.push({
+        OR: [
+          { prenom: { contains: search, mode: 'insensitive' } },
+          { nom: { contains: search, mode: 'insensitive' } },
+          { user: { email: { contains: search, mode: 'insensitive' } } },
+          { titrePoste: { contains: search, mode: 'insensitive' } },
+          { competences: { hasSome: [search, searchLower, search.toUpperCase()] } },
+        ],
+      })
+    }
+
+    // Construction du where final
+    const where = andConditions.length > 0 ? { AND: andConditions } : {}
 
     const [talents, total] = await Promise.all([
       prisma.talent.findMany({

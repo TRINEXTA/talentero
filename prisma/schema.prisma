@@ -53,6 +53,9 @@ model User {
 
   // Créé par admin (import manuel)
   createdByAdmin Boolean  @default(false)
+
+  // Dernier rappel d'activation envoyé
+  lastReminderSentAt DateTime?
 }
 
 enum UserRole {

@@ -15,7 +15,8 @@
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Amélioré : contraste plus fort pour le texte secondaire */
+    --muted-foreground: 215.4 25% 35%;
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
@@ -53,9 +54,78 @@
   * {
     @apply border-border;
   }
+
+  html {
+    /* Taille de base légèrement plus grande pour meilleure lisibilité */
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground;
+    /* Amélioration de la lisibilité du texte */
+    line-height: 1.6;
+    letter-spacing: -0.01em;
   }
+
+  /* Amélioration de la lisibilité des headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    line-height: 1.3;
+  }
+
+  /* Liens plus visibles */
+  a {
+    @apply transition-colors;
+  }
+
+  /* Amélioration des inputs */
+  input, textarea, select {
+    @apply text-base;
+  }
+}
+
+/* ===========================================
+   AMÉLIORATION LISIBILITÉ ESPACE CANDIDAT
+   =========================================== */
+
+/* Texte secondaire plus lisible */
+.text-gray-400 {
+  color: #6b7280 !important; /* gray-500 au lieu de gray-400 */
+}
+
+.text-gray-500 {
+  color: #4b5563 !important; /* gray-600 au lieu de gray-500 */
+}
+
+/* Badges plus visibles */
+.badge-readable {
+  @apply font-medium;
+  letter-spacing: 0.01em;
+}
+
+/* Cards avec meilleur contraste */
+.card-talent {
+  @apply bg-white border border-gray-200 shadow-sm;
+}
+
+.card-talent:hover {
+  @apply shadow-md border-gray-300;
+}
+
+/* Texte principal plus fort */
+.text-talent-primary {
+  @apply text-gray-900 font-medium;
+}
+
+.text-talent-secondary {
+  @apply text-gray-600;
+}
+
+/* Status badges plus lisibles */
+.status-badge-readable {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold;
 }
 
 /* Scrollbar personnalisée */

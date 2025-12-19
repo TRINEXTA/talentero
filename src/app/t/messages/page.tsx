@@ -7,9 +7,20 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Logo } from '@/components/ui/logo'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   Users, Bell, Settings, LogOut, MessageSquare,
-  Briefcase, Clock, ChevronRight, Mail, Search, MailOpen, Megaphone, ArrowLeft
+  Briefcase, Clock, ChevronRight, Mail, Search, MailOpen, Megaphone, ArrowLeft,
+  PenSquare, Send, Loader2, HelpCircle
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
@@ -62,10 +73,53 @@ export default function TalentMessagesPage() {
   const [broadcastUnread, setBroadcastUnread] = useState(0)
   const [selectedBroadcast, setSelectedBroadcast] = useState<BroadcastMessage | null>(null)
 
+  // État pour le dialogue de nouveau message
+  const [showNewMessageDialog, setShowNewMessageDialog] = useState(false)
+  const [newMessageType, setNewMessageType] = useState<'DIRECT' | 'SUPPORT'>('DIRECT')
+  const [newMessageSubject, setNewMessageSubject] = useState('')
+  const [newMessageContent, setNewMessageContent] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
+
   useEffect(() => {
     fetchConversations()
     fetchBroadcastMessages()
   }, [])
+
+  // Fonction pour envoyer un nouveau message à TRINEXTA
+  const handleSendNewMessage = async () => {
+    if (!newMessageContent.trim()) return
+
+    setSendingMessage(true)
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: newMessageType,
+          sujet: newMessageSubject || undefined,
+          message: newMessageContent.trim(),
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        // Fermer le dialogue et rediriger vers la conversation
+        setShowNewMessageDialog(false)
+        setNewMessageSubject('')
+        setNewMessageContent('')
+        router.push(`/t/messages/${data.conversation.uid}`)
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Erreur lors de l\'envoi du message')
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('Erreur lors de l\'envoi du message')
+    } finally {
+      setSendingMessage(false)
+    }
+  }
 
   const fetchConversations = async () => {
     setLoading(true)
@@ -237,27 +291,124 @@ export default function TalentMessagesPage() {
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={activeTab === 'annonces' ? 'default' : 'outline'}
-            onClick={() => { setActiveTab('annonces'); setSelectedBroadcast(null); }}
-            className="flex items-center gap-2"
-          >
-            <Megaphone className="w-4 h-4" />
-            Annonces TRINEXTA
-            {broadcastUnread > 0 && (
-              <Badge className="bg-red-500 text-white ml-1">{broadcastUnread}</Badge>
-            )}
-          </Button>
-          <Button
-            variant={activeTab === 'conversations' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('conversations')}
-            className="flex items-center gap-2"
-          >
-            <MessageSquare className="w-4 h-4" />
-            Conversations
-          </Button>
+        {/* Tabs et bouton nouveau message */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex gap-2">
+            <Button
+              variant={activeTab === 'annonces' ? 'default' : 'outline'}
+              onClick={() => { setActiveTab('annonces'); setSelectedBroadcast(null); }}
+              className="flex items-center gap-2"
+            >
+              <Megaphone className="w-4 h-4" />
+              Annonces TRINEXTA
+              {broadcastUnread > 0 && (
+                <Badge className="bg-red-500 text-white ml-1">{broadcastUnread}</Badge>
+              )}
+            </Button>
+            <Button
+              variant={activeTab === 'conversations' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('conversations')}
+              className="flex items-center gap-2"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Conversations
+            </Button>
+          </div>
+
+          {/* Bouton Contacter TRINEXTA */}
+          <Dialog open={showNewMessageDialog} onOpenChange={setShowNewMessageDialog}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90">
+                <PenSquare className="w-4 h-4 mr-2" />
+                Contacter TRINEXTA
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Nouveau message</DialogTitle>
+                <DialogDescription>
+                  Envoyez un message directement à l'équipe TRINEXTA. Nous vous répondrons dans les meilleurs délais.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                {/* Type de message */}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={newMessageType === 'DIRECT' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setNewMessageType('DIRECT')}
+                    className="flex-1"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Question générale
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={newMessageType === 'SUPPORT' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setNewMessageType('SUPPORT')}
+                    className="flex-1"
+                  >
+                    <HelpCircle className="w-4 h-4 mr-2" />
+                    Demande de support
+                  </Button>
+                </div>
+
+                {/* Sujet (optionnel) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sujet (optionnel)
+                  </label>
+                  <Input
+                    placeholder="Ex: Question sur ma candidature"
+                    value={newMessageSubject}
+                    onChange={(e) => setNewMessageSubject(e.target.value)}
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Votre message <span className="text-red-500">*</span>
+                  </label>
+                  <Textarea
+                    placeholder="Écrivez votre message ici..."
+                    rows={5}
+                    value={newMessageContent}
+                    onChange={(e) => setNewMessageContent(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowNewMessageDialog(false)}
+                  disabled={sendingMessage}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleSendNewMessage}
+                  disabled={!newMessageContent.trim() || sendingMessage}
+                >
+                  {sendingMessage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Envoi...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Envoyer
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Annonces TRINEXTA */}
