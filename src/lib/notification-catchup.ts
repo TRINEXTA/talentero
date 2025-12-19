@@ -578,4 +578,4 @@ export async function runFullNotificationCatchup(): Promise<CatchupReport> {
 }
 
 // Export pour utilisation via API
-export { CatchupReport, CatchupResult }
+export type { CatchupReport, CatchupResult }
