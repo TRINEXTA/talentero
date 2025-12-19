@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useState, useRef, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import {
   MessageSquare, ChevronLeft, Send, User, Shield,
-  HelpCircle, Briefcase, Mail, Loader2
+  HelpCircle, Briefcase, Mail, Loader2, AlertCircle
 } from 'lucide-react'
 
-interface Message {
+interface MessageData {
   id: number
   uid: string
   contenu: string
@@ -22,13 +23,12 @@ interface Message {
     type: string
     nom: string
     prenom?: string
-    photoUrl?: string | null
   } | null
 }
 
-interface Conversation {
+interface ConversationData {
   uid: string
-  type: 'OFFRE' | 'DIRECT' | 'SUPPORT'
+  type: string
   sujet: string | null
   createdAt: string
   participants: Array<{
@@ -37,96 +37,113 @@ interface Conversation {
       codeUnique: string
       prenom: string
       nom: string
-      photoUrl: string | null
     } | null
     isAdmin: boolean
   }>
-  messages: Message[]
-  offre: {
-    uid: string
-    titre: string
-  } | null
+  messages: MessageData[]
+  offre: { uid: string; titre: string } | null
 }
 
-export default function AdminConversationPage({ params }: { params: Promise<{ uid: string }> }) {
-  const resolvedParams = use(params)
-  const uid = resolvedParams?.uid || ''
+export default function AdminConversationPage() {
+  // Utiliser useParams au lieu de use(params)
+  const params = useParams()
+  const uid = typeof params?.uid === 'string' ? params.uid : ''
+
   const router = useRouter()
-  const [conversation, setConversation] = useState<Conversation | null>(null)
+  const [conversation, setConversation] = useState<ConversationData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!uid) return
-    fetchConversation()
-    const interval = setInterval(fetchConversation, 10000)
-    return () => clearInterval(interval)
-  }, [uid])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [conversation?.messages])
-
-  const fetchConversation = async () => {
-    try {
-      setError(null)
-      const res = await fetch(`/api/admin/conversations/${uid}/messages`)
-      if (res.status === 401) {
-        router.push('/admin/login')
-        return
-      }
-      if (res.status === 404) {
-        router.push('/admin/messages')
-        return
-      }
-      if (res.ok) {
-        const data = await res.json()
-        if (data.conversation) {
-          // Transformation sécurisée des données
-          const conv = data.conversation
-          const safeConversation: Conversation = {
-            uid: conv.uid || uid,
-            type: conv.type || 'DIRECT',
-            sujet: conv.sujet || null,
-            createdAt: conv.createdAt || new Date().toISOString(),
-            participants: Array.isArray(conv.participants) ? conv.participants.map((p: any) => ({
-              talent: p.talent || null,
-              isAdmin: !!p.isAdmin
-            })) : [],
-            messages: Array.isArray(conv.messages) ? conv.messages.map((m: any) => ({
-              id: m.id || 0,
-              uid: m.uid || '',
-              contenu: m.contenu || '',
-              createdAt: m.createdAt || new Date().toISOString(),
-              expediteurAdmin: !!m.expediteurAdmin,
-              expediteurTalentId: m.expediteurTalentId || null,
-              expediteur: m.expediteur || null
-            })) : [],
-            offre: conv.offre || null
-          }
-          setConversation(safeConversation)
-        }
-      } else {
-        setError('Erreur lors du chargement')
-      }
-    } catch (err) {
-      console.error('Erreur:', err)
-      setError('Erreur de connexion')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  useEffect(() => {
+    scrollToBottom()
+  }, [conversation?.messages])
+
+  // Fetch conversation
+  useEffect(() => {
+    if (!uid) {
+      setError('ID de conversation manquant')
+      setLoading(false)
+      return
+    }
+
+    const fetchConversation = async () => {
+      try {
+        setError(null)
+        const res = await fetch(`/api/admin/conversations/${uid}/messages`)
+
+        if (res.status === 401) {
+          router.push('/admin/login')
+          return
+        }
+
+        if (res.status === 404) {
+          router.push('/admin/messages')
+          return
+        }
+
+        if (!res.ok) {
+          setError('Erreur lors du chargement')
+          return
+        }
+
+        const data = await res.json()
+
+        if (data?.conversation) {
+          const conv = data.conversation
+          const safeConv: ConversationData = {
+            uid: String(conv.uid || uid),
+            type: String(conv.type || 'DIRECT'),
+            sujet: conv.sujet || null,
+            createdAt: String(conv.createdAt || ''),
+            participants: Array.isArray(conv.participants) ? conv.participants.map((p: any) => ({
+              talent: p.talent ? {
+                uid: String(p.talent.uid || ''),
+                codeUnique: String(p.talent.codeUnique || ''),
+                prenom: String(p.talent.prenom || ''),
+                nom: String(p.talent.nom || '')
+              } : null,
+              isAdmin: Boolean(p.isAdmin)
+            })) : [],
+            messages: Array.isArray(conv.messages) ? conv.messages.map((m: any) => ({
+              id: Number(m.id) || 0,
+              uid: String(m.uid || ''),
+              contenu: String(m.contenu || ''),
+              createdAt: String(m.createdAt || ''),
+              expediteurAdmin: Boolean(m.expediteurAdmin),
+              expediteurTalentId: m.expediteurTalentId || null,
+              expediteur: m.expediteur || null
+            })) : [],
+            offre: conv.offre ? {
+              uid: String(conv.offre.uid || ''),
+              titre: String(conv.offre.titre || '')
+            } : null
+          }
+          setConversation(safeConv)
+        }
+      } catch (err) {
+        console.error('Erreur:', err)
+        setError('Erreur de connexion')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchConversation()
+    const interval = setInterval(fetchConversation, 10000)
+    return () => clearInterval(interval)
+  }, [uid, router])
+
+  // Send message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newMessage.trim() || sending) return
+    if (!newMessage.trim() || sending || !uid) return
 
     setSending(true)
     try {
@@ -138,10 +155,45 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
 
       if (res.ok) {
         setNewMessage('')
-        await fetchConversation()
+        // Refresh
+        const refreshRes = await fetch(`/api/admin/conversations/${uid}/messages`)
+        if (refreshRes.ok) {
+          const data = await refreshRes.json()
+          if (data?.conversation) {
+            const conv = data.conversation
+            setConversation({
+              uid: String(conv.uid || uid),
+              type: String(conv.type || 'DIRECT'),
+              sujet: conv.sujet || null,
+              createdAt: String(conv.createdAt || ''),
+              participants: Array.isArray(conv.participants) ? conv.participants.map((p: any) => ({
+                talent: p.talent ? {
+                  uid: String(p.talent.uid || ''),
+                  codeUnique: String(p.talent.codeUnique || ''),
+                  prenom: String(p.talent.prenom || ''),
+                  nom: String(p.talent.nom || '')
+                } : null,
+                isAdmin: Boolean(p.isAdmin)
+              })) : [],
+              messages: Array.isArray(conv.messages) ? conv.messages.map((m: any) => ({
+                id: Number(m.id) || 0,
+                uid: String(m.uid || ''),
+                contenu: String(m.contenu || ''),
+                createdAt: String(m.createdAt || ''),
+                expediteurAdmin: Boolean(m.expediteurAdmin),
+                expediteurTalentId: m.expediteurTalentId || null,
+                expediteur: m.expediteur || null
+              })) : [],
+              offre: conv.offre ? {
+                uid: String(conv.offre.uid || ''),
+                titre: String(conv.offre.titre || '')
+              } : null
+            })
+          }
+        }
       } else {
-        const errorData = await res.json()
-        alert(errorData.error || 'Erreur lors de l\'envoi')
+        const errData = await res.json().catch(() => ({}))
+        alert(errData.error || 'Erreur lors de l\'envoi')
       }
     } catch (err) {
       console.error('Erreur:', err)
@@ -152,8 +204,10 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
   }
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return ''
     try {
       const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return ''
       return date.toLocaleDateString('fr-FR', {
         day: 'numeric',
         month: 'short',
@@ -167,14 +221,10 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'SUPPORT':
-        return <HelpCircle className="w-4 h-4" />
-      case 'DIRECT':
-        return <Mail className="w-4 h-4" />
-      case 'OFFRE':
-        return <Briefcase className="w-4 h-4" />
-      default:
-        return <MessageSquare className="w-4 h-4" />
+      case 'SUPPORT': return <HelpCircle className="w-4 h-4" />
+      case 'DIRECT': return <Mail className="w-4 h-4" />
+      case 'OFFRE': return <Briefcase className="w-4 h-4" />
+      default: return <MessageSquare className="w-4 h-4" />
     }
   }
 
@@ -184,6 +234,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
     return talentParticipant?.talent || null
   }
 
+  // Loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -192,29 +243,33 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
     )
   }
 
+  // Error
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => router.push('/admin/messages')}>
-            Retour aux messages
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold mb-2">Erreur</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={() => router.push('/admin/messages')}>Retour aux messages</Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
+  // Not found
   if (!conversation) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">Conversation non trouvée</p>
-          <Button onClick={() => router.push('/admin/messages')}>
-            Retour aux messages
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center">
+            <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold mb-2">Conversation non trouvée</h2>
+            <Button onClick={() => router.push('/admin/messages')}>Retour aux messages</Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -240,9 +295,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
                   <span className="ml-1">{conversation.type}</span>
                 </Badge>
                 {talent && (
-                  <Badge variant="outline" className="text-xs">
-                    {talent.codeUnique}
-                  </Badge>
+                  <Badge variant="outline" className="text-xs">{talent.codeUnique}</Badge>
                 )}
               </div>
               <p className="text-sm text-gray-500">
@@ -251,9 +304,7 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
             </div>
             {talent && (
               <Link href={`/admin/talents/${talent.uid}`}>
-                <Button variant="outline" size="sm">
-                  Voir profil
-                </Button>
+                <Button variant="outline" size="sm">Voir profil</Button>
               </Link>
             )}
           </div>
@@ -273,41 +324,35 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
               const isFromAdmin = msg.expediteurAdmin
 
               return (
-                <div
-                  key={msg.id || msg.uid}
-                  className={`flex ${isFromAdmin ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`max-w-[70%] ${isFromAdmin ? 'order-2' : ''}`}>
-                    {/* Expediteur info */}
-                    {!isFromAdmin && (
-                      <div className="flex items-center gap-2 mb-1 ml-2">
+                <div key={msg.id || msg.uid} className={`flex ${isFromAdmin ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[70%]`}>
+                    {/* Sender info */}
+                    <div className={`flex items-center gap-2 mb-1 ${isFromAdmin ? 'justify-end mr-2' : 'ml-2'}`}>
+                      {!isFromAdmin && (
                         <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
                           <User className="w-4 h-4 text-gray-600" />
                         </div>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {msg.expediteur?.prenom
+                      )}
+                      <span className="text-xs text-gray-500 font-medium">
+                        {isFromAdmin ? 'TRINEXTA' : (
+                          msg.expediteur?.prenom
                             ? `${msg.expediteur.prenom} ${msg.expediteur.nom || ''}`
-                            : msg.expediteur?.nom || 'Talent'}
-                        </span>
-                      </div>
-                    )}
-                    {isFromAdmin && (
-                      <div className="flex items-center gap-2 mb-1 mr-2 justify-end">
-                        <span className="text-xs text-gray-500 font-medium">TRINEXTA</span>
+                            : msg.expediteur?.nom || 'Talent'
+                        )}
+                      </span>
+                      {isFromAdmin && (
                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
                           <Shield className="w-4 h-4 text-primary" />
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     {/* Message bubble */}
-                    <div
-                      className={`rounded-2xl px-4 py-2 ${
-                        isFromAdmin
-                          ? 'bg-primary text-white rounded-br-md'
-                          : 'bg-white text-gray-900 border rounded-bl-md'
-                      }`}
-                    >
+                    <div className={`rounded-2xl px-4 py-2 ${
+                      isFromAdmin
+                        ? 'bg-primary text-white rounded-br-md'
+                        : 'bg-white text-gray-900 border rounded-bl-md'
+                    }`}>
                       <p className="whitespace-pre-wrap">{msg.contenu}</p>
                     </div>
                     <p className={`text-xs text-gray-400 mt-1 ${isFromAdmin ? 'text-right mr-2' : 'ml-2'}`}>
@@ -342,16 +387,10 @@ export default function AdminConversationPage({ params }: { params: Promise<{ ui
               />
             </div>
             <Button type="submit" disabled={!newMessage.trim() || sending}>
-              {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">
-            Entrée pour envoyer, Shift+Entrée pour saut de ligne
-          </p>
+          <p className="text-xs text-gray-400 mt-2">Entrée pour envoyer, Shift+Entrée pour saut de ligne</p>
         </form>
       </div>
     </div>

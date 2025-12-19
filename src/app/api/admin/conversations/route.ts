@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { sendNewMessageNotification } from '@/lib/microsoft-graph'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Liste des conversations
 export async function GET(request: NextRequest) {
@@ -149,25 +149,15 @@ export async function POST(request: NextRequest) {
       data: { updatedAt: new Date() }
     })
 
-    // Creer une notification pour le talent
-    await prisma.notification.create({
-      data: {
+    // Creer une notification et envoyer un email
+    try {
+      await createNotificationWithEmail({
         userId: talent.user.id,
         type: 'NOUVEAU_MESSAGE',
         titre: 'Nouveau message de TRINEXTA',
         message: sujet || 'Vous avez recu un nouveau message',
         lien: '/t/messages',
-      }
-    })
-
-    // Envoyer un email de notification
-    try {
-      await sendNewMessageNotification(
-        talent.user.email,
-        talent.prenom,
-        sujet || `Message pour ${talent.prenom} ${talent.nom}`,
-        message
-      )
+      })
     } catch (emailError) {
       // Log l'erreur mais ne pas bloquer la reponse
       console.error('Erreur envoi email notification:', emailError)
