@@ -9,7 +9,7 @@
  */
 
 import { prisma } from '@/lib/db'
-import { NotificationType } from '@prisma/client'
+import { NotificationType, Prisma } from '@prisma/client'
 import { sendEmailViaGraph } from '@/lib/microsoft-graph'
 
 // ============================================
@@ -437,7 +437,7 @@ export async function createNotificationWithEmail(params: {
       titre,
       message,
       lien,
-      data: data || undefined,
+      data: data ? (data as Prisma.InputJsonValue) : undefined,
     },
   })
 
