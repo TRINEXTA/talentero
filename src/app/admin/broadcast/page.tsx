@@ -52,6 +52,12 @@ export default function AdminBroadcastPage() {
   const [previewCount, setPreviewCount] = useState<number | null>(null)
   const [loadingPreview, setLoadingPreview] = useState(false)
 
+  // Option d'envoi emails
+  const [sendEmailsNow, setSendEmailsNow] = useState(false)
+
+  // Envoi manuel emails
+  const [notifyingId, setNotifyingId] = useState<number | null>(null)
+
   useEffect(() => {
     fetchMessages()
   }, [])
@@ -137,15 +143,22 @@ export default function AdminBroadcastPage() {
           sujet,
           contenu,
           filters,
+          sendEmailsNow,
+          batchSize: 10,
+          delayBetweenBatchesMs: 30000, // 30 secondes entre chaque lot
         }),
       })
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
+      const emailInfo = sendEmailsNow
+        ? `Emails: ${data.emailStats.sent}/${data.emailStats.total} envoyés`
+        : `Notifications créées (emails à envoyer manuellement)`
+
       toast({
         title: "Message envoyé",
-        description: `Message envoyé à ${data.totalEnvoye} talent(s)`,
+        description: `Message envoyé à ${data.totalEnvoye} talent(s). ${emailInfo}`,
       })
 
       // Reset form
@@ -163,6 +176,35 @@ export default function AdminBroadcastPage() {
       })
     } finally {
       setSending(false)
+    }
+  }
+
+  const notifyByEmail = async (messageId: number) => {
+    if (!confirm('Envoyer les notifications email pour ce message ? (Envoi par lots de 10, avec pause de 30s entre chaque lot)')) {
+      return
+    }
+
+    setNotifyingId(messageId)
+    try {
+      const res = await fetch(`/api/admin/broadcast/${messageId}/notify`, {
+        method: 'POST',
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      toast({
+        title: "Notifications envoyées",
+        description: `${data.stats.sent}/${data.stats.total} emails envoyés (${data.stats.failed} échecs)`,
+      })
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Erreur lors de l'envoi",
+        variant: "destructive",
+      })
+    } finally {
+      setNotifyingId(null)
     }
   }
 
@@ -310,6 +352,25 @@ export default function AdminBroadcastPage() {
                 />
               </div>
 
+              {/* Option envoi email */}
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={sendEmailsNow}
+                    onChange={(e) => setSendEmailsNow(e.target.checked)}
+                    className="rounded mt-1"
+                  />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900">Envoyer les emails maintenant</p>
+                    <p className="text-blue-700 text-xs mt-1">
+                      Si coché: emails envoyés par lots de 10 avec 30s de pause.<br/>
+                      Si décoché: notifications créées, vous pourrez envoyer les emails plus tard.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
               <Button
                 onClick={sendBroadcast}
                 disabled={sending || !sujet || !contenu}
@@ -320,7 +381,7 @@ export default function AdminBroadcastPage() {
                 ) : (
                   <Send className="w-4 h-4 mr-2" />
                 )}
-                Envoyer le message
+                {sendEmailsNow ? 'Envoyer avec emails' : 'Envoyer (notifications seulement)'}
               </Button>
             </CardContent>
           </Card>
@@ -355,7 +416,7 @@ export default function AdminBroadcastPage() {
                       <p className="text-sm text-gray-600 line-clamp-2 mb-2">
                         {msg.contenu}
                       </p>
-                      <div className="flex justify-between items-center text-xs text-gray-400">
+                      <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
                         <span>{new Date(msg.createdAt).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'short',
@@ -367,6 +428,26 @@ export default function AdminBroadcastPage() {
                           {msg.totalLu}/{msg.totalEnvoye} lu(s)
                         </span>
                       </div>
+                      {/* Bouton pour envoyer les notifications email */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => notifyByEmail(msg.id)}
+                        disabled={notifyingId === msg.id}
+                        className="w-full text-xs"
+                      >
+                        {notifyingId === msg.id ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            Envoi en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="w-3 h-3 mr-1" />
+                            Envoyer notifications email
+                          </>
+                        )}
+                      </Button>
                     </div>
                   ))}
                 </div>

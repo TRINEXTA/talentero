@@ -63,7 +63,15 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser()
 
     const body = await request.json()
-    const { sujet, contenu, talentIds, filters } = body
+    const {
+      sujet,
+      contenu,
+      talentIds,
+      filters,
+      sendEmailsNow = false, // Par défaut, ne pas envoyer les emails immédiatement
+      batchSize = 10,
+      delayBetweenBatchesMs = 30000 // 30 secondes par défaut
+    } = body
 
     if (!sujet || !contenu) {
       return NextResponse.json(
@@ -150,7 +158,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Créer des notifications pour chaque talent et envoyer emails
+    // Créer des notifications pour chaque talent
     const talentUsers = await prisma.talent.findMany({
       where: { id: { in: targetTalentIds } },
       select: {
@@ -160,13 +168,60 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Envoyer les notifications avec emails de manière synchrone pour s'assurer qu'ils sont envoyés
-    // Utiliser Promise.allSettled pour ne pas bloquer si certains emails échouent
     let emailsSent = 0
     let emailsFailed = 0
+    let emailsSkipped = 0
 
-    const emailResults = await Promise.allSettled(
-      talentUsers.map(async (t) => {
+    if (sendEmailsNow) {
+      // Envoi par lots avec délai pour éviter le rate limiting
+      console.log(`[Broadcast] Envoi immédiat: ${talentUsers.length} destinataires en lots de ${batchSize}`)
+
+      for (let i = 0; i < talentUsers.length; i += batchSize) {
+        const batch = talentUsers.slice(i, i + batchSize)
+        const batchNum = Math.floor(i / batchSize) + 1
+        const totalBatches = Math.ceil(talentUsers.length / batchSize)
+
+        console.log(`[Broadcast] Lot ${batchNum}/${totalBatches}: ${batch.length} emails`)
+
+        const results = await Promise.allSettled(
+          batch.map(async (t) => {
+            try {
+              const result = await createNotificationWithEmail({
+                userId: t.userId,
+                type: 'NOUVEAU_MESSAGE',
+                titre: sujet,
+                message: contenu.substring(0, 200) + (contenu.length > 200 ? '...' : ''),
+                lien: `/t/messages`,
+              })
+              return { success: result.emailSent, email: t.user.email }
+            } catch (err) {
+              console.error(`Erreur envoi à ${t.user.email}:`, err)
+              return { success: false, email: t.user.email }
+            }
+          })
+        )
+
+        results.forEach((result) => {
+          if (result.status === 'fulfilled' && result.value.success) {
+            emailsSent++
+          } else {
+            emailsFailed++
+          }
+        })
+
+        // Pause entre les lots (sauf pour le dernier)
+        if (i + batchSize < talentUsers.length) {
+          console.log(`[Broadcast] Pause de ${delayBetweenBatchesMs / 1000}s...`)
+          await new Promise(resolve => setTimeout(resolve, delayBetweenBatchesMs))
+        }
+      }
+
+      console.log(`[Broadcast] Terminé: ${emailsSent} envoyés, ${emailsFailed} échecs`)
+    } else {
+      // Créer seulement les notifications in-app (sans emails)
+      console.log(`[Broadcast] Création notifications sans emails pour ${talentUsers.length} destinataires`)
+
+      for (const t of talentUsers) {
         try {
           await createNotificationWithEmail({
             userId: t.userId,
@@ -174,35 +229,30 @@ export async function POST(request: NextRequest) {
             titre: sujet,
             message: contenu.substring(0, 200) + (contenu.length > 200 ? '...' : ''),
             lien: `/t/messages`,
+            skipEmail: true, // Pas d'envoi email
           })
-          return { success: true, email: t.user.email }
+          emailsSkipped++
         } catch (err) {
-          console.error(`Erreur envoi notification/email à ${t.user.email}:`, err)
-          return { success: false, email: t.user.email, error: err }
+          console.error(`Erreur notification ${t.user.email}:`, err)
+          emailsFailed++
         }
-      })
-    )
-
-    // Compter les résultats
-    emailResults.forEach((result) => {
-      if (result.status === 'fulfilled' && result.value.success) {
-        emailsSent++
-      } else {
-        emailsFailed++
       }
-    })
 
-    console.log(`Broadcast: ${emailsSent} emails envoyés, ${emailsFailed} échecs sur ${talentUsers.length} destinataires`)
+      console.log(`[Broadcast] ${emailsSkipped} notifications créées (emails à envoyer manuellement)`)
+    }
 
     return NextResponse.json({
       success: true,
       message,
+      broadcastId: message.id,
       totalEnvoye: targetTalentIds.length,
       emailStats: {
         sent: emailsSent,
         failed: emailsFailed,
+        skipped: emailsSkipped,
         total: talentUsers.length,
       },
+      notifyUrl: sendEmailsNow ? null : `/api/admin/broadcast/${message.id}/notify`,
     })
   } catch (error) {
     console.error('Erreur POST broadcast message:', error)
