@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole, getCurrentUser } from '@/lib/auth'
-import { sendNewMessageNotification } from '@/lib/microsoft-graph'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Liste des messages broadcast envoyés
 export async function GET(request: NextRequest) {
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Créer des notifications pour chaque talent et récupérer infos pour email
+    // Créer des notifications pour chaque talent et envoyer emails
     const talentUsers = await prisma.talent.findMany({
       where: { id: { in: targetTalentIds } },
       select: {
@@ -160,42 +160,49 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    await prisma.notification.createMany({
-      data: talentUsers.map(t => ({
-        userId: t.userId,
-        type: 'NOUVEAU_MESSAGE',
-        titre: `Nouveau message: ${sujet}`,
-        message: contenu.substring(0, 200) + (contenu.length > 200 ? '...' : ''),
-        lien: `/t/messages`,
-      }))
-    })
-
-    // Envoyer les emails en arrière-plan (ne pas bloquer la réponse)
+    // Envoyer les notifications avec emails de manière synchrone pour s'assurer qu'ils sont envoyés
     // Utiliser Promise.allSettled pour ne pas bloquer si certains emails échouent
-    setImmediate(async () => {
-      try {
-        const emailPromises = talentUsers.map(t =>
-          sendNewMessageNotification(
-            t.user.email,
-            t.prenom,
-            sujet,
-            contenu
-          ).catch(err => {
-            console.error(`Erreur envoi email à ${t.user.email}:`, err)
-            return false
+    let emailsSent = 0
+    let emailsFailed = 0
+
+    const emailResults = await Promise.allSettled(
+      talentUsers.map(async (t) => {
+        try {
+          await createNotificationWithEmail({
+            userId: t.userId,
+            type: 'NOUVEAU_MESSAGE',
+            titre: sujet,
+            message: contenu.substring(0, 200) + (contenu.length > 200 ? '...' : ''),
+            lien: `/t/messages`,
           })
-        )
-        await Promise.allSettled(emailPromises)
-        console.log(`Emails broadcast envoyés à ${talentUsers.length} destinataires`)
-      } catch (error) {
-        console.error('Erreur envoi emails broadcast:', error)
+          return { success: true, email: t.user.email }
+        } catch (err) {
+          console.error(`Erreur envoi notification/email à ${t.user.email}:`, err)
+          return { success: false, email: t.user.email, error: err }
+        }
+      })
+    )
+
+    // Compter les résultats
+    emailResults.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value.success) {
+        emailsSent++
+      } else {
+        emailsFailed++
       }
     })
+
+    console.log(`Broadcast: ${emailsSent} emails envoyés, ${emailsFailed} échecs sur ${talentUsers.length} destinataires`)
 
     return NextResponse.json({
       success: true,
       message,
       totalEnvoye: targetTalentIds.length,
+      emailStats: {
+        sent: emailsSent,
+        failed: emailsFailed,
+        total: talentUsers.length,
+      },
     })
   } catch (error) {
     console.error('Erreur POST broadcast message:', error)

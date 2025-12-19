@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Liste des messages d'une conversation
 export async function GET(
@@ -136,18 +137,20 @@ export async function POST(
       data: { updatedAt: new Date() }
     })
 
-    // Notifier les talents participants
+    // Notifier les talents participants avec email
     for (const participant of conversation.participants) {
       if (participant.talent?.user) {
-        await prisma.notification.create({
-          data: {
+        try {
+          await createNotificationWithEmail({
             userId: participant.talent.user.id,
             type: 'NOUVEAU_MESSAGE',
             titre: 'Nouveau message de TRINEXTA',
             message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
             lien: '/t/messages',
-          }
-        })
+          })
+        } catch (emailError) {
+          console.error('Erreur envoi notification/email:', emailError)
+        }
       }
     }
 
