@@ -11,7 +11,7 @@ import { NotificationBell } from '@/components/ui/notification-bell'
 import {
   User, Briefcase, FileText, Bell, Settings, LogOut,
   Search, TrendingUp, Clock, CheckCircle,
-  ChevronRight, MapPin, Building2, Zap, Calendar
+  ChevronRight, MapPin, Building2, Zap, Calendar, MessageSquare
 } from 'lucide-react'
 
 interface Stats {
@@ -436,11 +436,17 @@ export default function TalentDashboardPage() {
             <CardTitle>Actions rapides</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-5 gap-4">
+            <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Link href="/t/offres" className="block">
                 <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition border border-primary/20">
                   <Search className="w-5 h-5 text-primary" />
                   <span className="font-medium text-primary">Voir les offres</span>
+                </div>
+              </Link>
+              <Link href="/t/messages" className="block">
+                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition border border-green-200">
+                  <MessageSquare className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-green-700">Messages</span>
                 </div>
               </Link>
               <Link href="/t/planning" className="block">
