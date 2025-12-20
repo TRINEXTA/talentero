@@ -10,8 +10,8 @@ import { Logo } from '@/components/ui/logo'
 import {
   Building2, Briefcase, Users, Bell, Settings, LogOut,
   ChevronLeft, MapPin, Clock, Calendar, Euro,
-  Edit, CheckCircle, Archive, Copy, Eye, Star,
-  User, Mail, Phone, FileText, ExternalLink
+  CheckCircle, Archive, Copy, Eye, Star,
+  FileText, ExternalLink
 } from 'lucide-react'
 
 interface Offre {
@@ -41,31 +41,11 @@ interface Offre {
   nbCandidatures: number
   createdAt: string
   publieLe: string | null
-  candidatures: Candidature[]
+  // Les candidatures ne sont plus exposées aux clients (anonymisation)
   shortlist: Shortlist | null
   _count: {
     candidatures: number
     matchs: number
-  }
-}
-
-interface Candidature {
-  uid: string
-  statut: string
-  scoreMatch: number
-  tjmPropose: number | null
-  motivation: string | null
-  createdAt: string
-  talent: {
-    uid: string
-    prenom: string
-    nom: string
-    titrePoste: string | null
-    photoUrl: string | null
-    competences: string[]
-    tjm: number | null
-    disponibilite: string | null
-    ville: string | null
   }
 }
 
@@ -153,25 +133,6 @@ export default function ClientOffreDetailPage() {
       POURVUE: { label: 'Pourvue', className: 'bg-purple-100 text-purple-800' },
       FERMEE: { label: 'Fermee', className: 'bg-orange-100 text-orange-800' },
       EXPIREE: { label: 'Expiree', className: 'bg-gray-100 text-gray-600' },
-    }
-    const config = configs[statut] || { label: statut, className: 'bg-gray-100 text-gray-800' }
-    return <Badge className={config.className}>{config.label}</Badge>
-  }
-
-  const getCandidatureStatutBadge = (statut: string) => {
-    const configs: Record<string, { label: string; className: string }> = {
-      NOUVELLE: { label: 'Nouvelle', className: 'bg-blue-100 text-blue-800' },
-      VUE: { label: 'Vue', className: 'bg-gray-100 text-gray-800' },
-      EN_REVUE: { label: 'En revue', className: 'bg-yellow-100 text-yellow-800' },
-      PRE_SELECTIONNE: { label: 'Preselectionne', className: 'bg-purple-100 text-purple-800' },
-      SHORTLIST: { label: 'Shortlist', className: 'bg-green-100 text-green-800' },
-      PROPOSEE_CLIENT: { label: 'Propose', className: 'bg-blue-100 text-blue-800' },
-      ENTRETIEN_DEMANDE: { label: 'Entretien demande', className: 'bg-orange-100 text-orange-800' },
-      ENTRETIEN_PLANIFIE: { label: 'Entretien planifie', className: 'bg-orange-100 text-orange-800' },
-      ENTRETIEN_REALISE: { label: 'Entretien realise', className: 'bg-orange-100 text-orange-800' },
-      ACCEPTEE: { label: 'Retenue', className: 'bg-green-100 text-green-800' },
-      REFUSEE: { label: 'Refusee', className: 'bg-red-100 text-red-800' },
-      ABANDONNEE: { label: 'Abandonnee', className: 'bg-gray-100 text-gray-600' },
     }
     const config = configs[statut] || { label: statut, className: 'bg-gray-100 text-gray-800' }
     return <Badge className={config.className}>{config.label}</Badge>
@@ -405,72 +366,45 @@ export default function ClientOffreDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Candidatures */}
+            {/* Candidatures - Info pour le client */}
             <Card>
               <CardHeader>
-                <CardTitle>Candidatures ({offre.candidatures.length})</CardTitle>
+                <CardTitle>Candidatures ({offre._count.candidatures})</CardTitle>
                 <CardDescription>
-                  Candidatures recues pour cette offre
+                  Suivi des candidatures pour cette offre
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {offre.candidatures.length === 0 ? (
+                {offre._count.candidatures === 0 ? (
                   <div className="text-center py-8">
                     <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">Aucune candidature pour le moment</p>
                   </div>
+                ) : offre.shortlist ? (
+                  <div className="text-center py-6">
+                    <Star className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                    <p className="text-gray-700 mb-2">
+                      <span className="font-semibold">{offre._count.candidatures}</span> candidature(s) recue(s)
+                    </p>
+                    <p className="text-gray-500 text-sm mb-4">
+                      Une shortlist de {offre.shortlist._count.candidats} candidat(s) a ete preparee pour vous
+                    </p>
+                    <Link href={`/c/shortlists/${offre.shortlist.uid}`}>
+                      <Button>
+                        <Star className="w-4 h-4 mr-2" />
+                        Voir la shortlist
+                      </Button>
+                    </Link>
+                  </div>
                 ) : (
-                  <div className="space-y-4">
-                    {offre.candidatures.map((candidature) => (
-                      <div
-                        key={candidature.uid}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
-                      >
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                          {candidature.talent.photoUrl ? (
-                            <img
-                              src={candidature.talent.photoUrl}
-                              alt=""
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <User className="w-6 h-6 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-gray-900">
-                              {candidature.talent.prenom} {candidature.talent.nom}
-                            </span>
-                            {getCandidatureStatutBadge(candidature.statut)}
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            {candidature.talent.titrePoste || 'Consultant IT'}
-                          </p>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                            {candidature.talent.ville && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {candidature.talent.ville}
-                              </span>
-                            )}
-                            {candidature.talent.tjm && (
-                              <span className="flex items-center gap-1">
-                                <Euro className="w-3 h-3" />
-                                {candidature.talent.tjm} EUR/j
-                              </span>
-                            )}
-                            <span>Postule le {formatDate(candidature.createdAt)}</span>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <div className="text-lg font-bold text-primary">
-                            {candidature.scoreMatch}%
-                          </div>
-                          <p className="text-xs text-gray-500">match</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-6">
+                    <Users className="w-12 h-12 text-primary/30 mx-auto mb-4" />
+                    <p className="text-gray-700 mb-2">
+                      <span className="font-semibold">{offre._count.candidatures}</span> candidature(s) recue(s)
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      Notre equipe analyse les profils et vous enverra prochainement une shortlist de candidats qualifies.
+                    </p>
                   </div>
                 )}
               </CardContent>

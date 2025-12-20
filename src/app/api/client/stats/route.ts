@@ -98,11 +98,10 @@ export async function GET(request: NextRequest) {
           talent: {
             select: {
               uid: true,
-              prenom: true,
-              nom: true,
+              codeUnique: true,
               titrePoste: true,
-              photoUrl: true,
               competences: true,
+              // PAS de nom, prenom, photo - anonymisation pour le client
             },
           },
         },
@@ -117,7 +116,8 @@ export async function GET(request: NextRequest) {
         shortlistsEnCours,
       },
       offresRecentes,
-      candidaturesRecentes: candidaturesRecentes.map(c => ({
+      // Anonymiser les candidatures pour le client
+      candidaturesRecentes: candidaturesRecentes.map((c, index) => ({
         uid: c.uid,
         statut: c.statut,
         scoreMatch: c.scoreMatch,
@@ -125,10 +125,11 @@ export async function GET(request: NextRequest) {
         offre: c.offre,
         talent: {
           uid: c.talent.uid,
-          prenom: c.talent.prenom,
-          nom: c.talent.nom,
+          // Afficher le code unique au lieu du nom
+          codeUnique: c.talent.codeUnique || `CANDIDAT-${index + 1}`,
+          displayName: `Candidat ${c.talent.codeUnique || (index + 1)}`,
           titrePoste: c.talent.titrePoste,
-          photoUrl: c.talent.photoUrl,
+          // PAS de photo, nom, prénom
           competences: c.talent.competences.slice(0, 5),
         },
       })),

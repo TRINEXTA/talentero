@@ -17,21 +17,20 @@ interface ShortlistCandidat {
   uid: string
   ordre: number
   commentaireAdmin: string | null
-  tjmPropose: number | null
   feedbackClient: string | null
   noteClient: number | null
   statutClient: string | null
   talent: {
     uid: string
-    prenom: string
-    nom: string
+    codeUnique: string
+    displayName: string
     titrePoste: string | null
-    photoUrl: string | null
     competences: string[]
-    tjm: number | null
     anneesExperience: number | null
     disponibilite: string | null
     ville: string | null
+    bio: string | null
+    mobilite: string | null
   }
   scoreMatch: number | null
 }
@@ -265,22 +264,14 @@ export default function ClientShortlistsPage() {
                           <div className="flex items-start gap-4">
                             <div className="flex-shrink-0">
                               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                                {candidat.talent.photoUrl ? (
-                                  <img
-                                    src={candidat.talent.photoUrl}
-                                    alt=""
-                                    className="w-12 h-12 rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <User className="w-6 h-6 text-primary" />
-                                )}
+                                <User className="w-6 h-6 text-primary" />
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-xs text-gray-400">#{index + 1}</span>
                                 <h4 className="font-semibold text-gray-900">
-                                  {candidat.talent.prenom} {candidat.talent.nom}
+                                  {candidat.talent.displayName}
                                 </h4>
                                 {candidat.scoreMatch && (
                                   <Badge className="bg-primary/10 text-primary">
@@ -324,11 +315,6 @@ export default function ClientShortlistsPage() {
                                     {getDisponibiliteLabel(candidat.talent.disponibilite)}
                                   </span>
                                 )}
-                                {candidat.tjmPropose && (
-                                  <span className="font-medium text-primary">
-                                    {candidat.tjmPropose}€/j
-                                  </span>
-                                )}
                               </div>
 
                               {candidat.commentaireAdmin && (
@@ -342,9 +328,9 @@ export default function ClientShortlistsPage() {
                             </div>
 
                             <div className="flex-shrink-0">
-                              <Link href={`/c/shortlists/${selectedShortlist.uid}/candidat/${candidat.uid}`}>
+                              <Link href={`/c/shortlists/${selectedShortlist.uid}`}>
                                 <Button variant="outline" size="sm">
-                                  Voir le profil
+                                  Voir les details
                                   <ChevronRight className="w-4 h-4 ml-1" />
                                 </Button>
                               </Link>

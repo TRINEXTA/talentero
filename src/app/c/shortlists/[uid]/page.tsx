@@ -9,8 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import {
-  ArrowLeft, Briefcase, User, MapPin, Euro, Clock, CheckCircle, XCircle,
-  MessageSquare, Calendar, Loader2, ChevronDown, ChevronUp, FileText, Star
+  ArrowLeft, Briefcase, User, MapPin, Clock, CheckCircle, XCircle,
+  MessageSquare, Calendar, Loader2, ChevronDown, ChevronUp, Star
 } from 'lucide-react'
 
 interface Candidat {
@@ -25,25 +25,20 @@ interface Candidat {
   candidature: {
     id: number
     uid: string
-    tjmPropose: number | null
     motivation: string | null
     scoreMatch: number | null
     talent: {
       uid: string
       codeUnique: string
-      prenom: string
-      nom: string
+      displayName: string
       titrePoste: string | null
       competences: string[]
       anneesExperience: number
-      tjm: number | null
-      tjmMin: number | null
-      tjmMax: number | null
       disponibilite: string
       mobilite: string
       ville: string | null
       bio: string | null
-      photoUrl: string | null
+      // PAS de nom, prenom, photo, TJM - données anonymisées
     }
   }
 }
@@ -229,16 +224,6 @@ export default function ClientShortlistDetailPage() {
                   {shortlist.offre.lieu}
                 </span>
               )}
-              {(shortlist.offre.tjmMin || shortlist.offre.tjmMax) && (
-                <span className="flex items-center gap-1">
-                  <Euro className="w-4 h-4" />
-                  {shortlist.offre.tjmMin && shortlist.offre.tjmMax
-                    ? `${shortlist.offre.tjmMin} - ${shortlist.offre.tjmMax} EUR/j`
-                    : shortlist.offre.tjmMax
-                    ? `${shortlist.offre.tjmMax} EUR/j`
-                    : `${shortlist.offre.tjmMin}+ EUR/j`}
-                </span>
-              )}
               <span className="flex items-center gap-1">
                 <User className="w-4 h-4" />
                 {shortlist.candidats.length} candidat(s) preselectionne(s)
@@ -292,7 +277,7 @@ export default function ClientShortlistDetailPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-gray-900">
-                              Candidat {talent.codeUnique}
+                              {talent.displayName}
                             </h3>
                             {getStatutBadge(candidat.statutClient, candidat.retenuParClient)}
                           </div>
@@ -302,12 +287,6 @@ export default function ClientShortlistDetailPage() {
                               <Briefcase className="w-4 h-4" />
                               {talent.anneesExperience} ans d'exp.
                             </span>
-                            {talent.tjm && (
-                              <span className="flex items-center gap-1">
-                                <Euro className="w-4 h-4" />
-                                {talent.tjm} EUR/j
-                              </span>
-                            )}
                             <span className="flex items-center gap-1">
                               <Clock className="w-4 h-4" />
                               {DISPONIBILITE_LABELS[talent.disponibilite] || talent.disponibilite}
@@ -361,18 +340,7 @@ export default function ClientShortlistDetailPage() {
                       )}
 
                       {/* Infos supplementaires */}
-                      <div className="grid md:grid-cols-3 gap-4 mb-6">
-                        <div className="p-3 bg-white rounded-lg border">
-                          <p className="text-sm text-gray-500">TJM souhaite</p>
-                          <p className="font-semibold">
-                            {talent.tjm ? `${talent.tjm} EUR/j` : 'Non precise'}
-                            {talent.tjmMin && talent.tjmMax && (
-                              <span className="text-sm text-gray-500 ml-1">
-                                ({talent.tjmMin}-{talent.tjmMax})
-                              </span>
-                            )}
-                          </p>
-                        </div>
+                      <div className="grid md:grid-cols-2 gap-4 mb-6">
                         <div className="p-3 bg-white rounded-lg border">
                           <p className="text-sm text-gray-500">Mobilite</p>
                           <p className="font-semibold">

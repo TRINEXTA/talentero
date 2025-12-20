@@ -59,10 +59,9 @@ interface CandidatureRecente {
   }
   talent: {
     uid: string
-    prenom: string
-    nom: string
+    codeUnique: string
+    displayName: string
     titrePoste: string | null
-    photoUrl: string | null
     competences: string[]
   }
 }
@@ -375,20 +374,12 @@ export default function ClientDashboardPage() {
                   {candidaturesRecentes.map((candidature) => (
                     <div key={candidature.uid} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        {candidature.talent.photoUrl ? (
-                          <img
-                            src={candidature.talent.photoUrl}
-                            alt=""
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-5 h-5 text-primary" />
-                        )}
+                        <User className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-gray-900 truncate">
-                            {candidature.talent.prenom} {candidature.talent.nom}
+                            {candidature.talent.displayName}
                           </span>
                           {getCandidatureStatutBadge(candidature.statut)}
                         </div>
