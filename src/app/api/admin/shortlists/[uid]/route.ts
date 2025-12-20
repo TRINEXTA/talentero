@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
 import { sendShortlistNotification, sendAOResultNotification } from '@/lib/microsoft-graph'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'une shortlist
 export async function GET(
@@ -146,6 +147,7 @@ export async function POST(
           include: {
             client: {
               include: {
+                user: { select: { id: true } },
                 contacts: { where: { recevoirNotifications: true } },
               },
             },
@@ -246,8 +248,23 @@ export async function POST(
           })
         }
 
-        // Envoie les notifications aux contacts du client
+        // Notifie le client principal via le service unifié (notification + email)
         const client = shortlist.offre.client
+        if (client && client.user?.id) {
+          await createNotificationWithEmail({
+            userId: client.user.id,
+            type: 'SHORTLIST_ENVOYEE',
+            titre: 'Nouvelle shortlist disponible',
+            message: `Une shortlist de ${shortlist.candidats.length} candidat(s) est disponible pour votre offre "${shortlist.offre.titre}"`,
+            lien: `/c/shortlists/${shortlist.uid}`,
+            data: {
+              offreTitre: shortlist.offre.titre,
+              nbCandidats: shortlist.candidats.length,
+            },
+          })
+        }
+
+        // Envoie aussi les notifications aux contacts supplémentaires du client
         if (client && client.contacts.length > 0) {
           for (const contact of client.contacts) {
             await sendShortlistNotification(

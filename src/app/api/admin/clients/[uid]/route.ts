@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'un client
 export async function GET(
@@ -163,7 +164,16 @@ export async function POST(
 
         await prisma.user.update({
           where: { id: client.userId },
-          data: { emailVerified: true },
+          data: { emailVerified: true, isActive: true },
+        })
+
+        // Envoyer l'email de validation de compte
+        await createNotificationWithEmail({
+          userId: client.userId,
+          type: 'VALIDATION_COMPTE',
+          titre: 'Votre compte a été validé !',
+          message: `Félicitations ! Votre compte ${client.raisonSociale} a été validé par notre équipe. Vous pouvez maintenant accéder à toutes les fonctionnalités de la plateforme.`,
+          lien: '/c/dashboard',
         })
 
         // Log l'action

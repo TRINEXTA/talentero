@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Obtenir une candidature par UID
 export async function GET(
@@ -196,14 +197,18 @@ export async function PATCH(
 
     const notif = notificationMessages[action]
     if (notif && candidature.talent.user) {
-      await prisma.notification.create({
+      // Utiliser le service email pour envoyer notification + email
+      await createNotificationWithEmail({
+        userId: candidature.talent.user.id,
+        type: 'STATUT_CANDIDATURE',
+        titre: notif.titre,
+        message: notif.message,
+        lien: '/t/candidatures',
         data: {
-          userId: candidature.talent.user.id,
-          type: 'STATUT_CANDIDATURE',
-          titre: notif.titre,
-          message: notif.message,
-          lien: `/t/candidatures`,
-        }
+          offreUid: candidature.offre.uid,
+          offreTitre: candidature.offre.titre,
+          action,
+        },
       })
 
       if (action === 'refuser') {

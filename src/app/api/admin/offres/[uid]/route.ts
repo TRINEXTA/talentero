@@ -8,6 +8,7 @@ import { requireRole } from '@/lib/auth'
 import { matchTalentsForOffer, getBestMatchesForOffer } from '@/lib/matching'
 import { sendMissionLostNotification, sendProfileNotSelectedNotification } from '@/lib/microsoft-graph'
 import { generateMissionCode } from '@/lib/utils'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'une offre
 export async function GET(
@@ -196,16 +197,14 @@ export async function PATCH(
                   reponduLe: new Date()
                 }
               })
-              // Créer notification
+              // Créer notification avec email
               if (candidature.talent.user) {
-                await prisma.notification.create({
-                  data: {
-                    userId: candidature.talent.user.id,
-                    type: 'STATUT_CANDIDATURE',
-                    titre: 'Poste pourvu',
-                    message: `Le poste "${offre.titre}" a été pourvu. Votre candidature n'a pas été retenue.`,
-                    lien: '/t/candidatures'
-                  }
+                await createNotificationWithEmail({
+                  userId: candidature.talent.user.id,
+                  type: 'CANDIDAT_REFUSE',
+                  titre: 'Poste pourvu',
+                  message: `Le poste "${offre.titre}" a été pourvu. Votre candidature n'a pas été retenue.`,
+                  lien: '/t/candidatures',
                 })
               }
             }
@@ -228,14 +227,12 @@ export async function PATCH(
                 }
               })
               if (candidature.talent.user) {
-                await prisma.notification.create({
-                  data: {
-                    userId: candidature.talent.user.id,
-                    type: 'MISSION_PERDUE',
-                    titre: 'Offre fermée',
-                    message: `L'offre "${offre.titre}" a été fermée.`,
-                    lien: '/t/candidatures'
-                  }
+                await createNotificationWithEmail({
+                  userId: candidature.talent.user.id,
+                  type: 'STATUT_CANDIDATURE',
+                  titre: 'Offre fermée',
+                  message: `L'offre "${offre.titre}" a été fermée.`,
+                  lien: '/t/candidatures',
                 })
               }
             }

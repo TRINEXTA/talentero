@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createBulkNotificationsWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'une shortlist
 export async function GET(
@@ -43,6 +44,7 @@ export async function GET(
                 talent: {
                   select: {
                     uid: true,
+                    codeUnique: true,
                     prenom: true,
                     nom: true,
                     titrePoste: true,
@@ -53,6 +55,7 @@ export async function GET(
                     disponibilite: true,
                     mobilite: true,
                     ville: true,
+                    bio: true,
                   },
                 },
               },
@@ -76,6 +79,9 @@ export async function GET(
       return NextResponse.json({ error: 'Shortlist non disponible' }, { status: 404 })
     }
 
+    // Anonymiser les données pour les clients
+    const isClient = user.role === 'CLIENT'
+
     return NextResponse.json({
       shortlist: {
         uid: shortlist.uid,
@@ -83,16 +89,52 @@ export async function GET(
         notes: shortlist.notes,
         envoyeeLe: shortlist.envoyeeLe,
         offre: shortlist.offre,
-        candidats: shortlist.candidats.map(c => ({
-          id: c.id,
-          ordre: c.ordre,
-          retenuParClient: c.retenuParClient,
-          commentaireClient: c.commentaireClient,
-          talent: c.candidature.talent,
-          scoreMatch: c.candidature.scoreMatch,
-          motivation: c.candidature.motivation,
-          tjmPropose: c.candidature.tjmPropose,
-        })),
+        candidats: shortlist.candidats.map((c, index) => {
+          const talent = c.candidature.talent
+
+          // Pour les clients : anonymiser les informations personnelles
+          if (isClient) {
+            return {
+              id: c.id,
+              ordre: c.ordre,
+              retenuParClient: c.retenuParClient,
+              commentaireClient: c.commentaireClient,
+              talent: {
+                // Identifiant anonyme (code unique ou numéro)
+                uid: talent.uid,
+                codeUnique: talent.codeUnique || `CANDIDAT-${index + 1}`,
+                // Afficher "Candidat X" au lieu du nom
+                displayName: `Candidat ${talent.codeUnique || (index + 1)}`,
+                // Informations professionnelles (non personnelles)
+                titrePoste: talent.titrePoste,
+                competences: talent.competences,
+                anneesExperience: talent.anneesExperience,
+                disponibilite: talent.disponibilite,
+                mobilite: talent.mobilite,
+                // Ville approximative seulement
+                ville: talent.ville,
+                // Bio/présentation
+                bio: talent.bio,
+                // PAS de nom, prenom, photo, TJM
+              },
+              scoreMatch: c.candidature.scoreMatch,
+              motivation: c.candidature.motivation,
+              // PAS de tjmPropose - le client ne doit pas voir le TJM du freelance
+            }
+          }
+
+          // Pour les admins : données complètes
+          return {
+            id: c.id,
+            ordre: c.ordre,
+            retenuParClient: c.retenuParClient,
+            commentaireClient: c.commentaireClient,
+            talent: talent,
+            scoreMatch: c.candidature.scoreMatch,
+            motivation: c.candidature.motivation,
+            tjmPropose: c.candidature.tjmPropose,
+          }
+        }),
       },
     })
   } catch (error) {
@@ -191,23 +233,21 @@ export async function PATCH(
             },
           })
 
-          // Créer une notification pour les admins TRINEXTA
+          // Créer une notification pour les admins TRINEXTA avec email
           const adminsValider = await prisma.user.findMany({
             where: { role: 'ADMIN', isActive: true },
             select: { id: true },
           })
 
-          for (const admin of adminsValider) {
-            await prisma.notification.create({
-              data: {
-                userId: admin.id,
-                type: 'SYSTEME',
-                titre: 'Shortlist validée par le client',
-                message: `Le client a validé la shortlist pour l'offre`,
-                lien: `/admin/shortlists/${shortlist.uid}`,
-              },
-            })
-          }
+          await createBulkNotificationsWithEmail(
+            adminsValider.map(a => a.id),
+            {
+              type: 'SHORTLIST_RETOUR',
+              titre: 'Shortlist validée par le client',
+              message: `Le client a validé la shortlist pour l'offre`,
+              lien: `/admin/shortlists/${shortlist.uid}`,
+            }
+          )
 
           return NextResponse.json({
             success: true,
@@ -226,23 +266,21 @@ export async function PATCH(
             data: { statut: 'FINALISEE' },
           })
 
-          // Créer une notification pour les admins TRINEXTA
+          // Créer une notification pour les admins TRINEXTA avec email
           const adminsRefuser = await prisma.user.findMany({
             where: { role: 'ADMIN', isActive: true },
             select: { id: true },
           })
 
-          for (const admin of adminsRefuser) {
-            await prisma.notification.create({
-              data: {
-                userId: admin.id,
-                type: 'SYSTEME',
-                titre: 'Shortlist refusée par le client',
-                message: `Le client a refusé tous les candidats: ${body.commentaire || 'Pas de commentaire'}`,
-                lien: `/admin/shortlists/${shortlist.uid}`,
-              },
-            })
-          }
+          await createBulkNotificationsWithEmail(
+            adminsRefuser.map(a => a.id),
+            {
+              type: 'SHORTLIST_RETOUR',
+              titre: 'Shortlist refusée par le client',
+              message: `Le client a refusé tous les candidats: ${body.commentaire || 'Pas de commentaire'}`,
+              lien: `/admin/shortlists/${shortlist.uid}`,
+            }
+          )
 
           return NextResponse.json({
             success: true,
@@ -259,23 +297,21 @@ export async function PATCH(
             },
           })
 
-          // Créer une notification pour les admins TRINEXTA
+          // Créer une notification pour les admins TRINEXTA avec email
           const adminsDemander = await prisma.user.findMany({
             where: { role: 'ADMIN', isActive: true },
             select: { id: true },
           })
 
-          for (const admin of adminsDemander) {
-            await prisma.notification.create({
-              data: {
-                userId: admin.id,
-                type: 'SYSTEME',
-                titre: 'Demande de candidats supplémentaires',
-                message: `Le client demande plus de candidats: ${body.commentaire || ''}`,
-                lien: `/admin/shortlists/${shortlist.uid}`,
-              },
-            })
-          }
+          await createBulkNotificationsWithEmail(
+            adminsDemander.map(a => a.id),
+            {
+              type: 'SHORTLIST_RETOUR',
+              titre: 'Demande de candidats supplémentaires',
+              message: `Le client demande plus de candidats: ${body.commentaire || ''}`,
+              lien: `/admin/shortlists/${shortlist.uid}`,
+            }
+          )
 
           return NextResponse.json({
             success: true,

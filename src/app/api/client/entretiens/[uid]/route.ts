@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'un entretien
 export async function GET(
@@ -120,20 +121,18 @@ export async function PATCH(
           data: { statut: 'SHORTLIST' },
         })
 
-        // Notifier le talent
+        // Notifier le talent par email
         const talentUser = await prisma.user.findFirst({
           where: { talent: { id: entretien.talent.id } },
         })
 
         if (talentUser) {
-          await prisma.notification.create({
-            data: {
-              userId: talentUser.id,
-              type: 'ENTRETIEN_ANNULE',
-              titre: 'Entretien annulé',
-              message: `L'entretien pour "${entretien.offre.titre}" a été annulé`,
-              lien: `/t/candidatures`,
-            },
+          await createNotificationWithEmail({
+            userId: talentUser.id,
+            type: 'STATUT_CANDIDATURE',
+            titre: 'Entretien annulé',
+            message: `L'entretien pour "${entretien.offre.titre}" a été annulé`,
+            lien: '/t/candidatures',
           })
         }
 
@@ -163,20 +162,18 @@ export async function PATCH(
           },
         })
 
-        // Notifier le talent
-        const talentUser = await prisma.user.findFirst({
+        // Notifier le talent par email
+        const talentUserReschedule = await prisma.user.findFirst({
           where: { talent: { id: entretien.talent.id } },
         })
 
-        if (talentUser) {
-          await prisma.notification.create({
-            data: {
-              userId: talentUser.id,
-              type: 'ENTRETIEN_DEMANDE',
-              titre: 'Entretien reprogrammé',
-              message: `L'entretien pour "${entretien.offre.titre}" a été reprogrammé`,
-              lien: `/t/entretiens/${uid}`,
-            },
+        if (talentUserReschedule) {
+          await createNotificationWithEmail({
+            userId: talentUserReschedule.id,
+            type: 'ENTRETIEN_DEMANDE',
+            titre: 'Entretien reprogrammé',
+            message: `L'entretien pour "${entretien.offre.titre}" a été reprogrammé`,
+            lien: `/t/entretiens/${uid}`,
           })
         }
 

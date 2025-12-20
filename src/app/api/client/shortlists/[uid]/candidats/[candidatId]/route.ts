@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail, createBulkNotificationsWithEmail } from '@/lib/email-notification-service'
 
 // PATCH - Action sur un candidat de shortlist
 export async function PATCH(
@@ -80,21 +81,30 @@ export async function PATCH(
           data: { statut: 'ACCEPTEE' },
         })
 
-        // Notifier les admins
+        // Notifier les admins avec email
         const admins = await prisma.user.findMany({
           where: { role: 'ADMIN', isActive: true },
           select: { id: true },
         })
 
-        for (const admin of admins) {
-          await prisma.notification.create({
-            data: {
-              userId: admin.id,
-              type: 'SYSTEME',
-              titre: 'Candidat selectionne',
-              message: `${candidat.candidature.talent.prenom} ${candidat.candidature.talent.nom} a ete selectionne pour "${shortlist.offre.titre}"`,
-              lien: `/admin/shortlists/${uid}`,
-            },
+        await createBulkNotificationsWithEmail(
+          admins.map(a => a.id),
+          {
+            type: 'CANDIDAT_SELECTIONNE',
+            titre: 'Candidat sélectionné',
+            message: `${candidat.candidature.talent.prenom} ${candidat.candidature.talent.nom} a été sélectionné pour "${shortlist.offre.titre}"`,
+            lien: `/admin/shortlists/${uid}`,
+          }
+        )
+
+        // Notifier le talent qu'il a été sélectionné
+        if (candidat.candidature.talent.user?.id) {
+          await createNotificationWithEmail({
+            userId: candidat.candidature.talent.user.id,
+            type: 'CANDIDAT_SELECTIONNE',
+            titre: 'Vous avez été sélectionné !',
+            message: `Félicitations ! Vous avez été sélectionné pour "${shortlist.offre.titre}"`,
+            lien: '/t/candidatures',
           })
         }
 
@@ -151,34 +161,33 @@ export async function PATCH(
           data: { statut: 'ENTRETIEN_DEMANDE' },
         })
 
-        // Notifier le talent
-        await prisma.notification.create({
+        // Notifier le talent avec email
+        await createNotificationWithEmail({
+          userId: candidat.candidature.talent.user.id,
+          type: 'ENTRETIEN_DEMANDE',
+          titre: 'Demande d\'entretien',
+          message: `Un client souhaite vous rencontrer pour "${shortlist.offre.titre}"`,
+          lien: '/t/candidatures',
           data: {
-            userId: candidat.candidature.talent.user.id,
-            type: 'ENTRETIEN_DEMANDE',
-            titre: 'Demande d\'entretien',
-            message: `Un client souhaite vous rencontrer pour "${shortlist.offre.titre}"`,
-            lien: `/t/candidatures`,
+            offreTitre: shortlist.offre.titre,
           },
         })
 
-        // Notifier les admins
-        const admins = await prisma.user.findMany({
+        // Notifier les admins avec email
+        const adminsEntretien = await prisma.user.findMany({
           where: { role: 'ADMIN', isActive: true },
           select: { id: true },
         })
 
-        for (const admin of admins) {
-          await prisma.notification.create({
-            data: {
-              userId: admin.id,
-              type: 'SYSTEME',
-              titre: 'Demande d\'entretien client',
-              message: `Entretien demande avec ${candidat.candidature.talent.prenom} ${candidat.candidature.talent.nom}`,
-              lien: `/admin/shortlists/${uid}`,
-            },
-          })
-        }
+        await createBulkNotificationsWithEmail(
+          adminsEntretien.map(a => a.id),
+          {
+            type: 'ENTRETIEN_DEMANDE',
+            titre: 'Demande d\'entretien client',
+            message: `Entretien demandé avec ${candidat.candidature.talent.prenom} ${candidat.candidature.talent.nom}`,
+            lien: `/admin/shortlists/${uid}`,
+          }
+        )
 
         return NextResponse.json({ success: true, message: 'Demande d\'entretien envoyee' })
       }
@@ -198,15 +207,13 @@ export async function PATCH(
           },
         })
 
-        // Notifier le talent
-        await prisma.notification.create({
-          data: {
-            userId: candidat.candidature.talent.user.id,
-            type: 'DEMANDE_INFOS',
-            titre: 'Question d\'un client',
-            message: `Un client vous pose une question concernant "${shortlist.offre.titre}"`,
-            lien: `/t/candidatures`,
-          },
+        // Notifier le talent avec email
+        await createNotificationWithEmail({
+          userId: candidat.candidature.talent.user.id,
+          type: 'NOUVEAU_MESSAGE',
+          titre: 'Question d\'un client',
+          message: `Un client vous pose une question concernant "${shortlist.offre.titre}"`,
+          lien: '/t/candidatures',
         })
 
         return NextResponse.json({ success: true, message: 'Question envoyee' })
