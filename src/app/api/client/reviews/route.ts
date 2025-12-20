@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail } from '@/lib/email-notification-service'
 
 // GET - Liste des reviews créées par le client
 export async function GET(request: NextRequest) {
@@ -133,21 +134,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Notifier le talent
+    // Notifier le talent avec email
     if (talent.userId) {
       const talentUser = await prisma.user.findFirst({
         where: { talent: { id: talent.id } },
       })
 
       if (talentUser) {
-        await prisma.notification.create({
-          data: {
-            userId: talentUser.id,
-            type: 'REVIEW_RECUE',
-            titre: 'Nouvelle évaluation reçue',
-            message: 'Un client a laissé une évaluation sur votre profil. Elle sera visible après validation.',
-            lien: '/t/profil',
-          },
+        await createNotificationWithEmail({
+          userId: talentUser.id,
+          type: 'NOUVEAU_MESSAGE',
+          titre: 'Nouvelle évaluation reçue',
+          message: 'Un client a laissé une évaluation sur votre profil. Elle sera visible après validation.',
+          lien: '/t/profil',
         })
       }
     }

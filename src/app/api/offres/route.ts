@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { createOffreSchema } from '@/lib/validations'
 import { generateMissionCode } from '@/lib/utils'
+import { createBulkNotificationsWithEmail } from '@/lib/email-notification-service'
 import slugify from 'slugify'
 
 // GET /api/offres - Liste des offres publiques
@@ -265,24 +266,22 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Si créée par un client, notifier les admins
+    // Si créée par un client, notifier les admins avec email
     if (user.role === 'CLIENT') {
       const admins = await prisma.user.findMany({
         where: { role: 'ADMIN', isActive: true },
         select: { id: true },
       })
 
-      for (const admin of admins) {
-        await prisma.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'SYSTEME',
-            titre: 'Nouvelle offre à valider',
-            message: `L'offre "${data.titre}" est en attente de validation.`,
-            lien: `/admin/offres/${offre.uid}`,
-          },
-        })
-      }
+      await createBulkNotificationsWithEmail(
+        admins.map(a => a.id),
+        {
+          type: 'NOUVELLE_CANDIDATURE',
+          titre: 'Nouvelle offre à valider',
+          message: `L'offre "${data.titre}" est en attente de validation.`,
+          lien: `/admin/offres/${offre.uid}`,
+        }
+      )
     }
 
     return NextResponse.json({

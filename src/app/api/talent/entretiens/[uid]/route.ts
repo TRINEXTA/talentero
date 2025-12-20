@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail, createBulkNotificationsWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'un entretien
 export async function GET(
@@ -124,36 +125,32 @@ export async function PATCH(
           data: { statut: 'ENTRETIEN_PLANIFIE' },
         })
 
-        // Notifier le client
+        // Notifier le client par email
         if (entretien.offre.client?.userId) {
-          await prisma.notification.create({
-            data: {
-              userId: entretien.offre.client.userId,
-              type: 'ENTRETIEN_CONFIRME',
-              titre: 'Entretien confirmé',
-              message: `${entretien.talent.prenom} ${entretien.talent.nom} a confirmé l'entretien pour "${entretien.offre.titre}"`,
-              lien: `/c/entretiens/${uid}`,
-            },
+          await createNotificationWithEmail({
+            userId: entretien.offre.client.userId,
+            type: 'ENTRETIEN_CONFIRME',
+            titre: 'Entretien confirmé',
+            message: `${entretien.talent.prenom} ${entretien.talent.nom} a confirmé l'entretien pour "${entretien.offre.titre}"`,
+            lien: `/c/entretiens/${uid}`,
           })
         }
 
-        // Notifier les admins
+        // Notifier les admins par email
         const admins = await prisma.user.findMany({
           where: { role: 'ADMIN', isActive: true },
           select: { id: true },
         })
 
-        for (const admin of admins) {
-          await prisma.notification.create({
-            data: {
-              userId: admin.id,
-              type: 'ENTRETIEN_CONFIRME',
-              titre: 'Entretien confirmé',
-              message: `${entretien.talent.prenom} ${entretien.talent.nom} a confirmé l'entretien`,
-              lien: `/admin/entretiens`,
-            },
-          })
-        }
+        await createBulkNotificationsWithEmail(
+          admins.map(a => a.id),
+          {
+            type: 'ENTRETIEN_CONFIRME',
+            titre: 'Entretien confirmé',
+            message: `${entretien.talent.prenom} ${entretien.talent.nom} a confirmé l'entretien`,
+            lien: '/admin/entretiens',
+          }
+        )
 
         return NextResponse.json({ success: true, message: 'Entretien confirmé' })
       }
@@ -176,16 +173,14 @@ export async function PATCH(
           data: { statut: 'SHORTLIST' },
         })
 
-        // Notifier le client
+        // Notifier le client par email
         if (entretien.offre.client?.userId) {
-          await prisma.notification.create({
-            data: {
-              userId: entretien.offre.client.userId,
-              type: 'ENTRETIEN_ANNULE',
-              titre: 'Entretien refusé',
-              message: `${entretien.talent.prenom} ${entretien.talent.nom} a refusé l'entretien pour "${entretien.offre.titre}"`,
-              lien: `/c/entretiens`,
-            },
+          await createNotificationWithEmail({
+            userId: entretien.offre.client.userId,
+            type: 'STATUT_CANDIDATURE',
+            titre: 'Entretien refusé',
+            message: `${entretien.talent.prenom} ${entretien.talent.nom} a refusé l'entretien pour "${entretien.offre.titre}"`,
+            lien: '/c/entretiens',
           })
         }
 
@@ -213,16 +208,14 @@ export async function PATCH(
           },
         })
 
-        // Notifier le client
+        // Notifier le client par email
         if (entretien.offre.client?.userId) {
-          await prisma.notification.create({
-            data: {
-              userId: entretien.offre.client.userId,
-              type: 'ENTRETIEN_DEMANDE',
-              titre: 'Date alternative proposée',
-              message: `${entretien.talent.prenom} ${entretien.talent.nom} propose une autre date pour l'entretien`,
-              lien: `/c/entretiens/${uid}`,
-            },
+          await createNotificationWithEmail({
+            userId: entretien.offre.client.userId,
+            type: 'ENTRETIEN_DEMANDE',
+            titre: 'Date alternative proposée',
+            message: `${entretien.talent.prenom} ${entretien.talent.nom} propose une autre date pour l'entretien`,
+            lien: `/c/entretiens/${uid}`,
           })
         }
 

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { generateMissionCode } from '@/lib/utils'
+import { createBulkNotificationsWithEmail } from '@/lib/email-notification-service'
 
 // GET - Détails d'une offre
 export async function GET(
@@ -76,6 +77,20 @@ export async function GET(
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 
+    // Pour les clients : ne pas exposer les candidatures directement
+    // Les clients doivent passer par les shortlists (profils anonymisés)
+    if (user.role === 'CLIENT') {
+      const { candidatures, ...offreSansCandiatures } = offre
+      return NextResponse.json({
+        offre: {
+          ...offreSansCandiatures,
+          // Afficher seulement le nombre de candidatures
+          nbCandidatures: candidatures?.length || 0,
+        },
+      })
+    }
+
+    // Pour les admins : données complètes
     return NextResponse.json({ offre })
   } catch (error) {
     console.error('Erreur GET /api/client/offres/[uid]:', error)
@@ -114,36 +129,53 @@ export async function PATCH(
     if (body.action) {
       switch (body.action) {
         case 'publier':
-          // Vérifie que l'offre peut être publiée
+          // Vérifie que l'offre peut être soumise pour validation
           if (!offre.titre || !offre.description) {
             return NextResponse.json(
-              { error: 'Titre et description requis pour publier' },
+              { error: 'Titre et description requis pour soumettre l\'offre' },
               { status: 400 }
             )
           }
 
-          const offrePubliee = await prisma.offre.update({
+          // Les clients ne peuvent pas publier directement - l'offre passe en validation
+          const offreSoumise = await prisma.offre.update({
             where: { id: offre.id },
             data: {
-              statut: 'PUBLIEE',
-              publieLe: new Date(),
+              statut: 'EN_ATTENTE_VALIDATION',
+              envoyeeLe: new Date(),
             },
           })
 
           await prisma.auditLog.create({
             data: {
               userId: user.id,
-              action: 'PUBLISH_OFFRE',
+              action: 'SUBMIT_OFFRE_VALIDATION',
               entite: 'Offre',
               entiteId: offre.id,
               details: JSON.parse(JSON.stringify({ titre: offre.titre })),
             },
           })
 
+          // Notifier les admins qu'il y a une offre à valider
+          const admins = await prisma.user.findMany({
+            where: { role: 'ADMIN', isActive: true },
+            select: { id: true },
+          })
+
+          await createBulkNotificationsWithEmail(
+            admins.map(a => a.id),
+            {
+              type: 'NOUVELLE_CANDIDATURE',
+              titre: 'Nouvelle offre à valider',
+              message: `L'offre "${offre.titre}" est en attente de validation et de définition du TJM de revente.`,
+              lien: `/admin/offres/${offreSoumise.uid}`,
+            }
+          )
+
           return NextResponse.json({
             success: true,
-            message: 'Offre publiée',
-            offre: { uid: offrePubliee.uid, statut: offrePubliee.statut },
+            message: 'Offre soumise pour validation. Elle sera publiée après examen par notre équipe.',
+            offre: { uid: offreSoumise.uid, statut: offreSoumise.statut },
           })
 
         case 'cloturer':
@@ -217,10 +249,18 @@ export async function PATCH(
     if (body.competencesRequises !== undefined) updateData.competencesRequises = body.competencesRequises
     if (body.competencesSouhaitees !== undefined) updateData.competencesSouhaitees = body.competencesSouhaitees
     if (body.experienceMin !== undefined) updateData.experienceMin = body.experienceMin
-    if (body.tjmMin !== undefined) updateData.tjmMin = body.tjmMin
-    if (body.tjmMax !== undefined) updateData.tjmMax = body.tjmMax
+
+    // Le client peut seulement définir son TJM réel (tjmClientReel)
+    // Les champs tjmMin, tjmMax, tjmAffiche sont réservés aux admins (TJM de revente)
     if (body.tjmClientReel !== undefined) updateData.tjmClientReel = body.tjmClientReel
-    if (body.tjmAffiche !== undefined) updateData.tjmAffiche = body.tjmAffiche
+
+    // Les admins peuvent modifier les TJM affichés
+    if (user.role === 'ADMIN') {
+      if (body.tjmMin !== undefined) updateData.tjmMin = body.tjmMin
+      if (body.tjmMax !== undefined) updateData.tjmMax = body.tjmMax
+      if (body.tjmAffiche !== undefined) updateData.tjmAffiche = body.tjmAffiche
+    }
+
     if (body.lieu !== undefined) updateData.lieu = body.lieu
     if (body.mobilite !== undefined) updateData.mobilite = body.mobilite
     if (body.dureeNombre !== undefined) updateData.dureeNombre = body.dureeNombre

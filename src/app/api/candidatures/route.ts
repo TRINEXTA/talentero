@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { createCandidatureSchema } from '@/lib/validations'
 import { calculateMatchScore } from '@/lib/cv-parser'
+import { notifyAdminsNewCandidatureWithEmail } from '@/lib/email-notification-service'
 
 // GET /api/candidatures - Liste des candidatures
 export async function GET(request: NextRequest) {
@@ -29,7 +30,12 @@ export async function GET(request: NextRequest) {
     if (user.role === 'TALENT') {
       where.talentId = user.talentId
     } else if (user.role === 'CLIENT') {
-      where.offre = { clientId: user.clientId }
+      // Les clients ne doivent PAS voir les candidatures directement
+      // Ils doivent passer par les shortlists (profils anonymisés)
+      return NextResponse.json(
+        { error: 'Les candidatures sont accessibles via les shortlists uniquement' },
+        { status: 403 }
+      )
     }
     // Admin voit toutes les candidatures
 
@@ -158,6 +164,8 @@ export async function POST(request: NextRequest) {
     const talent = await prisma.talent.findUnique({
       where: { id: user.talentId! },
       select: {
+        prenom: true,
+        nom: true,
         competences: true,
         disponibilite: true,
       },
@@ -226,23 +234,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Crée une notification pour les admins
-    const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN', isActive: true },
-      select: { id: true },
+    // Crée une notification pour les admins avec envoi d'email
+    await notifyAdminsNewCandidatureWithEmail({
+      talentNom: talent ? `${talent.prenom} ${talent.nom}` : 'Freelance',
+      offreTitre: offre.titre,
+      offreUid: offre.uid,
     })
-
-    for (const admin of admins) {
-      await prisma.notification.create({
-        data: {
-          userId: admin.id,
-          type: 'NOUVELLE_CANDIDATURE',
-          titre: 'Nouvelle candidature',
-          message: `Nouvelle candidature pour "${offre.titre}" (Score: ${matchResult.score}%)`,
-          lien: `/admin/candidatures/${candidature.uid}`,
-        },
-      })
-    }
 
     return NextResponse.json({
       success: true,

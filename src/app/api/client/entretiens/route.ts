@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
+import { createNotificationWithEmail, createBulkNotificationsWithEmail } from '@/lib/email-notification-service'
 
 // GET - Liste des entretiens pour le client
 export async function GET(request: NextRequest) {
@@ -129,19 +130,22 @@ export async function POST(request: NextRequest) {
       data: { statut: 'ENTRETIEN_DEMANDE' },
     })
 
-    // Créer une notification pour le talent
+    // Créer une notification pour le talent avec email
     const talentUser = await prisma.user.findFirst({
       where: { talent: { id: candidature.talent.id } },
     })
 
     if (talentUser) {
-      await prisma.notification.create({
+      await createNotificationWithEmail({
+        userId: talentUser.id,
+        type: 'ENTRETIEN_DEMANDE',
+        titre: 'Demande d\'entretien',
+        message: `Vous avez reçu une demande d'entretien pour l'offre "${candidature.offre.titre}"`,
+        lien: `/t/entretiens/${entretien.uid}`,
         data: {
-          userId: talentUser.id,
-          type: 'ENTRETIEN_DEMANDE',
-          titre: 'Demande d\'entretien',
-          message: `Vous avez reçu une demande d'entretien pour l'offre "${candidature.offre.titre}"`,
-          lien: `/t/entretiens/${entretien.uid}`,
+          offreTitre: candidature.offre.titre,
+          dateProposee,
+          entretienUid: entretien.uid,
         },
       })
     }
@@ -152,17 +156,15 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     })
 
-    for (const admin of admins) {
-      await prisma.notification.create({
-        data: {
-          userId: admin.id,
-          type: 'SYSTEME',
-          titre: 'Nouvelle demande d\'entretien',
-          message: `Le client a demandé un entretien avec ${candidature.talent.prenom} ${candidature.talent.nom}`,
-          lien: `/admin/entretiens/${entretien.uid}`,
-        },
-      })
-    }
+    await createBulkNotificationsWithEmail(
+      admins.map(a => a.id),
+      {
+        type: 'ENTRETIEN_DEMANDE',
+        titre: 'Nouvelle demande d\'entretien',
+        message: `Le client a demandé un entretien avec ${candidature.talent.prenom} ${candidature.talent.nom}`,
+        lien: `/admin/entretiens/${entretien.uid}`,
+      }
+    )
 
     // Log
     await prisma.auditLog.create({

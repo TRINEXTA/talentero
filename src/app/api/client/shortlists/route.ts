@@ -56,15 +56,15 @@ export async function GET(request: NextRequest) {
                   talent: {
                     select: {
                       uid: true,
-                      prenom: true,
-                      nom: true,
+                      codeUnique: true,
                       titrePoste: true,
-                      photoUrl: true,
                       competences: true,
-                      tjm: true,
                       anneesExperience: true,
                       disponibilite: true,
+                      mobilite: true,
                       ville: true,
+                      bio: true,
+                      // PAS de nom, prenom, photo, TJM
                     },
                   },
                 },
@@ -87,16 +87,31 @@ export async function GET(request: NextRequest) {
         envoyeeLe: s.envoyeeLe,
         offre: s.offre,
         nbCandidats: s._count.candidats,
-        candidats: s.candidats.map(c => ({
-          id: c.id,
-          ordre: c.ordre,
-          retenuParClient: c.retenuParClient,
-          commentaireClient: c.commentaireClient,
-          talent: c.candidature.talent,
-          scoreMatch: c.candidature.scoreMatch,
-          motivation: c.candidature.motivation,
-          tjmPropose: c.candidature.tjmPropose,
-        })),
+        candidats: s.candidats.map((c, index) => {
+          const talent = c.candidature.talent
+          return {
+            id: c.id,
+            ordre: c.ordre,
+            retenuParClient: c.retenuParClient,
+            commentaireClient: c.commentaireClient,
+            talent: {
+              uid: talent.uid,
+              codeUnique: talent.codeUnique || `CANDIDAT-${index + 1}`,
+              displayName: `Candidat ${talent.codeUnique || (index + 1)}`,
+              titrePoste: talent.titrePoste,
+              competences: talent.competences,
+              anneesExperience: talent.anneesExperience,
+              disponibilite: talent.disponibilite,
+              mobilite: talent.mobilite,
+              ville: talent.ville,
+              bio: talent.bio,
+              // PAS de nom, prenom, photo, TJM
+            },
+            scoreMatch: c.candidature.scoreMatch,
+            motivation: c.candidature.motivation,
+            // PAS de tjmPropose - le client ne doit pas voir le TJM du freelance
+          }
+        }),
       })),
       pagination: {
         page,
