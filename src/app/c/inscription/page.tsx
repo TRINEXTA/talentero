@@ -8,17 +8,39 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
-import { Mail, Lock, User, Building2, Phone, ArrowLeft, CheckCircle, Briefcase } from 'lucide-react'
+import { Mail, Lock, User, Building2, Phone, ArrowLeft, CheckCircle, Briefcase, Loader2, AlertCircle } from 'lucide-react'
+
+interface VerifiedCompany {
+  siret: string
+  siren: string
+  raisonSociale: string
+  formeJuridique: string
+  codeAPE: string
+  libelleAPE: string
+  adresse: {
+    numero: string
+    rue: string
+    codePostal: string
+    ville: string
+  }
+}
 
 export default function ClientInscriptionPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [verifiedCompany, setVerifiedCompany] = useState<VerifiedCompany | null>(null)
   const [step, setStep] = useState(1)
   const [success, setSuccess] = useState(false)
   const [formData, setFormData] = useState({
     raisonSociale: '',
     siret: '',
+    siren: '',
+    formeJuridique: '',
+    adresse: '',
+    codePostal: '',
+    ville: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -30,12 +52,67 @@ export default function ClientInscriptionPage() {
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  const verifySiretNumber = async () => {
+    const siretClean = formData.siret.replace(/\s/g, '')
+    if (!siretClean) {
+      setErrors({ ...errors, siret: 'SIRET requis' })
+      return
+    }
+    if (!/^\d{14}$/.test(siretClean)) {
+      setErrors({ ...errors, siret: 'SIRET invalide (14 chiffres)' })
+      return
+    }
+
+    setVerifying(true)
+    setErrors({})
+
+    try {
+      const res = await fetch('/api/verify-siret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siret: siretClean }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.valid) {
+        setErrors({ siret: data.error || 'SIRET non valide' })
+        setVerifiedCompany(null)
+        return
+      }
+
+      // SIRET valide - on remplit les données
+      setVerifiedCompany(data.entreprise)
+      setFormData(prev => ({
+        ...prev,
+        raisonSociale: data.entreprise.raisonSociale,
+        siret: data.entreprise.siret,
+        siren: data.entreprise.siren,
+        formeJuridique: data.entreprise.formeJuridique,
+        adresse: `${data.entreprise.adresse.numero} ${data.entreprise.adresse.rue}`.trim(),
+        codePostal: data.entreprise.adresse.codePostal,
+        ville: data.entreprise.adresse.ville,
+      }))
+
+      toast({
+        title: "Entreprise vérifiée",
+        description: `${data.entreprise.raisonSociale} a été trouvée dans la base INSEE`,
+      })
+    } catch (error) {
+      console.error('Erreur vérification SIRET:', error)
+      setErrors({ siret: 'Erreur lors de la vérification' })
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {}
     if (!formData.raisonSociale) newErrors.raisonSociale = 'Raison sociale requise'
     const siretClean = formData.siret.replace(/\s/g, '')
     if (!siretClean) newErrors.siret = 'SIRET requis'
     else if (!/^\d{14}$/.test(siretClean)) newErrors.siret = 'SIRET invalide (14 chiffres)'
+    // Vérification INSEE optionnelle - on n'empêche pas l'inscription si pas vérifié
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -206,20 +283,59 @@ export default function ClientInscriptionPage() {
 
                   <div>
                     <Label htmlFor="siret">Numéro SIRET</Label>
-                    <Input
-                      id="siret"
-                      placeholder="123 456 789 00012"
-                      value={formData.siret}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^\d\s]/g, '')
-                        setFormData({ ...formData, siret: value })
-                      }}
-                      error={errors.siret}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="siret"
+                        placeholder="123 456 789 00012"
+                        value={formData.siret}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d\s]/g, '')
+                          setFormData({ ...formData, siret: value })
+                          setVerifiedCompany(null) // Reset si modifié
+                        }}
+                        error={errors.siret}
+                        disabled={verifying}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={verifySiretNumber}
+                        disabled={verifying || formData.siret.replace(/\s/g, '').length < 14}
+                      >
+                        {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Vérifier'}
+                      </Button>
+                    </div>
                     <p className="mt-1 text-xs text-gray-500">
                       14 chiffres, disponible sur votre Kbis
                     </p>
                   </div>
+
+                  {/* Affichage des infos vérifiées */}
+                  {verifiedCompany && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Entreprise vérifiée
+                      </div>
+                      <div className="text-sm text-green-800 space-y-1">
+                        <p><strong>{verifiedCompany.raisonSociale}</strong></p>
+                        <p>{verifiedCompany.formeJuridique}</p>
+                        <p>{verifiedCompany.libelleAPE}</p>
+                        <p>
+                          {verifiedCompany.adresse.numero} {verifiedCompany.adresse.rue}<br />
+                          {verifiedCompany.adresse.codePostal} {verifiedCompany.adresse.ville}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {errors.siret && !verifiedCompany && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {errors.siret}
+                    </div>
+                  )}
 
                   <Button type="submit" className="w-full" size="lg">
                     Continuer

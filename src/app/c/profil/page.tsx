@@ -28,7 +28,6 @@ interface ClientProfile {
   codePostal: string | null
   ville: string | null
   pays: string
-  telephone: string | null
   siteWeb: string | null
   logoUrl: string | null
   description: string | null
@@ -40,12 +39,11 @@ interface ClientProfile {
 
 interface Contact {
   id: number
-  uid: string
   prenom: string
   nom: string
   email: string
   telephone: string | null
-  fonction: string | null
+  poste: string | null
   estContactPrincipal: boolean
 }
 
@@ -430,7 +428,7 @@ export default function ClientProfilPage() {
                     <p className="font-medium text-gray-900">
                       {contactPrincipal.prenom} {contactPrincipal.nom}
                     </p>
-                    <p className="text-sm text-gray-500">{contactPrincipal.fonction || 'Contact principal'}</p>
+                    <p className="text-sm text-gray-500">{contactPrincipal.poste || 'Contact principal'}</p>
                     <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <Mail className="w-3 h-3" />

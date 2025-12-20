@@ -97,28 +97,36 @@ export async function GET(
             return {
               id: c.id,
               ordre: c.ordre,
+              statutClient: c.statutClient || 'EN_ATTENTE',
               retenuParClient: c.retenuParClient,
               commentaireClient: c.commentaireClient,
-              talent: {
-                // Identifiant anonyme (code unique ou numéro)
-                uid: talent.uid,
-                codeUnique: talent.codeUnique || `CANDIDAT-${index + 1}`,
-                // Afficher "Candidat X" au lieu du nom
-                displayName: `Candidat ${talent.codeUnique || (index + 1)}`,
-                // Informations professionnelles (non personnelles)
-                titrePoste: talent.titrePoste,
-                competences: talent.competences,
-                anneesExperience: talent.anneesExperience,
-                disponibilite: talent.disponibilite,
-                mobilite: talent.mobilite,
-                // Ville approximative seulement
-                ville: talent.ville,
-                // Bio/présentation
-                bio: talent.bio,
-                // PAS de nom, prenom, photo, TJM
+              demandeInfos: c.demandeInfos || false,
+              questionClient: c.questionClient,
+              reponseCandidat: c.reponseCandidat,
+              candidature: {
+                id: c.candidature.id,
+                uid: c.candidature.uid,
+                scoreMatch: c.candidature.scoreMatch,
+                motivation: c.candidature.motivation,
+                talent: {
+                  // Identifiant anonyme (code unique ou numéro)
+                  uid: talent.uid,
+                  codeUnique: talent.codeUnique || `CANDIDAT-${index + 1}`,
+                  // Afficher "Candidat X" au lieu du nom
+                  displayName: `Candidat ${talent.codeUnique || (index + 1)}`,
+                  // Informations professionnelles (non personnelles)
+                  titrePoste: talent.titrePoste,
+                  competences: talent.competences,
+                  anneesExperience: talent.anneesExperience,
+                  disponibilite: talent.disponibilite,
+                  mobilite: talent.mobilite,
+                  // Ville approximative seulement
+                  ville: talent.ville,
+                  // Bio/présentation
+                  bio: talent.bio,
+                  // PAS de nom, prenom, photo, TJM
+                },
               },
-              scoreMatch: c.candidature.scoreMatch,
-              motivation: c.candidature.motivation,
               // PAS de tjmPropose - le client ne doit pas voir le TJM du freelance
             }
           }

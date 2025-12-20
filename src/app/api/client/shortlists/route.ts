@@ -80,39 +80,48 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      shortlists: shortlists.map(s => ({
-        uid: s.uid,
-        statut: s.statut,
-        notes: s.notes,
-        envoyeeLe: s.envoyeeLe,
-        offre: s.offre,
-        nbCandidats: s._count.candidats,
-        candidats: s.candidats.map((c, index) => {
-          const talent = c.candidature.talent
-          return {
-            id: c.id,
-            ordre: c.ordre,
-            retenuParClient: c.retenuParClient,
-            commentaireClient: c.commentaireClient,
-            talent: {
-              uid: talent.uid,
-              codeUnique: talent.codeUnique || `CANDIDAT-${index + 1}`,
-              displayName: `Candidat ${talent.codeUnique || (index + 1)}`,
-              titrePoste: talent.titrePoste,
-              competences: talent.competences,
-              anneesExperience: talent.anneesExperience,
-              disponibilite: talent.disponibilite,
-              mobilite: talent.mobilite,
-              ville: talent.ville,
-              bio: talent.bio,
-              // PAS de nom, prenom, photo, TJM
-            },
-            scoreMatch: c.candidature.scoreMatch,
-            motivation: c.candidature.motivation,
-            // PAS de tjmPropose - le client ne doit pas voir le TJM du freelance
-          }
-        }),
-      })),
+      shortlists: shortlists.map(s => {
+        return {
+          uid: s.uid,
+          nom: `Shortlist - ${s.offre.titre}`,
+          statut: s.statut,
+          commentaireAdmin: s.notes,
+          envoyeeLe: s.envoyeeLe,
+          offre: s.offre,
+          nbCandidats: s._count.candidats,
+          candidats: s.candidats.map((c, index) => {
+            const talent = c.candidature.talent
+            return {
+              uid: c.candidature.uid,
+              id: c.id,
+              ordre: c.ordre,
+              commentaireAdmin: null, // Pas de champ admin pour client
+              retenuParClient: c.retenuParClient,
+              commentaireClient: c.commentaireClient,
+              feedbackClient: c.commentaireClient,
+              noteClient: null,
+              statutClient: c.statutClient,
+              demandeInfos: c.demandeInfos,
+              questionClient: c.questionClient,
+              reponseCandidat: c.reponseCandidat,
+              talent: {
+                uid: talent.uid,
+                codeUnique: talent.codeUnique || `CANDIDAT-${index + 1}`,
+                displayName: `Candidat ${talent.codeUnique || (index + 1)}`,
+                titrePoste: talent.titrePoste,
+                competences: talent.competences,
+                anneesExperience: talent.anneesExperience,
+                disponibilite: talent.disponibilite,
+                mobilite: talent.mobilite,
+                ville: talent.ville,
+                bio: talent.bio,
+                // PAS de nom, prenom, photo, TJM
+              },
+              scoreMatch: c.candidature.scoreMatch,
+            }
+          }),
+        }
+      }),
       pagination: {
         page,
         limit,

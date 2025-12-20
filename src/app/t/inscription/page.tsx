@@ -11,8 +11,23 @@ import { useToast } from '@/components/ui/use-toast'
 import { Logo } from '@/components/ui/logo'
 import {
   Mail, Lock, User, Building2, Phone, ArrowLeft, ArrowRight,
-  CheckCircle, Upload, MapPin, Car, Globe, FileText, Loader2
+  CheckCircle, Upload, MapPin, Car, Globe, FileText, Loader2, AlertCircle
 } from 'lucide-react'
+
+interface VerifiedCompany {
+  siret: string
+  siren: string
+  raisonSociale: string
+  formeJuridique: string
+  codeAPE: string
+  libelleAPE: string
+  adresse: {
+    numero: string
+    rue: string
+    codePostal: string
+    ville: string
+  }
+}
 
 type FormData = {
   // Étape 1 - Identité
@@ -99,12 +114,70 @@ export default function TalentInscriptionPage() {
 
   const [loading, setLoading] = useState(false)
   const [parsingCv, setParsingCv] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [verifiedCompany, setVerifiedCompany] = useState<VerifiedCompany | null>(null)
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [cvFileName, setCvFileName] = useState<string>('')
 
   const totalSteps = 4
+
+  const verifySiretNumber = async () => {
+    const siretClean = formData.siret.replace(/\s/g, '')
+    if (!siretClean) {
+      setErrors(prev => ({ ...prev, siret: 'SIRET requis' }))
+      return
+    }
+    if (!/^\d{14}$/.test(siretClean)) {
+      setErrors(prev => ({ ...prev, siret: 'SIRET invalide (14 chiffres)' }))
+      return
+    }
+
+    setVerifying(true)
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors.siret
+      return newErrors
+    })
+
+    try {
+      const res = await fetch('/api/verify-siret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siret: siretClean }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.valid) {
+        setErrors(prev => ({ ...prev, siret: data.error || 'SIRET non valide' }))
+        setVerifiedCompany(null)
+        return
+      }
+
+      // SIRET valide - on remplit les données
+      setVerifiedCompany(data.entreprise)
+      setFormData(prev => ({
+        ...prev,
+        raisonSociale: data.entreprise.raisonSociale,
+        siret: data.entreprise.siret,
+        adresse: `${data.entreprise.adresse.numero} ${data.entreprise.adresse.rue}`.trim(),
+        codePostal: data.entreprise.adresse.codePostal,
+        ville: data.entreprise.adresse.ville,
+      }))
+
+      toast({
+        title: "Entreprise vérifiée",
+        description: `${data.entreprise.raisonSociale} a été trouvée dans la base INSEE`,
+      })
+    } catch (error) {
+      console.error('Erreur vérification SIRET:', error)
+      setErrors(prev => ({ ...prev, siret: 'Erreur lors de la vérification' }))
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   const updateFormData = (field: keyof FormData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -490,24 +563,62 @@ export default function TalentInscriptionPage() {
 
                   <div>
                     <Label htmlFor="siret">Numéro SIRET *</Label>
-                    <div className="mt-1 relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input
-                        id="siret"
-                        placeholder="123 456 789 00012"
-                        className="pl-10"
-                        value={formData.siret}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^\d\s]/g, '')
-                          updateFormData('siret', value)
-                        }}
-                        error={errors.siret}
-                      />
+                    <div className="mt-1 flex gap-2">
+                      <div className="relative flex-1">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          id="siret"
+                          placeholder="123 456 789 00012"
+                          className="pl-10"
+                          value={formData.siret}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^\d\s]/g, '')
+                            updateFormData('siret', value)
+                            setVerifiedCompany(null) // Reset si modifié
+                          }}
+                          error={errors.siret}
+                          disabled={verifying}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={verifySiretNumber}
+                        disabled={verifying || formData.siret.replace(/\s/g, '').length < 14}
+                      >
+                        {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Vérifier'}
+                      </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       14 chiffres, disponible sur votre avis de situation INSEE
                     </p>
                   </div>
+
+                  {/* Affichage des infos vérifiées */}
+                  {verifiedCompany && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Entreprise vérifiée
+                      </div>
+                      <div className="text-sm text-green-800 space-y-1">
+                        <p><strong>{verifiedCompany.raisonSociale}</strong></p>
+                        <p>{verifiedCompany.formeJuridique}</p>
+                        <p>{verifiedCompany.libelleAPE}</p>
+                        <p>
+                          {verifiedCompany.adresse.numero} {verifiedCompany.adresse.rue}<br />
+                          {verifiedCompany.adresse.codePostal} {verifiedCompany.adresse.ville}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {errors.siret && !verifiedCompany && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {errors.siret}
+                    </div>
+                  )}
 
                   <div>
                     <Label htmlFor="raisonSociale">Raison sociale *</Label>
