@@ -1,278 +1,304 @@
 /**
- * API Admin - Gestion des Talents
- * Import CV, création de comptes pré-remplis, gestion
+ * API Admin - Gestion d'un Talent spécifique
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
-import { parseCVSmart } from '@/lib/cv-parser'
 import { sendAccountActivationEmail } from '@/lib/microsoft-graph'
-import { generateTalentCode } from '@/lib/utils'
-import { saveCVSecurely } from '@/lib/cv-storage'
+import { createNotificationWithEmail } from '@/lib/email-notification-service' // <--- Ajouté
 import crypto from 'crypto'
 
-// GET - Liste des talents avec filtres
-export async function GET(request: NextRequest) {
+// GET - Détails d'un talent
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   try {
     await requireRole(['ADMIN'])
+    const { uid } = await params
 
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const search = searchParams.get('search') || ''
-    const statut = searchParams.get('statut') || ''
-    const compteLimite = searchParams.get('compteLimite')
-    const importeParAdmin = searchParams.get('importeParAdmin')
-    const emailVerifie = searchParams.get('emailVerifie')
-
-    // Construction correcte du where avec AND pour combiner les filtres
-    const andConditions: Record<string, unknown>[] = []
-
-    // Filtre par statut talent
-    if (statut) {
-      andConditions.push({ statut })
-    }
-
-    // Filtre par compte limité
-    if (compteLimite === 'true') {
-      andConditions.push({ compteLimite: true })
-    }
-
-    // Filtre par importé par admin
-    if (importeParAdmin === 'true') {
-      andConditions.push({ importeParAdmin: true })
-    }
-
-    // Filtre par email vérifié / jamais connecté
-    if (emailVerifie === 'true') {
-      andConditions.push({ user: { emailVerified: true } })
-    } else if (emailVerifie === 'false') {
-      andConditions.push({ user: { emailVerified: false } })
-    } else if (emailVerifie === 'jamaisConnecte') {
-      andConditions.push({ user: { lastLoginAt: null } })
-    }
-
-    // Recherche textuelle (nom, prénom, email, compétences)
-    if (search) {
-      const searchLower = search.toLowerCase()
-      andConditions.push({
-        OR: [
-          { prenom: { contains: search, mode: 'insensitive' } },
-          { nom: { contains: search, mode: 'insensitive' } },
-          { user: { email: { contains: search, mode: 'insensitive' } } },
-          { titrePoste: { contains: search, mode: 'insensitive' } },
-          { competences: { hasSome: [search, searchLower, search.toUpperCase()] } },
-        ],
-      })
-    }
-
-    // Construction du where final
-    const where = andConditions.length > 0 ? { AND: andConditions } : {}
-
-    const [talents, total] = await Promise.all([
-      prisma.talent.findMany({
-        where,
-        include: {
-          user: {
-            select: {
-              email: true,
-              emailVerified: true,
-              isActive: true,
-              lastLoginAt: true,
-              activationToken: true,
-            },
-          },
-          _count: {
-            select: {
-              candidatures: true,
-              matchs: true,
-            },
+    const talent = await prisma.talent.findUnique({
+      where: { uid },
+      include: {
+        user: {
+          select: {
+            uid: true,
+            email: true,
+            emailVerified: true,
+            isActive: true,
+            createdAt: true,
+            lastLoginAt: true,
+            activationToken: true,
+            createdByAdmin: true,
           },
         },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.talent.count({ where }),
-    ])
-
-    return NextResponse.json({
-      talents,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        experiences: { orderBy: { dateDebut: 'desc' } },
+        formations: { orderBy: { annee: 'desc' } },
+        certificationsDetail: { orderBy: { dateObtention: 'desc' } },
+        languesDetail: { orderBy: { niveau: 'desc' } },
+        candidatures: {
+          include: {
+            offre: { select: { uid: true, titre: true, statut: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        matchs: {
+          include: {
+            offre: { select: { uid: true, titre: true } },
+          },
+          orderBy: { score: 'desc' },
+          take: 10,
+        },
+        _count: {
+          select: {
+            candidatures: true,
+            matchs: true,
+          },
+        },
       },
     })
+
+    if (!talent) {
+      return NextResponse.json({ error: 'Talent non trouvé' }, { status: 404 })
+    }
+
+    return NextResponse.json({ talent })
   } catch (error) {
-    console.error('Erreur GET talents admin:', error)
+    console.error('Erreur GET talent admin:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erreur serveur' },
-      { status: error instanceof Error && error.message.includes('Non authentifié') ? 401 : 500 }
+      { status: 500 }
     )
   }
 }
 
-// POST - Import d'un CV et création d'un compte pré-rempli
-export async function POST(request: NextRequest) {
+// PATCH - Modifier un talent
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   try {
     await requireRole(['ADMIN'])
+    const { uid } = await params
+    const body = await request.json()
 
-    const formData = await request.formData()
-    const cvFile = formData.get('cv') as File
-    const email = formData.get('email') as string
-    const sendActivation = formData.get('sendActivation') !== 'false'
-
-    if (!cvFile) {
-      return NextResponse.json({ error: 'CV requis' }, { status: 400 })
-    }
-
-    if (!email) {
-      return NextResponse.json({ error: 'Email requis' }, { status: 400 })
-    }
-
-    // Vérifie si l'email existe déjà
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+    const talent = await prisma.talent.findUnique({
+      where: { uid },
+      include: { user: true },
     })
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'Cet email est déjà utilisé' },
-        { status: 400 }
-      )
+    if (!talent) {
+      return NextResponse.json({ error: 'Talent non trouvé' }, { status: 404 })
     }
 
-    // Lit et parse le CV (supporte les CVs visuels/scannes via Vision)
-    const cvBuffer = Buffer.from(await cvFile.arrayBuffer())
-    const parsedData = await parseCVSmart(cvBuffer, cvFile.name)
+    // Champs modifiables par l'admin
+    const allowedFields = [
+      'statut',
+      'compteLimite',
+      'compteComplet',
+      'visibleVitrine',
+      'visiblePublic',
+      'prenom',
+      'nom',
+      'telephone',
+      'titrePoste',
+      'bio',
+      'competences',
+      'anneesExperience',
+      'tjm',
+      'tjmMin',
+      'tjmMax',
+      'mobilite',
+      'zonesGeographiques',
+      'disponibilite',
+      'disponibleLe',
+      'ville',
+      'codePostal',
+      'adresse',
+      'siret',
+      'raisonSociale',
+      'langues',
+      'certifications',
+      'linkedinUrl',
+      'githubUrl',
+      'portfolioUrl',
+    ]
 
-    // Génère un token d'activation
-    const activationToken = crypto.randomBytes(32).toString('hex')
-    const activationTokenExpiry = new Date()
-    activationTokenExpiry.setDate(activationTokenExpiry.getDate() + 7) // 7 jours
-
-    // Crée l'utilisateur et le talent en transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Crée l'utilisateur sans mot de passe
-      const user = await tx.user.create({
-        data: {
-          email: email.toLowerCase(),
-          passwordHash: null, // Sera défini lors de l'activation
-          role: 'TALENT',
-          emailVerified: false,
-          activationToken,
-          activationTokenExpiry,
-          createdByAdmin: true,
-        },
-      })
-
-      // IMPORTANT: Sauvegarder le fichier CV avec VÉRIFICATION
-      const saveResult = await saveCVSecurely(cvBuffer, user.uid, cvFile.name)
-      if (!saveResult.success) {
-        throw new Error(`Échec sauvegarde CV: ${saveResult.error}`)
+    const updateData: Record<string, unknown> = {}
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field]
       }
+    }
 
-      // Génère le code unique talent
-      const codeUnique = await generateTalentCode()
-
-      // Crée le profil talent avec les données parsées
-      const talent = await tx.talent.create({
-        data: {
-          userId: user.id,
-          codeUnique,
-          prenom: parsedData.prenom || 'Prénom',
-          nom: parsedData.nom || 'Nom',
-          telephone: parsedData.telephone,
-          titrePoste: parsedData.titrePoste,
-          bio: parsedData.bio,
-          competences: parsedData.competences,
-          anneesExperience: parsedData.anneesExperience,
-          certifications: parsedData.certifications,
-          langues: parsedData.langues,
-          softSkills: parsedData.softSkills,
-          linkedinUrl: parsedData.linkedinUrl,
-          githubUrl: parsedData.githubUrl,
-          cvUrl: saveResult.cvUrl,
-          cvOriginalName: cvFile.name,
-          cvParsedData: parsedData as object,
-          importeParAdmin: true,
-          compteLimite: true, // Pas de SIRET tant que non activé
-          compteComplet: false,
-        },
-      })
-
-      // Crée les expériences
-      for (const exp of parsedData.experiences) {
-        await tx.experience.create({
-          data: {
-            talentId: talent.id,
-            poste: exp.poste,
-            entreprise: exp.entreprise,
-            lieu: exp.lieu,
-            dateDebut: new Date(exp.dateDebut),
-            dateFin: exp.dateFin ? new Date(exp.dateFin) : null,
-            enCours: !exp.dateFin,
-            description: exp.description,
-            competences: exp.competences,
-          },
-        })
-      }
-
-      // Crée les formations
-      for (const form of parsedData.formations) {
-        await tx.formation.create({
-          data: {
-            talentId: talent.id,
-            diplome: form.diplome,
-            etablissement: form.etablissement,
-            annee: form.annee,
-          },
-        })
-      }
-
-      // Log l'action
-      await tx.auditLog.create({
-        data: {
-          action: 'IMPORT_CV_ADMIN',
-          entite: 'Talent',
-          entiteId: talent.id,
-          details: {
-            email,
-            cvFile: cvFile.name,
-            competencesParsees: parsedData.competences.length,
-          },
-        },
-      })
-
-      return { user, talent }
+    const updatedTalent = await prisma.talent.update({
+      where: { uid },
+      data: updateData,
     })
 
-    // Envoie l'email d'activation si demandé
-    if (sendActivation) {
-      await sendAccountActivationEmail(
-        email,
-        parsedData.prenom || 'Futur talent',
-        activationToken
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      talent: {
-        uid: result.talent.uid,
-        prenom: result.talent.prenom,
-        nom: result.talent.nom,
-        email,
-        competences: result.talent.competences,
-        anneesExperience: result.talent.anneesExperience,
-        activationSent: sendActivation,
+    // Log l'action
+    await prisma.auditLog.create({
+      data: {
+        action: 'UPDATE_TALENT_ADMIN',
+        entite: 'Talent',
+        entiteId: talent.id,
+        details: JSON.parse(JSON.stringify({ modifications: updateData })),
       },
     })
+
+    // --- NOTIFICATION VALIDATION ---
+    // Si le statut passe à ACTIF, on envoie un mail de validation
+    if (updateData.statut === 'ACTIF' && talent.statut !== 'ACTIF') {
+      await createNotificationWithEmail({
+        userId: talent.userId,
+        type: 'VALIDATION_COMPTE',
+        titre: 'Votre compte est validé !',
+        message: 'Félicitations, votre profil a été validé par notre équipe. Vous êtes maintenant visible pour les clients et pouvez postuler aux offres.',
+        lien: '/t/dashboard'
+      }).catch(err => console.error('Erreur notif validation:', err))
+    }
+
+    return NextResponse.json({ talent: updatedTalent })
   } catch (error) {
-    console.error('Erreur import CV admin:', error)
+    console.error('Erreur PATCH talent admin:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erreur serveur' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Désactiver un talent
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
+  try {
+    await requireRole(['ADMIN'])
+    const { uid } = await params
+
+    const talent = await prisma.talent.findUnique({
+      where: { uid },
+      include: { user: true },
+    })
+
+    if (!talent) {
+      return NextResponse.json({ error: 'Talent non trouvé' }, { status: 404 })
+    }
+
+    // Désactive l'utilisateur (soft delete)
+    await prisma.user.update({
+      where: { id: talent.userId },
+      data: { isActive: false },
+    })
+
+    await prisma.talent.update({
+      where: { uid },
+      data: { statut: 'SUSPENDU' },
+    })
+
+    // Log l'action
+    await prisma.auditLog.create({
+      data: {
+        action: 'DISABLE_TALENT_ADMIN',
+        entite: 'Talent',
+        entiteId: talent.id,
+      },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Erreur DELETE talent admin:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erreur serveur' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Actions spéciales sur un talent
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
+  try {
+    await requireRole(['ADMIN'])
+    const { uid } = await params
+    const body = await request.json()
+    const { action } = body
+
+    const talent = await prisma.talent.findUnique({
+      where: { uid },
+      include: { user: true },
+    })
+
+    if (!talent) {
+      return NextResponse.json({ error: 'Talent non trouvé' }, { status: 404 })
+    }
+
+    switch (action) {
+      case 'resend_activation': {
+        const newToken = crypto.randomBytes(32).toString('hex')
+        const newExpiry = new Date()
+        newExpiry.setDate(newExpiry.getDate() + 7)
+
+        await prisma.user.update({
+          where: { id: talent.userId },
+          data: {
+            activationToken: newToken,
+            activationTokenExpiry: newExpiry,
+          },
+        })
+
+        await sendAccountActivationEmail(
+          talent.user.email,
+          talent.prenom,
+          newToken
+        )
+
+        return NextResponse.json({ success: true, message: 'Email envoyé' })
+      }
+
+      case 'toggle_vitrine': {
+        const updated = await prisma.talent.update({
+          where: { uid },
+          data: { visibleVitrine: !talent.visibleVitrine },
+        })
+        return NextResponse.json({
+          success: true,
+          visibleVitrine: updated.visibleVitrine,
+        })
+      }
+
+      case 'reactivate': {
+        await prisma.user.update({
+          where: { id: talent.userId },
+          data: { isActive: true },
+        })
+        await prisma.talent.update({
+          where: { uid },
+          data: { statut: 'ACTIF' },
+        })
+
+        // Notification de réactivation
+        await createNotificationWithEmail({
+          userId: talent.userId,
+          type: 'VALIDATION_COMPTE',
+          titre: 'Compte réactivé',
+          message: 'Votre compte a été réactivé par l\'équipe TRINEXTA.',
+          lien: '/t/dashboard'
+        }).catch(err => console.error('Erreur notif reactivation:', err))
+
+        return NextResponse.json({ success: true })
+      }
+
+      default:
+        return NextResponse.json({ error: 'Action non reconnue' }, { status: 400 })
+    }
+  } catch (error) {
+    console.error('Erreur POST talent admin:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Erreur serveur' },
       { status: 500 }
