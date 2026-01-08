@@ -29,7 +29,8 @@ export async function GET(
             isActive: true,
             createdAt: true,
             lastLoginAt: true,
-            activationToken: true,
+            // SECURITE: Ne pas exposer activationToken - exposer seulement l'expiry
+            activationTokenExpiry: true,
             createdByAdmin: true,
           },
         },

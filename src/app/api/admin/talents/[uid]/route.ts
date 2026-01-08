@@ -28,7 +28,9 @@ export async function GET(
             isActive: true,
             createdAt: true,
             lastLoginAt: true,
-            activationToken: true,
+            // SECURITE: Ne jamais exposer activationToken dans les réponses API
+            // On expose seulement si un token existe (boolean)
+            activationTokenExpiry: true,
             createdByAdmin: true,
           },
         },

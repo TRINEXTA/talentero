@@ -9,13 +9,21 @@ import { prisma } from './db'
 import { UserRole } from '@prisma/client'
 
 // Vérification du secret JWT au démarrage
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-me'
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as string
 
-// Avertissement si le secret n'est pas configuré correctement
+// En production, JWT_SECRET est OBLIGATOIRE
+// En développement, on permet un fallback pour faciliter le démarrage
+const isProduction = process.env.NODE_ENV === 'production'
+
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.warn('[SECURITE] JWT_SECRET non configuré ou trop court. Configurez une clé de 32+ caractères en production.')
+  if (isProduction) {
+    throw new Error('[SECURITE CRITIQUE] JWT_SECRET doit être défini et faire au moins 32 caractères en production. L\'application ne peut pas démarrer.')
+  }
+  console.warn('[SECURITE] JWT_SECRET non configuré ou trop court. Configurez une clé de 32+ caractères.')
 }
+
+// Utiliser le secret fourni ou générer une erreur en prod
+const JWT_SECRET = process.env.JWT_SECRET || (isProduction ? '' : 'dev-only-fallback-not-for-production-use')
 
 export interface JWTPayload {
   userId: number

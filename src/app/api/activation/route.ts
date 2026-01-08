@@ -5,10 +5,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword, createSession } from '@/lib/auth'
+import { checkRateLimit, getClientIP, ACTIVATION_RATE_LIMIT } from '@/lib/rate-limit'
 
 // POST - Activer un compte avec un token
 export async function POST(request: NextRequest) {
   try {
+    // SECURITE: Rate limiting pour prévenir les attaques par énumération
+    const clientIP = getClientIP(request)
+    const rateLimitResult = checkRateLimit(`activation:${clientIP}`, ACTIVATION_RATE_LIMIT)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Trop de tentatives. Veuillez réessayer plus tard.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
     const { token, password } = body
 
@@ -118,6 +138,25 @@ export async function POST(request: NextRequest) {
 // GET - Vérifier un token d'activation
 export async function GET(request: NextRequest) {
   try {
+    // SECURITE: Rate limiting pour prévenir les attaques par énumération
+    const clientIP = getClientIP(request)
+    const rateLimitResult = checkRateLimit(`activation-check:${clientIP}`, ACTIVATION_RATE_LIMIT)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Trop de tentatives. Veuillez réessayer plus tard.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
 
@@ -137,7 +176,6 @@ export async function GET(request: NextRequest) {
         talent: {
           select: {
             prenom: true,
-            nom: true,
             titrePoste: true,
           },
         },
@@ -151,10 +189,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // SECURITE: Ne pas exposer l'email complet, seulement une version masquée
+    // et le prénom pour personnaliser l'expérience
+    const maskedEmail = user.email.replace(
+      /^(.{2})(.*)(@.*)$/,
+      (_, start, middle, domain) => start + '*'.repeat(Math.min(middle.length, 5)) + domain
+    )
+
     return NextResponse.json({
       valid: true,
-      email: user.email,
-      talent: user.talent,
+      maskedEmail,
+      prenom: user.talent?.prenom || null,
+      titrePoste: user.talent?.titrePoste || null,
     })
   } catch (error) {
     console.error('Erreur vérification token:', error)

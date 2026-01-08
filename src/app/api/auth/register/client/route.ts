@@ -4,9 +4,29 @@ import { hashPassword } from '@/lib/auth'
 import { registerClientSchema } from '@/lib/validations'
 import { sendWelcomeClientEmail } from '@/lib/microsoft-graph'
 import { generateClientCode } from '@/lib/utils'
+import { checkRateLimit, getClientIP, REGISTER_RATE_LIMIT } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITE: Rate limiting pour prévenir le spam d'inscriptions
+    const clientIP = getClientIP(request)
+    const rateLimitResult = checkRateLimit(`register:${clientIP}`, REGISTER_RATE_LIMIT)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Trop de tentatives d\'inscription. Veuillez réessayer plus tard.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
 
     // Validation
