@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { Mail, Lock, User, Building2, Phone, ArrowLeft, CheckCircle, Briefcase, Loader2, AlertCircle } from 'lucide-react'
+import { PasswordStrength } from '@/components/ui/password-strength'
+import { checkPasswordStrength } from '@/lib/validations'
 
 interface VerifiedCompany {
   siret: string
@@ -124,7 +126,16 @@ export default function ClientInscriptionPage() {
     if (!formData.contactEmail) newErrors.contactEmail = 'Email requis'
     if (!formData.email) newErrors.email = 'Email de connexion requis'
     if (!formData.password) newErrors.password = 'Mot de passe requis'
-    if (formData.password.length < 8) newErrors.password = 'Minimum 8 caractères'
+    else {
+      const passwordCheck = checkPasswordStrength(formData.password)
+      if (!passwordCheck.isValid) {
+        if (!passwordCheck.checks.minLength) newErrors.password = 'Minimum 8 caractères'
+        else if (!passwordCheck.checks.hasUppercase) newErrors.password = 'Ajoutez une majuscule'
+        else if (!passwordCheck.checks.hasLowercase) newErrors.password = 'Ajoutez une minuscule'
+        else if (!passwordCheck.checks.hasDigit) newErrors.password = 'Ajoutez un chiffre'
+        else if (!passwordCheck.checks.hasSpecial) newErrors.password = 'Ajoutez un caractère spécial'
+      }
+    }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
     }
@@ -440,13 +451,14 @@ export default function ClientInscriptionPage() {
                       <Input
                         id="password"
                         type="password"
-                        placeholder="Minimum 8 caractères"
+                        placeholder="Créez un mot de passe sécurisé"
                         className="pl-10"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         error={errors.password}
                       />
                     </div>
+                    <PasswordStrength password={formData.password} />
                   </div>
 
                   <div>
@@ -456,7 +468,7 @@ export default function ClientInscriptionPage() {
                       <Input
                         id="confirmPassword"
                         type="password"
-                        placeholder="••••••••"
+                        placeholder="Répétez le mot de passe"
                         className="pl-10"
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

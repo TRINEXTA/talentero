@@ -13,6 +13,8 @@ import {
   Mail, Lock, User, Building2, Phone, ArrowLeft, ArrowRight,
   CheckCircle, Upload, MapPin, Car, Globe, FileText, Loader2, AlertCircle
 } from 'lucide-react'
+import { PasswordStrength } from '@/components/ui/password-strength'
+import { checkPasswordStrength } from '@/lib/validations'
 
 interface VerifiedCompany {
   siret: string
@@ -211,7 +213,16 @@ export default function TalentInscriptionPage() {
       }
       if (!formData.telephone.trim()) newErrors.telephone = 'Téléphone requis'
       if (!formData.password) newErrors.password = 'Mot de passe requis'
-      else if (formData.password.length < 8) newErrors.password = 'Minimum 8 caractères'
+      else {
+        const passwordCheck = checkPasswordStrength(formData.password)
+        if (!passwordCheck.isValid) {
+          if (!passwordCheck.checks.minLength) newErrors.password = 'Minimum 8 caractères'
+          else if (!passwordCheck.checks.hasUppercase) newErrors.password = 'Ajoutez une majuscule'
+          else if (!passwordCheck.checks.hasLowercase) newErrors.password = 'Ajoutez une minuscule'
+          else if (!passwordCheck.checks.hasDigit) newErrors.password = 'Ajoutez un chiffre'
+          else if (!passwordCheck.checks.hasSpecial) newErrors.password = 'Ajoutez un caractère spécial'
+        }
+      }
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
       }
@@ -509,36 +520,36 @@ export default function TalentInscriptionPage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="password">Mot de passe *</Label>
-                      <div className="mt-1 relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          id="password"
-                          type="password"
-                          placeholder="Min. 8 caractères"
-                          className="pl-10"
-                          value={formData.password}
-                          onChange={(e) => updateFormData('password', e.target.value)}
-                          error={errors.password}
-                        />
-                      </div>
+                  <div>
+                    <Label htmlFor="password">Mot de passe *</Label>
+                    <div className="mt-1 relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Créez un mot de passe sécurisé"
+                        className="pl-10"
+                        value={formData.password}
+                        onChange={(e) => updateFormData('password', e.target.value)}
+                        error={errors.password}
+                      />
                     </div>
-                    <div>
-                      <Label htmlFor="confirmPassword">Confirmer *</Label>
-                      <div className="mt-1 relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          placeholder="••••••••"
-                          className="pl-10"
-                          value={formData.confirmPassword}
-                          onChange={(e) => updateFormData('confirmPassword', e.target.value)}
-                          error={errors.confirmPassword}
-                        />
-                      </div>
+                    <PasswordStrength password={formData.password} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
+                    <div className="mt-1 relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Répétez le mot de passe"
+                        className="pl-10"
+                        value={formData.confirmPassword}
+                        onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                        error={errors.confirmPassword}
+                      />
                     </div>
                   </div>
                 </div>

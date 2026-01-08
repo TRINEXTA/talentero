@@ -10,6 +10,8 @@ import { Logo } from '@/components/ui/logo'
 import {
   CheckCircle, AlertCircle, Lock, Eye, EyeOff, Loader2, ArrowRight, KeyRound
 } from 'lucide-react'
+import { PasswordStrength } from '@/components/ui/password-strength'
+import { checkPasswordStrength } from '@/lib/validations'
 
 interface TokenInfo {
   valid: boolean
@@ -56,8 +58,13 @@ function ResetPasswordContent() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères')
+    const passwordCheck = checkPasswordStrength(password)
+    if (!passwordCheck.isValid) {
+      if (!passwordCheck.checks.minLength) setError('Le mot de passe doit contenir au moins 8 caractères')
+      else if (!passwordCheck.checks.hasUppercase) setError('Le mot de passe doit contenir au moins une majuscule')
+      else if (!passwordCheck.checks.hasLowercase) setError('Le mot de passe doit contenir au moins une minuscule')
+      else if (!passwordCheck.checks.hasDigit) setError('Le mot de passe doit contenir au moins un chiffre')
+      else if (!passwordCheck.checks.hasSpecial) setError('Le mot de passe doit contenir au moins un caractère spécial')
       return
     }
 
@@ -219,10 +226,9 @@ function ResetPasswordContent() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimum 8 caractères"
+                    placeholder="Créez un mot de passe sécurisé"
                     className="pl-10 pr-10"
                     required
-                    minLength={8}
                   />
                   <button
                     type="button"
@@ -232,6 +238,7 @@ function ResetPasswordContent() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                <PasswordStrength password={password} />
               </div>
 
               <div>

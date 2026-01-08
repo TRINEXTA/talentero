@@ -10,6 +10,77 @@ import { z } from 'zod'
 const optionalUrl = z.string().optional().nullable().or(z.literal(''))
 
 // ============================================
+// VALIDATION MOT DE PASSE SÉCURISÉ
+// ============================================
+
+/**
+ * Messages d'erreur pour la validation du mot de passe
+ */
+export const PASSWORD_REQUIREMENTS = {
+  minLength: 8,
+  messages: {
+    tooShort: 'Mot de passe minimum 8 caractères',
+    noUppercase: 'Le mot de passe doit contenir au moins une majuscule',
+    noLowercase: 'Le mot de passe doit contenir au moins une minuscule',
+    noDigit: 'Le mot de passe doit contenir au moins un chiffre',
+    noSpecial: 'Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*...)',
+  },
+}
+
+/**
+ * Schéma de mot de passe sécurisé
+ * Exigences:
+ * - Minimum 8 caractères
+ * - Au moins une majuscule
+ * - Au moins une minuscule
+ * - Au moins un chiffre
+ * - Au moins un caractère spécial
+ */
+export const securePasswordSchema = z
+  .string()
+  .min(PASSWORD_REQUIREMENTS.minLength, PASSWORD_REQUIREMENTS.messages.tooShort)
+  .refine((password) => /[A-Z]/.test(password), {
+    message: PASSWORD_REQUIREMENTS.messages.noUppercase,
+  })
+  .refine((password) => /[a-z]/.test(password), {
+    message: PASSWORD_REQUIREMENTS.messages.noLowercase,
+  })
+  .refine((password) => /\d/.test(password), {
+    message: PASSWORD_REQUIREMENTS.messages.noDigit,
+  })
+  .refine((password) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password), {
+    message: PASSWORD_REQUIREMENTS.messages.noSpecial,
+  })
+
+/**
+ * Vérifie si un mot de passe respecte toutes les exigences de complexité
+ * Utile pour la validation côté client
+ */
+export function checkPasswordStrength(password: string): {
+  isValid: boolean
+  checks: {
+    minLength: boolean
+    hasUppercase: boolean
+    hasLowercase: boolean
+    hasDigit: boolean
+    hasSpecial: boolean
+  }
+} {
+  const checks = {
+    minLength: password.length >= PASSWORD_REQUIREMENTS.minLength,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasDigit: /\d/.test(password),
+    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password),
+  }
+
+  return {
+    isValid: Object.values(checks).every(Boolean),
+    checks,
+  }
+}
+
+// ============================================
 // AUTH
 // ============================================
 
@@ -20,7 +91,7 @@ export const loginSchema = z.object({
 
 export const registerTalentSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(8, 'Mot de passe minimum 8 caractères'),
+  password: securePasswordSchema,
   prenom: z.string().min(2, 'Prénom requis'),
   nom: z.string().min(2, 'Nom requis'),
   siret: z.string().regex(/^\d{14}$/, 'SIRET invalide (14 chiffres)').optional(),
@@ -30,7 +101,7 @@ export const registerTalentSchema = z.object({
 
 export const registerClientSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(8, 'Mot de passe minimum 8 caractères'),
+  password: securePasswordSchema,
   raisonSociale: z.string().min(2, 'Raison sociale requise'),
   siret: z.string().regex(/^\d{14}$/, 'SIRET invalide (14 chiffres)').optional(),
   typeClient: z.enum(['DIRECT', 'SOUSTRAITANCE']).optional(),
@@ -49,7 +120,7 @@ export const registerClientSchema = z.object({
 
 export const activateAccountSchema = z.object({
   token: z.string().min(1, 'Token requis'),
-  password: z.string().min(8, 'Mot de passe minimum 8 caractères'),
+  password: securePasswordSchema,
 })
 
 export const resetPasswordSchema = z.object({
@@ -58,7 +129,7 @@ export const resetPasswordSchema = z.object({
 
 export const newPasswordSchema = z.object({
   token: z.string().min(1, 'Token requis'),
-  password: z.string().min(8, 'Mot de passe minimum 8 caractères'),
+  password: securePasswordSchema,
 })
 
 // ============================================
