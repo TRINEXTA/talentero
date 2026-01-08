@@ -19,6 +19,26 @@ import { sendEmailViaGraph } from '@/lib/microsoft-graph'
 const APP_URL = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://talentero.fr'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@trinexta.fr'
 
+// ============================================
+// SECURITE: ECHAPPEMENT HTML
+// ============================================
+
+/**
+ * Échappe les caractères HTML dangereux pour prévenir les injections
+ * Utilisé pour toutes les données utilisateur insérées dans les emails
+ */
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return ''
+  const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }
+  return str.replace(/[&<>"']/g, char => htmlEntities[char] || char)
+}
+
 // Types de notifications qui déclenchent un email
 const EMAIL_ENABLED_NOTIFICATIONS: NotificationType[] = [
   'NOUVELLE_OFFRE_MATCH',
@@ -67,16 +87,21 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
   const { type, titre, message, lien, metadata } = data
   const ctaUrl = lien ? `${APP_URL}${lien.startsWith('/') ? lien : '/' + lien}` : undefined
 
+  // SECURITE: Échapper toutes les données utilisateur pour prévenir les injections HTML
+  const safeUserName = escapeHtml(userName)
+  const safeMessage = escapeHtml(message)
+  const safeTitre = escapeHtml(titre)
+
   switch (type) {
     case 'NOUVELLE_OFFRE_MATCH':
       return {
-        subject: titre,
+        subject: safeTitre,
         preheader: 'Une nouvelle mission correspond à votre profil',
         headerColor: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
         headerIcon: '🎯',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <p>Notre algorithme a détecté une forte compatibilité entre cette mission et votre profil technique.</p>
           <p style="background: #eff6ff; padding: 16px; border-radius: 8px; border-left: 4px solid #2563eb;">
             <strong>Conseil :</strong> Les premières candidatures ont plus de chances d'être remarquées.
@@ -89,15 +114,15 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
     case 'STATUT_CANDIDATURE':
       const isPositive = message.includes('sélectionné') || message.includes('retenu') || message.includes('Bonne nouvelle')
       return {
-        subject: titre,
+        subject: safeTitre,
         preheader: 'Mise à jour de votre candidature',
         headerColor: isPositive
           ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
           : 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
         headerIcon: isPositive ? '✅' : '📋',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           ${isPositive ? `
             <p style="background: #ecfdf5; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
               <strong>Félicitations !</strong> Votre profil a retenu l'attention de notre équipe.
@@ -110,13 +135,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'ENTRETIEN_DEMANDE':
       return {
-        subject: `📅 ${titre}`,
+        subject: `📅 ${safeTitre}`,
         preheader: 'Un entretien vous est proposé',
         headerColor: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
         headerIcon: '📅',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <p style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
             <strong>Action requise :</strong> Veuillez confirmer votre disponibilité depuis votre espace.
           </p>
@@ -127,13 +152,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'ENTRETIEN_CONFIRME':
       return {
-        subject: `✅ ${titre}`,
+        subject: `✅ ${safeTitre}`,
         preheader: 'Entretien confirmé',
         headerColor: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         headerIcon: '✅',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <p>Un rappel vous sera envoyé 24h avant l'entretien.</p>
         `,
         ctaText: 'Voir les détails',
@@ -142,13 +167,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'ENTRETIEN_RAPPEL':
       return {
-        subject: `⏰ RAPPEL : ${titre}`,
+        subject: `⏰ RAPPEL : ${safeTitre}`,
         preheader: 'Votre entretien a lieu demain',
         headerColor: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
         headerIcon: '⏰',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p><strong>${message}</strong></p>
+          <p>Bonjour ${safeUserName},</p>
+          <p><strong>${safeMessage}</strong></p>
           <p style="background: #fef2f2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
             <strong>Rappel important :</strong> N'oubliez pas de vous connecter quelques minutes avant l'heure prévue.
           </p>
@@ -159,15 +184,15 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'NOUVEAU_MESSAGE':
       return {
-        subject: titre,
+        subject: safeTitre,
         preheader: 'Vous avez reçu un nouveau message',
         headerColor: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
         headerIcon: '💬',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
+          <p>Bonjour ${safeUserName},</p>
           <p>Vous avez reçu un nouveau message :</p>
           <div style="background: #f5f3ff; padding: 16px; border-radius: 8px; border-left: 4px solid #8b5cf6; margin: 16px 0;">
-            <em>"${message}"</em>
+            <em>"${safeMessage}"</em>
           </div>
         `,
         ctaText: 'Lire le message',
@@ -176,13 +201,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'CANDIDAT_SELECTIONNE':
       return {
-        subject: `🎉 ${titre}`,
+        subject: `🎉 ${safeTitre}`,
         preheader: 'Félicitations, vous êtes retenu !',
         headerColor: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         headerIcon: '🎉',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p><strong>${message}</strong></p>
+          <p>Bonjour ${safeUserName},</p>
+          <p><strong>${safeMessage}</strong></p>
           <p style="background: #ecfdf5; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
             Félicitations ! Notre équipe va vous contacter très prochainement pour la suite du processus.
           </p>
@@ -193,13 +218,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'CANDIDAT_REFUSE':
       return {
-        subject: titre,
+        subject: safeTitre,
         preheader: 'Mise à jour de votre candidature',
         headerColor: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
         headerIcon: '📋',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <p>Nous vous encourageons à consulter nos autres opportunités qui pourraient correspondre à votre profil.</p>
         `,
         ctaText: 'Voir d\'autres offres',
@@ -208,13 +233,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'SHORTLIST_ENVOYEE':
       return {
-        subject: titre,
+        subject: safeTitre,
         preheader: 'Votre shortlist est prête',
         headerColor: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         headerIcon: '📋',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <p>Consultez les profils et donnez-nous votre retour directement depuis la plateforme.</p>
         `,
         ctaText: 'Voir la shortlist',
@@ -223,13 +248,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'NOUVELLE_CANDIDATURE':
       return {
-        subject: titre,
+        subject: safeTitre,
         preheader: 'Nouvelle candidature reçue',
         headerColor: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
         headerIcon: '📥',
         bodyHtml: `
           <p>Bonjour,</p>
-          <p>${message}</p>
+          <p>${safeMessage}</p>
           <p>Connectez-vous à l'espace admin pour examiner cette candidature.</p>
         `,
         ctaText: 'Voir la candidature',
@@ -238,13 +263,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'VALIDATION_COMPTE':
       return {
-        subject: `✅ ${titre}`,
+        subject: `✅ ${safeTitre}`,
         preheader: 'Votre compte a été validé',
         headerColor: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         headerIcon: '✅',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <p>Vous pouvez maintenant accéder à toutes les fonctionnalités de la plateforme.</p>
         `,
         ctaText: 'Accéder à mon espace',
@@ -253,13 +278,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     case 'BIENVENUE':
       return {
-        subject: `👋 ${titre}`,
+        subject: `👋 ${safeTitre}`,
         preheader: 'Bienvenue sur Talentero',
         headerColor: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
         headerIcon: '👋',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
           <div style="background: #eff6ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <strong>Pour maximiser vos chances :</strong>
             <ul style="margin: 8px 0 0 0; padding-left: 20px;">
@@ -275,13 +300,13 @@ function getEmailTemplate(data: EmailNotificationData, userEmail: string, userNa
 
     default:
       return {
-        subject: titre,
-        preheader: message.substring(0, 100),
+        subject: safeTitre,
+        preheader: safeMessage.substring(0, 100),
         headerColor: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
         headerIcon: '🔔',
         bodyHtml: `
-          <p>Bonjour ${userName},</p>
-          <p>${message}</p>
+          <p>Bonjour ${safeUserName},</p>
+          <p>${safeMessage}</p>
         `,
         ctaText: lien ? 'Voir plus' : undefined,
         ctaUrl,

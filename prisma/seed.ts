@@ -213,8 +213,14 @@ Stack:
   console.log('')
   console.log('🎉 Seed terminé avec succès!')
   console.log('')
-  console.log('📧 Admin: admin@trinexta.fr')
-  console.log('🔐 Mot de passe: AdminTrinexta2025')
+  console.log('📧 Admin:', process.env.ADMIN_EMAIL || 'admin@trinexta.fr')
+  // SECURITE: Ne jamais afficher le mot de passe en clair dans les logs
+  if (process.env.ADMIN_PASSWORD) {
+    console.log('🔐 Mot de passe: [configuré via ADMIN_PASSWORD]')
+  } else {
+    console.log('⚠️  ATTENTION: Mot de passe par défaut utilisé!')
+    console.log('   Configurez ADMIN_PASSWORD en production.')
+  }
   console.log('')
 }
 

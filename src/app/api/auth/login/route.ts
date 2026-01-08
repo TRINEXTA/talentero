@@ -2,9 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyPassword, createSession } from '@/lib/auth'
 import { loginSchema } from '@/lib/validations'
+import { checkRateLimit, resetRateLimit, getClientIP, LOGIN_RATE_LIMIT } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITE: Rate limiting pour prévenir les attaques brute-force
+    const clientIP = getClientIP(request)
+    const rateLimitResult = checkRateLimit(`login:${clientIP}`, LOGIN_RATE_LIMIT)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Trop de tentatives de connexion. Veuillez réessayer plus tard.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(rateLimitResult.resetAt),
+          },
+        }
+      )
+    }
+
     const body = await request.json()
 
     // Validation
@@ -78,6 +100,9 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || undefined
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined
     const token = await createSession(user.id, userAgent, ip)
+
+    // SECURITE: Réinitialiser le rate limit après connexion réussie
+    resetRateLimit(`login:${clientIP}`)
 
     // Détermine la redirection selon le rôle
     let redirectUrl = '/'

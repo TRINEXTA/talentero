@@ -13,8 +13,11 @@ import {
 
 interface TokenInfo {
   valid: boolean
-  email?: string
-  talent?: {
+  email?: string // Déprécié - utiliser maskedEmail
+  maskedEmail?: string // Email masqué pour sécurité
+  prenom?: string | null
+  titrePoste?: string | null
+  talent?: { // Déprécié - compatibilité ascendante
     prenom: string
     nom: string
     titrePoste: string | null
@@ -196,24 +199,26 @@ function ActivationContent() {
             </div>
             <CardTitle className="text-2xl">Activez votre compte</CardTitle>
             <CardDescription>
-              {tokenInfo.talent && (
+              {(tokenInfo.prenom || tokenInfo.talent?.prenom) && (
                 <span>
-                  Bienvenue {tokenInfo.talent.prenom} ! <br />
+                  Bienvenue {tokenInfo.prenom || tokenInfo.talent?.prenom} ! <br />
                 </span>
               )}
               Créez votre mot de passe pour accéder à votre espace.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {tokenInfo.talent && (
+            {(tokenInfo.prenom || tokenInfo.maskedEmail || tokenInfo.email) && (
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <p className="text-sm text-gray-600 mb-1">Compte créé pour :</p>
-                <p className="font-medium text-gray-900">
-                  {tokenInfo.talent.prenom} {tokenInfo.talent.nom}
-                </p>
-                <p className="text-sm text-gray-500">{tokenInfo.email}</p>
-                {tokenInfo.talent.titrePoste && (
-                  <p className="text-sm text-primary mt-1">{tokenInfo.talent.titrePoste}</p>
+                {(tokenInfo.prenom || tokenInfo.talent?.prenom) && (
+                  <p className="font-medium text-gray-900">
+                    {tokenInfo.prenom || tokenInfo.talent?.prenom}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500">{tokenInfo.maskedEmail || tokenInfo.email}</p>
+                {(tokenInfo.titrePoste || tokenInfo.talent?.titrePoste) && (
+                  <p className="text-sm text-primary mt-1">{tokenInfo.titrePoste || tokenInfo.talent?.titrePoste}</p>
                 )}
               </div>
             )}

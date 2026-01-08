@@ -276,6 +276,59 @@ export function formatCandidatureStatus(statut: string): string {
 // ============================================
 
 /**
+ * Parse un entier de manière sécurisée
+ * Retourne la valeur par défaut si la conversion échoue ou si la valeur est hors limites
+ *
+ * @param value - Valeur à parser (peut être null/undefined)
+ * @param defaultValue - Valeur par défaut si parsing échoue
+ * @param options - Options de validation (min, max)
+ */
+export function safeParseInt(
+  value: string | null | undefined,
+  defaultValue: number,
+  options?: { min?: number; max?: number }
+): number {
+  if (!value) return defaultValue
+
+  const parsed = parseInt(value, 10)
+
+  // Vérifie si le parsing a réussi
+  if (isNaN(parsed)) return defaultValue
+
+  // Applique les limites si spécifiées
+  const min = options?.min ?? Number.MIN_SAFE_INTEGER
+  const max = options?.max ?? Number.MAX_SAFE_INTEGER
+
+  if (parsed < min) return min
+  if (parsed > max) return max
+
+  return parsed
+}
+
+/**
+ * Parse un nombre décimal de manière sécurisée
+ */
+export function safeParseFloat(
+  value: string | null | undefined,
+  defaultValue: number,
+  options?: { min?: number; max?: number }
+): number {
+  if (!value) return defaultValue
+
+  const parsed = parseFloat(value)
+
+  if (isNaN(parsed)) return defaultValue
+
+  const min = options?.min ?? Number.MIN_SAFE_INTEGER
+  const max = options?.max ?? Number.MAX_SAFE_INTEGER
+
+  if (parsed < min) return min
+  if (parsed > max) return max
+
+  return parsed
+}
+
+/**
  * Valide un numéro SIRET (14 chiffres + clé de Luhn)
  */
 export function isValidSiret(siret: string): boolean {
